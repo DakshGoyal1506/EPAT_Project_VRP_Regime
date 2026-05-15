@@ -1,0 +1,75 @@
+version: 1
+
+broker:
+  name: ibkr_ibridgepy
+  phase: 11
+  enabled: false
+  required_for_core_research: false
+
+safety:
+  paper_signal_only: true
+  live_trading_enabled: false
+  allow_live_orders: false
+  require_manual_confirmation: true
+  fail_if_live_order_flag_detected: true
+
+connection:
+  host_env_var: IBKR_HOST
+  port_env_var: IBKR_PORT
+  client_id_env_var: IBKR_CLIENT_ID
+  account_id_env_var: IBKR_ACCOUNT_ID
+  default_host: 127.0.0.1
+  default_paper_port: 7497
+  default_client_id: 101
+
+cache:
+  enabled: true
+  directory: data/broker_cache
+  market_data_cache: data/broker_cache/market_data.parquet
+  signal_cache: data/broker_cache/signals.parquet
+  position_snapshot_cache: data/broker_cache/positions.parquet
+
+signal_policy:
+  generate_daily_signal: true
+  place_orders: false
+  publish_format: parquet
+  include_fields:
+    - date
+    - market
+    - symbol
+    - regime_model
+    - regime_label
+    - target_exposure
+    - current_exposure
+    - suggested_action
+    - risk_status
+    - notes
+
+instruments:
+  US:
+    enabled: false
+    reason: Research only unless account permissions and legal constraints are reviewed.
+    watchlist:
+      - SPY
+      - VIX
+  INDIA:
+    enabled: false
+    reason: Broker availability depends on account permissions.
+    watchlist:
+      - NIFTY
+      - INDIA_VIX
+
+risk_checks:
+  require_non_null_signal: true
+  require_known_symbol: true
+  require_market_open_check: true
+  require_position_snapshot: true
+  max_abs_target_exposure: 1.0
+  block_if_missing_regime_probability: true
+  block_if_stress_regime: true
+
+logging:
+  log_dir: logs/broker
+  log_signals: true
+  log_blocked_actions: true
+  log_connection_attempts: true

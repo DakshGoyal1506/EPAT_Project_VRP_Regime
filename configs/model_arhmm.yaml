@@ -1,0 +1,84 @@
+version: 1
+
+model:
+  name: markov_autoregression
+  enabled: true
+  phase: 7
+
+purpose:
+  description: Upgrade over Gaussian HMM to account for autocorrelation in VRP and volatility dynamics.
+
+implementation_options:
+  primary:
+    library: statsmodels
+    class: MarkovAutoregression
+    reason: Inspectable Python implementation available through statsmodels.
+  optional_research:
+    library: dynamax
+    class: autoregressive_hmm
+    reason: Useful for AR-HMM experiments, not mandatory for core reproducibility.
+  optional_advanced:
+    library: MSGARCH
+    language: R
+    reason: Markov-switching GARCH robustness only; not required for EPAT core.
+
+target_series:
+  candidates:
+    - vrp
+    - realised_variance
+    - realised_volatility
+    - implied_volatility
+  default: vrp
+
+exogenous_features:
+  enabled: true
+  candidate_columns:
+    - implied_volatility
+    - realised_volatility
+    - index_return
+    - vrp_lag_1
+    - vrp_lag_5
+    - rv_lag_1
+    - rv_lag_5
+
+autoregression:
+  order_candidates:
+    - 1
+    - 2
+    - 5
+  default_order: 1
+  switching_ar: true
+  switching_variance: true
+  switching_trend: true
+
+state_counts:
+  candidates:
+    - 2
+    - 3
+  default: 3
+
+training:
+  min_train_observations: 1000
+  training_mode: expanding_window
+  refit_frequency_days: 21
+  random_seed: 42
+  maxiter: 500
+
+inference:
+  allowed_for_backtest: filtered_probabilities_only
+  forbidden_for_backtest:
+    - full_sample_smoothed_probabilities
+    - future_state_labels
+  signal_probability_column_prefix: arhmm_p_state_
+  regime_label_column: arhmm_regime
+
+outputs:
+  model_dir: data/processed/models/arhmm
+  probabilities_dir: data/processed/regimes/arhmm
+  diagnostics_dir: reports/tables/arhmm
+  figures_dir: reports/figures/arhmm
+
+anti_lookahead:
+  enforce_train_test_split: true
+  enforce_filtered_probabilities: true
+  reject_full_sample_backtest_probabilities: true

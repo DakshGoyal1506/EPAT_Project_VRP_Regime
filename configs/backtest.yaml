@@ -1,0 +1,95 @@
+version: 1
+
+backtest:
+  name: vrp_regime_conditioned_backtest
+  phase: 8
+  engine: vectorized_daily
+  frequency: daily
+
+capital:
+  initial_capital: 1000000.0
+  base_currency: USD
+  allow_fractional_exposure: true
+
+markets:
+  enabled:
+    - US
+    - INDIA
+
+strategies:
+  unconditional_short_vol:
+    enabled: true
+    description: Baseline strategy with constant short-volatility exposure.
+    target_exposure: -1.0
+
+  threshold_regime_conditioned:
+    enabled: true
+    description: Exposure controlled by threshold regime labels.
+    calm_exposure: -1.0
+    transition_exposure: -0.5
+    stress_exposure: 0.0
+
+  hmm_regime_conditioned:
+    enabled: true
+    description: Exposure controlled by filtered HMM probabilities.
+    calm_exposure: -1.0
+    transition_exposure: -0.5
+    stress_exposure: 0.0
+    stress_probability_cutoff: 0.5
+
+  arhmm_regime_conditioned:
+    enabled: true
+    description: Exposure controlled by filtered AR-HMM / Markov autoregression probabilities.
+    calm_exposure: -1.0
+    transition_exposure: -0.5
+    stress_exposure: 0.0
+    stress_probability_cutoff: 0.5
+
+signal_timing:
+  signal_timestamp: close_t
+  execution_timestamp: close_t_plus_1
+  use_next_day_returns: true
+  allow_same_day_return_capture: false
+  require_signal_shift_by_one_period: true
+
+costs:
+  enabled: true
+  transaction_cost_bps_per_turnover: 5.0
+  slippage_bps_per_turnover: 5.0
+  borrow_cost_bps_annualized: 0.0
+  financing_cost_bps_annualized: 0.0
+
+risk:
+  max_abs_exposure: 1.0
+  allow_leverage: false
+  stop_loss_enabled: false
+  volatility_targeting_enabled: false
+  notes: Keep Phase 8 baseline simple before adding sizing complexity.
+
+metrics:
+  annualization_days: 252
+  include:
+    - total_return
+    - annualized_return
+    - annualized_volatility
+    - sharpe_ratio
+    - sortino_ratio
+    - max_drawdown
+    - calmar_ratio
+    - hit_rate
+    - average_daily_return
+    - worst_daily_return
+    - turnover
+    - exposure_days
+    - stress_exposure_days
+
+outputs:
+  equity_curves_dir: data/processed/backtest/equity_curves
+  trades_dir: data/processed/backtest/trades
+  metrics_dir: reports/tables/backtest
+  figures_dir: reports/figures/backtest
+
+anti_lookahead:
+  reject_unshifted_signals: true
+  reject_future_realised_variance_signal: true
+  reject_full_sample_smoothed_regimes: true

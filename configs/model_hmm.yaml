@@ -1,0 +1,79 @@
+version: 1
+
+model:
+  name: gaussian_hmm
+  library: hmmlearn
+  enabled: true
+
+purpose:
+  description: Gaussian HMM regime classification for VRP, realised volatility, implied volatility, and returns.
+  phase: 6
+
+state_counts:
+  candidates:
+    - 2
+    - 3
+  default: 3
+
+features:
+  # These are placeholders for later phases.
+  # They must be produced by src/vrp/features before HMM training.
+  candidate_columns:
+    - vrp
+    - realised_variance
+    - implied_variance
+    - index_return
+    - realised_volatility
+    - implied_volatility
+  default_columns:
+    - vrp
+    - realised_volatility
+    - implied_volatility
+    - index_return
+
+preprocessing:
+  drop_missing: true
+  standardize_features: true
+  standardizer_fit_scope: train_only
+  winsorize:
+    enabled: false
+    lower_quantile: 0.01
+    upper_quantile: 0.99
+
+training:
+  covariance_type: full
+  n_iter: 500
+  tol: 0.0001
+  random_seed: 42
+  min_train_observations: 756
+  refit_frequency_days: 21
+  training_mode: expanding_window
+  allow_walk_forward: true
+
+inference:
+  allowed_for_backtest: filtered_probabilities_only
+  forbidden_for_backtest:
+    - full_sample_smoothed_probabilities
+    - future_state_labels
+    - viterbi_path_from_full_sample
+  signal_probability_column_prefix: hmm_p_state_
+  regime_label_column: hmm_regime
+
+state_labeling:
+  method: rank_by_realised_volatility
+  labels:
+    low_vol_state: calm
+    middle_state: transition
+    high_vol_state: stress
+  require_manual_diagnostic_review: true
+
+outputs:
+  model_dir: data/processed/models/hmm
+  probabilities_dir: data/processed/regimes/hmm
+  diagnostics_dir: reports/tables/hmm
+  figures_dir: reports/figures/hmm
+
+anti_lookahead:
+  enforce_train_test_split: true
+  enforce_filtered_probabilities: true
+  reject_full_sample_backtest_probabilities: true

@@ -1,0 +1,50 @@
+version: 1
+
+markets:
+  US:
+    name: United States
+    timezone: America/New_York
+    currency: USD
+    trading_days_per_year: 252
+    underlying:
+      primary_symbol: "^GSPC"
+      tradable_proxy: SPY
+      source_id: yahoo_spx
+    implied_volatility:
+      primary_symbol: VIX
+      primary_source_id: cboe_vix
+      fallback_source_ids:
+        - fred_vixcls
+        - yahoo_vix
+    variance_convention:
+      vix_is_annualized_percent_volatility: true
+      implied_variance_formula: "(vix_close / 100) ** 2"
+      annualization_days: 252
+    notes: US leg uses SPX or SPY OHLCV and VIX as the implied variance proxy.
+
+  INDIA:
+    name: India
+    timezone: Asia/Kolkata
+    currency: INR
+    trading_days_per_year: 252
+    underlying:
+      primary_symbol: "^NSEI"
+      tradable_proxy: null
+      source_id: yahoo_nifty
+    implied_volatility:
+      primary_symbol: INDIA_VIX
+      primary_source_id: nse_india_vix
+      fallback_source_ids:
+        - yahoo_india_vix
+    variance_convention:
+      vix_is_annualized_percent_volatility: true
+      implied_variance_formula: "(india_vix_close / 100) ** 2"
+      annualization_days: 252
+    notes: India leg uses NIFTY OHLCV and India VIX as the implied variance proxy.
+
+alignment:
+  keep_markets_separate_until_processed: true
+  cross_market_join_type: inner
+  date_column: date
+  require_monotonic_dates: true
+  allow_market_specific_holidays: true

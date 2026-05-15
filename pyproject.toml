@@ -1,0 +1,52 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "epat-vrp-regime"
+version = "0.1.0"
+description = "Variance Risk Premium decomposition and regime-conditional harvesting across US and Indian volatility markets."
+readme = "README.md"
+requires-python = ">=3.10"
+authors = [
+    { name = "Daksh Goyal" }
+]
+license = { text = "Proprietary / Academic Research" }
+
+dependencies = [
+	"pandas>=2.0",
+	"numpy>=1.24",
+	"scipy>=1.10",
+	"statsmodels>=0.14",
+	"hmmlearn>=0.3",
+	"yfinance>=0.2",
+	"pandas-datareader>=0.10",
+	"matplotlib>=3.7",
+	"pydantic>=2.0",
+	"pytest>=7.0",
+	"pyarrow>=14.0",
+	"python-dotenv>=1.0",
+	"PyYAML>=6.0"
+]
+
+[project.optional-dependencies]
+dev = [
+	"pytest>=7.0"
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["vrp*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+addopts = "-q"
+
+[tool.black]
+line-length = 88
+target-version = ["py310"]
+
+[tool.ruff]
+line-length = 88
+target-version = "py310"
