@@ -5,6 +5,10 @@ import pytest
 
 from vrp.data.schema import OHLCV_COLUMNS
 from vrp.data.validators import (
+    validate_adj_close_positive_or_nullable_policy,
+    validate_monotonic_dates,
+    validate_non_negative_volume,
+    validate_numeric_columns_present,
     validate_no_duplicate_dates,
     validate_ohlc_bounds,
     validate_ohlcv_schema,
@@ -71,6 +75,51 @@ def test_validate_no_duplicate_dates_rejects_duplicate_market_symbol_date() -> N
 
     with pytest.raises(ValueError, match="Duplicate dates detected"):
         validate_no_duplicate_dates(df)
+
+
+def test_validate_monotonic_dates_accepts_monotonic_dates() -> None:
+    df = make_valid_ohlcv_frame()
+
+    validate_monotonic_dates(df)
+
+
+def test_validate_monotonic_dates_rejects_non_monotonic_dates() -> None:
+    df = make_valid_ohlcv_frame().sort_values("date", ascending=False).reset_index(drop=True)
+
+    with pytest.raises(ValueError, match="monotonic increasing"):
+        validate_monotonic_dates(df)
+
+
+def test_validate_numeric_columns_present_rejects_non_numeric_values() -> None:
+    df = make_valid_ohlcv_frame()
+    df["volume"] = df["volume"].astype("object")
+    df.loc[0, "volume"] = "bad"
+
+    with pytest.raises(ValueError, match="non-numeric"):
+        validate_numeric_columns_present(df)
+
+
+def test_validate_non_negative_volume_rejects_negative_volume() -> None:
+    df = make_valid_ohlcv_frame()
+    df.loc[0, "volume"] = -1
+
+    with pytest.raises(ValueError, match="non-negative"):
+        validate_non_negative_volume(df)
+
+
+def test_validate_adj_close_positive_or_nullable_policy_accepts_null() -> None:
+    df = make_valid_ohlcv_frame()
+    df.loc[0, "adj_close"] = None
+
+    validate_adj_close_positive_or_nullable_policy(df)
+
+
+def test_validate_adj_close_positive_or_nullable_policy_rejects_zero() -> None:
+    df = make_valid_ohlcv_frame()
+    df.loc[0, "adj_close"] = 0
+
+    with pytest.raises(ValueError, match="strictly positive"):
+        validate_adj_close_positive_or_nullable_policy(df)
 
 
 def test_validate_ohlc_bounds_accepts_valid_prices() -> None:
