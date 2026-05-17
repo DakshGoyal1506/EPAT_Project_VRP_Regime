@@ -140,6 +140,15 @@ def _non_negative_variance(series: pd.Series, name: str) -> pd.Series:
     The estimators should be non-negative under valid OHLC data. Floating-point
     arithmetic can still create very small negative values around zero.
     """
+    tolerance = 1e-14
+    materially_negative = series < -tolerance
+
+    if materially_negative.any():
+        bad_count = int(materially_negative.sum())
+        raise ValueError(
+            f"Estimator '{name}' produced {bad_count} materially negative variance value(s)."
+        )
+
     out = series.clip(lower=0.0)
     out.name = name
     return out
@@ -384,8 +393,8 @@ def yang_zhang_rolling_var(df: pd.DataFrame, window: int = 22) -> pd.Series:
     low = out["low"]
     close = out["close"]
 
-    open_return = np.log(open / close.shift(1))
-    close_return = np.log(close / open)
+    open_return = pd.Series(np.log(open / close.shift(1)), index=out.index, name="open_return")
+    close_return = pd.Series(np.log(close / open), index=out.index, name="close_return")
 
     log_ho = np.log(high / open)
     log_hc = np.log(high / close)
@@ -396,16 +405,16 @@ def yang_zhang_rolling_var(df: pd.DataFrame, window: int = 22) -> pd.Series:
 
     k = 0.34 / (1.34 + (window + 1) / (window - 1))
 
-    var_open = rolling_realized_variance(
-        out.assign(open_return_var=open_return ** 2),
-        var_col="open_return_var",
+    var_open = open_return.rolling(
         window=window,
-    )
-    var_close = rolling_realized_variance(
-        out.assign(close_return_var=close_return ** 2),
-        var_col="close_return_var",
+        min_periods=window,
+        center=False,
+    ).var(ddof=1)
+    var_close = close_return.rolling(
         window=window,
-    )
+        min_periods=window,
+        center=False,
+    ).var(ddof=1)
     rs_series = pd.Series(rs, index=out.index)
     mean_rs = rs_series.rolling(window=window, min_periods=window, center=False).mean()
 
@@ -435,17 +444,17 @@ def build_rv_panel(
         intraday_return
         rv_cc_daily
         rv_parkinson_daily
-        rv_gk_daily
+        annualized_var = annualize_variance(var, periods)
         rv_rs_daily
-        rv_cc_{window}d_ann
-        rv_parkinson_{window}d_ann
+        if isinstance(annualized_var, pd.Series):
+            if(annualized_var.dropna() < 0).any():
         rv_gk_{window}d_ann
-        rv_rs_{window}d_ann
+            return pd.Series(np.sqrt(annualized_var), index=annualized_var.index)
         rv_yz_{window}d_ann
-
+        if annualized_var < 0:
     Notes
     -----
-    - Primary project column for window=22 is rv_gk_22d_ann.
+        return float(np.sqrt(annualized_var))
     - No rv_yz_daily column is created.
     """
     _required_columns(df, ["date", "open", "high", "low", "close"])

@@ -344,6 +344,42 @@ def test_yang_zhang_rolling_var_expected_nan_alignment() -> None:
     assert (out.dropna() >= 0.0).all()
 
 
+def test_yang_zhang_uses_sample_variance_components() -> None:
+    df = make_valid_ohlc(n=30)
+    window = 22
+
+    out = yang_zhang_rolling_var(df, window=window)
+
+    sorted_df = df.sort_values("date").reset_index(drop=True)
+    open_ = pd.Series(sorted_df["open"].to_numpy(), index=sorted_df.index)
+    high = pd.Series(sorted_df["high"].to_numpy(), index=sorted_df.index)
+    low = pd.Series(sorted_df["low"].to_numpy(), index=sorted_df.index)
+    close = pd.Series(sorted_df["close"].to_numpy(), index=sorted_df.index)
+
+    open_return = np.log(open_ / close.shift(1))
+    close_return = np.log(close / open_)
+    rs = (
+        np.log(high / open_) * np.log(high / close)
+        + np.log(low / open_) * np.log(low / close)
+    )
+
+    k = 0.34 / (1.34 + (window + 1) / (window - 1))
+    expected = (
+        open_return.rolling(window=window, min_periods=window, center=False).var(ddof=1)
+        + k * close_return.rolling(window=window, min_periods=window, center=False).var(ddof=1)
+        + (1 - k) * rs.rolling(window=window, min_periods=window, center=False).mean()
+    )
+    expected = expected.clip(lower=0.0).rename("rv_yz_22d")
+
+    pd.testing.assert_series_equal(
+        out,
+        expected,
+        check_exact=False,
+        rtol=1e-12,
+        atol=1e-12,
+    )
+
+
 def test_build_rv_panel_contains_required_columns_and_no_yz_daily() -> None:
     df = make_valid_ohlc(n=30)
 
