@@ -340,17 +340,17 @@ def annualize_vol(var: pd.Series | float, periods: int = 252) -> pd.Series | flo
     """
     _validate_annualization_factor(periods)
 
-    annulaised_var = annualize_variance(var, periods)
+    annualized_var = annualize_variance(var, periods)
     
-    if isinstance(annulaised_var, pd.Series):
-        if(annulaised_var.dropna() < 0).any():
+    if isinstance(annualized_var, pd.Series):
+        if(annualized_var.dropna() < 0).any():
             raise ValueError("Annualised variance contains negative values, cannot compute volatility.")
-        return pd.Series(np.sqrt(annulaised_var), index=annulaised_var.index)
+        return pd.Series(np.sqrt(annualized_var), index=annualized_var.index)
     
-    if annulaised_var < 0:
+    if annualized_var < 0:
         raise ValueError("Annualised variance is negative, cannot compute volatility.")
     
-    return float(np.sqrt(annulaised_var))
+    return float(np.sqrt(annualized_var))
 
 def yang_zhang_rolling_var(df: pd.DataFrame, window: int = 22) -> pd.Series:
     """
@@ -444,17 +444,17 @@ def build_rv_panel(
         intraday_return
         rv_cc_daily
         rv_parkinson_daily
-        annualized_var = annualize_variance(var, periods)
+        rv_gk_daily
         rv_rs_daily
-        if isinstance(annualized_var, pd.Series):
-            if(annualized_var.dropna() < 0).any():
+        rv_cc_{window}d_ann
+        rv_parkinson_{window}d_ann
         rv_gk_{window}d_ann
-            return pd.Series(np.sqrt(annualized_var), index=annualized_var.index)
+        rv_rs_{window}d_ann
         rv_yz_{window}d_ann
-        if annualized_var < 0:
+
     Notes
     -----
-        return float(np.sqrt(annualized_var))
+    - Primary project column for window=22 is rv_gk_22d_ann.
     - No rv_yz_daily column is created.
     """
     _required_columns(df, ["date", "open", "high", "low", "close"])
