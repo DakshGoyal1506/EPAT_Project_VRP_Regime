@@ -383,3 +383,57 @@ Finance logic: not implemented yet
 Broker logic: paper-signal placeholder only
 Tests: minimal schema and validation tests
 ```
+
+## Quick Start — Run data scripts and tests
+
+Follow these steps from the repository root.
+
+- Activate the Conda environment (example):
+
+	```powershell
+	conda activate epat
+	```
+
+- Install editable package + dev deps (one-time):
+
+	```bash
+	pip install -e .
+	pip install -e ".[dev]"
+	```
+
+- Dry-run the ingestion (no downloads or writes):
+
+	```bash
+	python scripts/download_data.py --dry-run
+	```
+
+- Download and write specific source families (examples):
+
+	```bash
+	# Download all Yahoo US sources
+	python scripts/download_data.py --market US --source yahoo --force
+
+	# Download only FRED sources for US
+	python scripts/download_data.py --market US --source fred --force
+
+	# Download only CBOE sources for US
+	python scripts/download_data.py --market US --source cboe --force
+
+	# Use a local CSV override for CBOE/NSE
+	python scripts/download_data.py --market US --source cboe --source-id cboe_vix --local-csv data/manual/cboe/VIX_History.csv --force
+	```
+
+- Run the test suite relevant to data and loaders:
+
+	```bash
+	pytest tests/test_data_loaders.py tests/test_data_schema.py -q
+	```
+
+## Data & Scripts
+
+- Ingested raw files are written to `data/raw/`.
+- Canonical processed datasets are written to `data/processed/`.
+- Data audit table is `reports/tables/data_audit.csv`.
+
+See `src/vrp/data/README.md` for loader-specific commands and `data/README.md` for dataset descriptions.
+

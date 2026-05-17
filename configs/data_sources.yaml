@@ -1,21 +1,22 @@
-# Phase 0 configuration only.
-# Downloaders are not implemented yet.
-# scripts/download_data.py --dry-run should read this file and print the intended sources.
+# Phase 1 data ingestion configuration.
+#
+# Rules:
+# 1. Each source is downloaded or ingested separately.
+# 2. Raw source-specific Parquet files are saved first.
+# 3. Processed datasets select one explicit source by priority.
+# 4. No silent source mixing.
+# 5. No forward-filling prices silently.
+# 6. CBOE/NSE official files must support local CSV override.
+# 7. iBridgePy/IBKR is not part of Phase 1 historical research ingestion.
 
-version: 1
+version: 2
 
 paths:
   raw_dir: data/raw
   interim_dir: data/interim
   processed_dir: data/processed
   broker_cache_dir: data/broker_cache
-
-download_policy:
-  phase_0_dry_run_only: true
-  overwrite_existing: false
-  fail_on_empty_download: true
-  write_raw_copy: true
-  write_interim_parquet: true
+  audit_table: reports/tables/data_audit.csv
 
 canonical_columns:
   - date
@@ -29,113 +30,310 @@ canonical_columns:
   - market
   - symbol
 
+download_policy:
+  overwrite_existing: false
+  fail_on_empty_download: true
+  write_raw_parquet: true
+  write_processed_parquet: true
+  allow_network_downloads: true
+  allow_local_csv_override: true
+  forward_fill_prices: false
+  merge_sources_silently: false
+  merge_us_india_calendar: false
+
+processed_outputs:
+  US:
+    implied_vol:
+      dataset: us_vix
+      role: implied_volatility
+      processed_path: data/processed/us_vix.parquet
+      source_priority:
+        - cboe_vix
+        - fred_vixcls
+        - yahoo_vix
+    underlying:
+      dataset: us_underlying
+      role: underlying_ohlcv
+      processed_path: data/processed/us_underlying.parquet
+      source_priority:
+        - yahoo_spx
+        - yahoo_spy
+
+  INDIA:
+    implied_vol:
+      dataset: india_vix
+      role: implied_volatility
+      processed_path: data/processed/india_vix.parquet
+      source_priority:
+        - nse_india_vix
+        - yahoo_india_vix
+    underlying:
+      dataset: india_underlying
+      role: underlying_ohlcv
+      processed_path: data/processed/india_underlying.parquet
+      source_priority:
+        - yahoo_nifty
+
 sources:
+  # ------------------------------------------------------------------
+  # US IMPLIED VOLATILITY SOURCES
+  # ------------------------------------------------------------------
+
   - source_id: cboe_vix
     enabled: true
-    provider: cboe
     market: US
-    asset_type: implied_volatility_index
+    dataset: us_vix
+    role: implied_volatility
+    provider: cboe
+    access_method: csv_url_or_local_csv
+    priority: 1
     symbol: VIX
-    description: Official CBOE VIX historical data.
-    access_method: csv_download
+    description: Official CBOE VIX daily historical data.
+    start_date: "1990-01-02"
+    end_date: null
+
+    # Common CBOE historical CSV endpoint. If this endpoint changes,
+    # use local_csv_path instead of blocking the project.
+    official_url: "https://cdn.cboe.com/api/global/us_indices/daily_prices/VIX_History.csv"
     url_env_var: CBOE_VIX_URL
-    raw_output: data/raw/us/cboe_vix.csv
-    interim_output: data/interim/us/cboe_vix.parquet
-    notes: Primary US implied volatility proxy.
+
+    # Optional manual override. Keep null by default.
+    # Example later:
+    # local_csv_path: data/manual/cboe/VIX_History.csv
+    local_csv_path: null
+
+    raw_path: data/raw/us_vix_cboe.parquet
+    processed_path: data/processed/us_vix.parquet
+
+    expected_columns_any_of:
+      date:
+        - DATE
+        - Date
+        - date
+      open:
+        - OPEN
+        - Open
+        - open
+      high:
+        - HIGH
+        - High
+        - high
+      low:
+        - LOW
+        - Low
+        - low
+      close:
+        - CLOSE
+        - Close
+        - close
+
+    notes: Primary US implied-volatility source. Use local CSV if the URL fails.
 
   - source_id: fred_vixcls
     enabled: true
+    market: US
+    dataset: us_vix
+    role: implied_volatility
     provider: fred
-    market: US
-    asset_type: implied_volatility_index
-    symbol: VIXCLS
-    description: FRED VIXCLS daily close series.
     access_method: pandas_datareader
-    api_key_env_var: FRED_API_KEY
-    raw_output: data/raw/us/fred_vixcls.csv
-    interim_output: data/interim/us/fred_vixcls.parquet
-    notes: Supplementary VIX close source for audit and fallback.
-
-  - source_id: yahoo_spx
-    enabled: true
-    provider: yahoo_finance
-    market: US
-    asset_type: equity_index
-    symbol: "^GSPC"
-    description: S&P 500 index OHLCV from Yahoo Finance.
-    access_method: yfinance
-    raw_output: data/raw/us/yahoo_gspc.csv
-    interim_output: data/interim/us/yahoo_gspc.parquet
-    notes: Main US underlying index series.
-
-  - source_id: yahoo_spy
-    enabled: true
-    provider: yahoo_finance
-    market: US
-    asset_type: equity_etf
-    symbol: SPY
-    description: SPY ETF OHLCV from Yahoo Finance.
-    access_method: yfinance
-    raw_output: data/raw/us/yahoo_spy.csv
-    interim_output: data/interim/us/yahoo_spy.parquet
-    notes: Tradable proxy and fallback for SPX.
+    priority: 2
+    symbol: VIXCLS
+    description: FRED VIXCLS daily VIX close series.
+    start_date: "1990-01-02"
+    end_date: null
+    official_url: null
+    local_csv_path: null
+    raw_path: data/raw/us_vix_fred.parquet
+    processed_path: data/processed/us_vix.parquet
+    notes: Backup/mirror for US VIX. Close-only series is converted to canonical OHLCV shape.
 
   - source_id: yahoo_vix
     enabled: true
-    provider: yahoo_finance
     market: US
-    asset_type: implied_volatility_index
-    symbol: "^VIX"
-    description: VIX OHLCV mirror from Yahoo Finance.
+    dataset: us_vix
+    role: implied_volatility
+    provider: yahoo_finance
     access_method: yfinance
-    raw_output: data/raw/us/yahoo_vix.csv
-    interim_output: data/interim/us/yahoo_vix.parquet
-    notes: Programmatic VIX mirror; not preferred over CBOE for final audit.
+    priority: 3
+    symbol: "^VIX"
+    description: Yahoo Finance VIX OHLCV mirror.
+    start_date: "1990-01-02"
+    end_date: null
+    official_url: null
+    local_csv_path: null
+    raw_path: data/raw/us_vix_yahoo.parquet
+    processed_path: data/processed/us_vix.parquet
+    notes: Programmatic fallback only. CBOE remains preferred for final research.
+
+  # ------------------------------------------------------------------
+  # US UNDERLYING SOURCES
+  # ------------------------------------------------------------------
+
+  - source_id: yahoo_spx
+    enabled: true
+    market: US
+    dataset: us_underlying
+    role: underlying_ohlcv
+    provider: yahoo_finance
+    access_method: yfinance
+    priority: 1
+    symbol: "^GSPC"
+    description: S&P 500 index OHLCV from Yahoo Finance.
+    start_date: "1990-01-02"
+    end_date: null
+    official_url: null
+    local_csv_path: null
+    raw_path: data/raw/us_spx_yahoo.parquet
+    processed_path: data/processed/us_underlying.parquet
+    notes: Primary US underlying for realised variance construction.
+
+  - source_id: yahoo_spy
+    enabled: true
+    market: US
+    dataset: us_underlying
+    role: underlying_ohlcv
+    provider: yahoo_finance
+    access_method: yfinance
+    priority: 2
+    symbol: SPY
+    description: SPY ETF OHLCV from Yahoo Finance.
+    start_date: "1993-01-29"
+    end_date: null
+    official_url: null
+    local_csv_path: null
+    raw_path: data/raw/us_spy_yahoo.parquet
+    processed_path: data/processed/us_underlying.parquet
+    notes: Tradable proxy and fallback if SPX download fails.
+
+  # ------------------------------------------------------------------
+  # INDIA IMPLIED VOLATILITY SOURCES
+  # ------------------------------------------------------------------
 
   - source_id: nse_india_vix
     enabled: true
-    provider: nse
     market: INDIA
-    asset_type: implied_volatility_index
+    dataset: india_vix
+    role: implied_volatility
+    provider: nse
+    access_method: local_csv_first
+    priority: 1
     symbol: INDIA_VIX
-    description: Official NSE India VIX historical data.
-    access_method: nse_download
-    raw_output: data/raw/india/nse_india_vix.csv
-    interim_output: data/interim/india/nse_india_vix.parquet
-    notes: Primary India implied volatility proxy.
+    description: Official NSE India VIX daily historical data.
+    start_date: "2009-03-02"
+    end_date: null
+
+    # NSE pages are not treated as stable direct CSV APIs.
+    # Prefer manual CSV download into data/manual/nse/.
+    official_url: "https://www.nseindia.com/reports-indices-historical-vix"
+    local_csv_path: null
+
+    raw_path: data/raw/india_vix_nse.parquet
+    processed_path: data/processed/india_vix.parquet
+
+    expected_columns_any_of:
+      date:
+        - DATE
+        - Date
+        - HistoricalDate
+        - TIMESTAMP
+        - timestamp
+      open:
+        - OPEN
+        - Open
+        - open
+      high:
+        - HIGH
+        - High
+        - high
+      low:
+        - LOW
+        - Low
+        - low
+      close:
+        - CLOSE
+        - Close
+        - close
+        - INDIA VIX
+        - India VIX
+
+    notes: Primary India implied-volatility source. Use manual CSV if NSE blocks scripted access.
 
   - source_id: yahoo_india_vix
     enabled: true
-    provider: yahoo_finance
     market: INDIA
-    asset_type: implied_volatility_index
-    symbol: "^INDIAVIX"
-    description: India VIX mirror from Yahoo Finance.
+    dataset: india_vix
+    role: implied_volatility
+    provider: yahoo_finance
     access_method: yfinance
-    raw_output: data/raw/india/yahoo_indiavix.csv
-    interim_output: data/interim/india/yahoo_indiavix.parquet
-    notes: Programmatic fallback for NSE India VIX.
+    priority: 2
+    symbol: "^INDIAVIX"
+    description: Yahoo Finance India VIX mirror.
+    start_date: "2009-03-02"
+    end_date: null
+    official_url: null
+    local_csv_path: null
+    raw_path: data/raw/india_vix_yahoo.parquet
+    processed_path: data/processed/india_vix.parquet
+    notes: Programmatic fallback for India VIX.
+
+  # ------------------------------------------------------------------
+  # INDIA UNDERLYING SOURCES
+  # ------------------------------------------------------------------
 
   - source_id: yahoo_nifty
     enabled: true
-    provider: yahoo_finance
     market: INDIA
-    asset_type: equity_index
-    symbol: "^NSEI"
-    description: NIFTY 50 OHLCV from Yahoo Finance.
+    dataset: india_underlying
+    role: underlying_ohlcv
+    provider: yahoo_finance
     access_method: yfinance
-    raw_output: data/raw/india/yahoo_nsei.csv
-    interim_output: data/interim/india/yahoo_nsei.parquet
-    notes: Main India underlying index series.
+    priority: 1
+    symbol: "^NSEI"
+    description: NIFTY 50 index OHLCV from Yahoo Finance.
+    start_date: "2000-01-03"
+    end_date: null
+    official_url: null
+    local_csv_path: null
+    raw_path: data/raw/india_nifty_yahoo.parquet
+    processed_path: data/processed/india_underlying.parquet
+    notes: Primary India underlying for realised variance construction.
+
+  - source_id: nse_nifty
+    enabled: false
+    market: INDIA
+    dataset: india_underlying
+    role: underlying_ohlcv
+    provider: nse
+    access_method: local_csv_first
+    priority: 2
+    symbol: NIFTY_50
+    description: Official NSE NIFTY 50 historical index data.
+    start_date: "2000-01-03"
+    end_date: null
+    official_url: "https://www.nseindia.com/reports-indices-historical-index-data"
+    local_csv_path: null
+    raw_path: data/raw/india_nifty_nse.parquet
+    processed_path: data/processed/india_underlying.parquet
+    notes: Optional manual official source. Disabled by default to avoid brittle scraping.
+
+  # ------------------------------------------------------------------
+  # BROKER SOURCE PLACEHOLDER — NOT USED IN PHASE 1
+  # ------------------------------------------------------------------
 
   - source_id: ibkr_paper_cache
     enabled: false
-    provider: ibkr_ibridgepy
     market: MULTI
-    asset_type: broker_cache
+    dataset: broker_cache
+    role: broker_validation
+    provider: ibkr_ibridgepy
+    access_method: disabled_phase_1
+    priority: 99
     symbol: null
-    description: Optional broker-side paper data cache.
-    access_method: ibridgepy
-    raw_output: data/broker_cache/ibkr_paper_cache.parquet
-    interim_output: null
-    notes: Optional only. Not required for research reproducibility. Must not place live orders.
+    description: Optional later broker data cache.
+    start_date: null
+    end_date: null
+    official_url: null
+    local_csv_path: null
+    raw_path: data/broker_cache/ibkr_paper_cache.parquet
+    processed_path: null
+    notes: Disabled. iBridgePy/IBKR must not be primary historical data for Phase 1.

@@ -1,50 +1,96 @@
-version: 1
+# Phase 1 market metadata.
+#
+# This file describes market-level conventions only.
+# It does not merge calendars and does not define modelling features.
+
+version: 2
 
 markets:
   US:
+    code: US
     name: United States
     timezone: America/New_York
     currency: USD
-    trading_days_per_year: 252
+    start_date: "1990-01-02"
+
     underlying:
       primary_symbol: "^GSPC"
-      tradable_proxy: SPY
-      source_id: yahoo_spx
+      primary_source_id: yahoo_spx
+      fallback_source_ids:
+        - yahoo_spy
+      processed_dataset: us_underlying
+      processed_path: data/processed/us_underlying.parquet
+
     implied_volatility:
       primary_symbol: VIX
       primary_source_id: cboe_vix
       fallback_source_ids:
         - fred_vixcls
         - yahoo_vix
+      processed_dataset: us_vix
+      processed_path: data/processed/us_vix.parquet
+
+    trading_calendar:
+      calendar_name: US equity trading calendar
+      trading_days_per_year: 252
+      holiday_handling: keep_market_specific_dates
+      notes:
+        - US data should be cleaned independently before cross-market alignment.
+        - Do not merge with India calendar in Phase 1.
+
     variance_convention:
-      vix_is_annualized_percent_volatility: true
-      implied_variance_formula: "(vix_close / 100) ** 2"
+      implied_vol_is_annualized_percent: true
+      implied_variance_formula: "(close / 100) ** 2"
       annualization_days: 252
-    notes: US leg uses SPX or SPY OHLCV and VIX as the implied variance proxy.
+      notes:
+        - VIX close is treated as annualized percentage volatility.
+        - Variance conversion happens in later phases, not in Phase 1.
 
   INDIA:
+    code: INDIA
     name: India
     timezone: Asia/Kolkata
     currency: INR
-    trading_days_per_year: 252
+    start_date: "2000-01-03"
+
     underlying:
       primary_symbol: "^NSEI"
-      tradable_proxy: null
-      source_id: yahoo_nifty
+      primary_source_id: yahoo_nifty
+      fallback_source_ids:
+        - nse_nifty
+      processed_dataset: india_underlying
+      processed_path: data/processed/india_underlying.parquet
+
     implied_volatility:
       primary_symbol: INDIA_VIX
       primary_source_id: nse_india_vix
       fallback_source_ids:
         - yahoo_india_vix
-    variance_convention:
-      vix_is_annualized_percent_volatility: true
-      implied_variance_formula: "(india_vix_close / 100) ** 2"
-      annualization_days: 252
-    notes: India leg uses NIFTY OHLCV and India VIX as the implied variance proxy.
+      processed_dataset: india_vix
+      processed_path: data/processed/india_vix.parquet
+      start_date: "2009-03-02"
 
-alignment:
+    trading_calendar:
+      calendar_name: India equity trading calendar
+      trading_days_per_year: 252
+      holiday_handling: keep_market_specific_dates
+      notes:
+        - India data should be cleaned independently before cross-market alignment.
+        - NSE official downloads may require manual CSV export if scripted access is blocked.
+
+    variance_convention:
+      implied_vol_is_annualized_percent: true
+      implied_variance_formula: "(close / 100) ** 2"
+      annualization_days: 252
+      notes:
+        - India VIX close is treated as annualized percentage volatility.
+        - Variance conversion happens in later phases, not in Phase 1.
+
+alignment_policy:
+  phase_1_cross_market_merge_allowed: false
   keep_markets_separate_until_processed: true
-  cross_market_join_type: inner
   date_column: date
-  require_monotonic_dates: true
+  require_sorted_dates: true
+  require_unique_market_symbol_dates: true
   allow_market_specific_holidays: true
+  cross_market_join_type_later: inner
