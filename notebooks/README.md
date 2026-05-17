@@ -2,6 +2,11 @@
 
 Notebooks are for inspection, diagnostics, and presentation only.
 
+Available notebooks:
+
+- `01_data_audit.ipynb` - audit and validation exploration for processed data.
+- `02_build_features.ipynb` - realized-variance feature build walkthrough.
+
 Rules:
 
 1. Do not place production logic here.

@@ -86,100 +86,134 @@ epat-vrp-regime/
 └── .env.example
 ```
 
+## Notebooks
+
+The `notebooks/` folder is for inspection and presentation only. Production logic should stay in `src/vrp/`.
+
+Current notebook index:
+
+- `01_data_audit.ipynb` - data-quality checks and audit exploration.
+- `02_build_features.ipynb` - realized-variance feature build walkthrough for the processed OHLC panels.
+
 ## Phase Roadmap
 
-### Phase 0 — Repo Foundation
+### Completed Phases
 
-Create the installable Python package, configuration files, script entry points, schema definitions, validation utilities, tests, and reproducibility conventions.
+#### Phase 0 - Repo Foundation
 
-Output:
+Status: complete.
 
-```text
-installable repo skeleton
-minimal OHLCV schema
-schema validators
-dry-run data script
-passing tests
-```
-
-### Phase 1 — Data Ingestion
-
-Implement loaders for:
+What is implemented:
 
 ```text
-CBOE VIX
-FRED VIXCLS
-Yahoo Finance SPX / SPY / NIFTY / India VIX
-NSE India VIX
-optional IBKR / iBridgePy broker cache
+installable Python package
+project configuration and script entry points
+schema definitions and validators
+basic test harness
+reproducible workspace structure
 ```
 
-Output:
+Use this from the repository root:
+
+```bash
+pip install -e .
+pip install -e ".[dev]"
+pytest
+```
+
+#### Phase 1 - Data Ingestion
+
+Status: complete.
+
+What is implemented:
 
 ```text
-raw data files
-standardized interim files
-data audit report
-
+CBOE VIX loader
+FRED VIXCLS loader
+Yahoo Finance OHLC loaders for US and India markets
+NSE India VIX loader
+data schema validation and audit support
 ```
 
-### Phase 2 — Realised Variance
+Key commands:
 
-Implement realised variance estimators:
+```bash
+python scripts/download_data.py --dry-run
+pytest tests/test_data_loaders.py tests/test_data_schema.py
+```
+
+#### Phase 2 - Realised Variance
+
+Status: complete.
+
+What is implemented:
 
 ```text
-close-to-close
-Parkinson
-Garman-Klass
-Rogers-Satchell
-Yang-Zhang optional
-rolling realised variance windows
+close-to-close daily variance
+Parkinson daily variance
+Garman-Klass daily variance
+Rogers-Satchell daily variance
+Yang-Zhang rolling variance
+trailing rolling realised variance windows
+annualized RV panels
+RV validation and diagnostics
 ```
 
-Output:
+Key modules and functions:
 
 ```text
-daily realised variance panels
-estimator comparison tables
+vrp.features.returns.compute_log_returns
+vrp.features.returns.compute_simple_returns
+vrp.features.returns.add_gap_return
+vrp.features.returns.add_intraday_return
+vrp.features.returns.add_all_returns
+vrp.features.realized_variance.validate_ohlc
+vrp.features.realized_variance.close_to_close_daily_var
+vrp.features.realized_variance.parkinson_daily_var
+vrp.features.realized_variance.garman_klass_daily_var
+vrp.features.realized_variance.rogers_satchell_daily_var
+vrp.features.realized_variance.rolling_realized_variance
+vrp.features.realized_variance.yang_zhang_rolling_var
+vrp.features.realized_variance.annualize_variance
+vrp.features.realized_variance.annualize_vol
+vrp.features.realized_variance.build_rv_panel
 ```
 
-### Phase 3 — Implied Variance and VRP
+Build and test commands:
+
+```bash
+python scripts/build_features.py --market US --feature rv --window 22
+python scripts/build_features.py --market INDIA --feature rv --window 22
+python scripts/build_features.py --market ALL --feature rv --window 22
+pytest tests/test_rv_estimators.py
+```
+
+Expected outputs:
+
+```text
+data/processed/us_rv.parquet
+data/processed/india_rv.parquet
+reports/tables/
+reports/figures/
+```
+
+Notebook support for this phase lives in `notebooks/02_build_features.ipynb`.
+
+### Next Phases
+
+#### Phase 3 - Implied Variance and VRP
 
 Construct implied variance proxies from VIX and India VIX, align them to realised variance, and construct VRP.
 
-Output:
-
-```text
-US VRP panel
-India VRP panel
-summary statistics
-alignment checks
-```
-
-### Phase 4 — HAR-RV Forecasting
+#### Phase 4 - HAR-RV Forecasting
 
 Build HAR-RV forecasts using only information available at time `t`.
 
-Output:
-
-```text
-forecasted realised variance
-prospective VRP measure
-forecast diagnostics
-```
-
-### Phase 5 — Threshold Regimes
+#### Phase 5 - Threshold Regimes
 
 Build simple interpretable regime filters using VIX, realised volatility, and VRP thresholds.
 
-Output:
-
-```text
-threshold regime labels
-baseline regime strategy signals
-```
-
-### Phase 6 — Gaussian HMM
+#### Phase 6 - Gaussian HMM
 
 Train Gaussian HMM regime models using expanding or walk-forward logic.
 
@@ -190,136 +224,62 @@ Backtests must use filtered probabilities available at time t.
 Do not use full-sample smoothed probabilities for strategy decisions.
 ```
 
-Output:
-
-```text
-HMM filtered regime probabilities
-state diagnostics
-regime labels
-```
-
-### Phase 7 — AR-HMM / Markov Autoregression
+#### Phase 7 - AR-HMM / Markov Autoregression
 
 Upgrade regime modelling to account for autocorrelation in volatility and VRP series.
 
-Output:
-
-```text
-Markov autoregression regime probabilities
-comparison versus Gaussian HMM
-```
-
-### Phase 8 — Strategy and Backtest
+#### Phase 8 - Strategy and Backtest
 
 Test unconditional versus regime-conditioned short-volatility exposure.
 
-Output:
+#### Phase 9 - Robustness
 
-```text
-equity curves
-performance metrics
-drawdown diagnostics
-transaction cost sensitivity
-```
+Test sensitivity to estimator choice, regime model, state count, training window, transaction costs, and sample period.
 
-### Phase 9 — Robustness
-
-Test sensitivity to:
-
-```text
-realised variance estimator
-regime model
-state count
-training window
-transaction cost assumptions
-market sample period
-```
-
-Output:
-
-```text
-robustness tables
-failure cases
-parameter sensitivity plots
-```
-
-### Phase 10 — Cross-Market Analysis
+#### Phase 10 - Cross-Market Analysis
 
 Compare US and India VRP behaviour and regime transitions.
 
-Output:
-
-```text
-lead-lag diagnostics
-cross-market regime transition analysis
-correlation tables
-```
-
-### Phase 11 — Broker Paper-Signal Layer
+#### Phase 11 - Broker Paper-Signal Layer
 
 Create an optional iBridgePy / IBKR paper-signal adapter.
 
-This layer must not be required for core research reproducibility.
-
-Output:
-
-```text
-daily broker-aware signal
-paper-only exposure instruction
-risk checks
-no live orders
-```
-
-### Phase 12 — Final Report
+#### Phase 12 - Final Report
 
 Generate final tables, figures, diagnostics, and written conclusions.
 
-Output:
-
-```text
-reports/final_report.md
-reports/figures/
-reports/tables/
-```
-
 ## Installation
-
-From the repository root:
 
 ```bash
 pip install -e .
-```
-
-For development:
-
-```bash
 pip install -e ".[dev]"
 ```
 
-## Run Tests
+## Quick Start
 
-```bash
-pytest
+From the repository root:
+
+```powershell
+conda activate epat
 ```
-
-## Phase 1 Data Ingestion Dry Run
 
 ```bash
 python scripts/download_data.py --dry-run
+python scripts/build_features.py --market ALL --feature rv --window 22
+pytest
 ```
 
-Expected behaviour:
+## Current Phase Status
 
 ```text
-Print intended data sources.
-Do not download anything.
-Do not write files.
-Exit successfully.
+Phase: 2
+Status: realised variance complete
+Finance logic: realised variance implemented; implied variance and VRP remain next
+Broker logic: paper-signal placeholder only
+Tests: schema, validators, source loaders, and RV estimator coverage
 ```
 
 ## Data Policy
-
-This repository separates data into four levels:
 
 ```text
 data/raw/          source-format downloaded files
@@ -340,8 +300,6 @@ Rules:
 
 ## No-Lookahead Policy
 
-The project must obey these rules:
-
 1. Do not use future realised variance as a tradable signal.
 2. Do not use future returns in feature construction.
 3. Do not use full-sample HMM-smoothed probabilities in backtests.
@@ -352,10 +310,6 @@ The project must obey these rules:
 ## No-Live-Trading Warning
 
 This repository is for academic research and paper-signal generation.
-
-The broker layer is disabled by default.
-
-The project must not place live orders unless explicitly changed later.
 
 Default broker mode:
 
@@ -373,67 +327,4 @@ position limits
 order preview logs
 manual review checkpoint
 ```
-
-## Current Phase Status
-
-```text
-Phase: 1
-Status: data ingestion complete
-Finance logic: not implemented yet
-Broker logic: paper-signal placeholder only
-Tests: schema, validators, source loaders, and ingestion support
-```
-
-## Quick Start — Run data scripts and tests
-
-Follow these steps from the repository root.
-
-- Activate the Conda environment (example):
-
-	```powershell
-	conda activate epat
-	```
-
-- Install editable package + dev deps (one-time):
-
-	```bash
-	pip install -e .
-	pip install -e ".[dev]"
-	```
-
-- Dry-run the ingestion (no downloads or writes):
-
-	```bash
-	python scripts/download_data.py --dry-run
-	```
-
-- Download and write specific source families (examples):
-
-	```bash
-	# Download all Yahoo US sources
-	python scripts/download_data.py --market US --source yahoo --force
-
-	# Download only FRED sources for US
-	python scripts/download_data.py --market US --source fred --force
-
-	# Download only CBOE sources for US
-	python scripts/download_data.py --market US --source cboe --force
-
-	# Use a local CSV override for CBOE/NSE
-	python scripts/download_data.py --market US --source cboe --source-id cboe_vix --local-csv data/manual/cboe/VIX_History.csv --force
-	```
-
-- Run the test suite relevant to data and loaders:
-
-	```bash
-	pytest tests/test_data_loaders.py tests/test_data_schema.py -q
-	```
-
-## Data & Scripts
-
-- Ingested raw files are written to `data/raw/`.
-- Canonical processed datasets are written to `data/processed/`.
-- Data audit table is `reports/tables/data_audit.csv`.
-
-See `src/vrp/data/README.md` for loader-specific commands and `data/README.md` for dataset descriptions.
 
