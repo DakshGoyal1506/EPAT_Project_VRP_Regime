@@ -124,11 +124,20 @@ def assert_registry_is_valid() -> None:
     Validate internal feature/label registry consistency.
     """
     overlap = sorted(set(VRP_FEATURE_COLUMNS) & set(VRP_LABEL_COLUMNS))
+    feature_robustness_overlap = sorted(
+        set(VRP_FEATURE_COLUMNS) & set(VRP_ROBUSTNESS_COLUMNS)
+    )
     robustness_label_overlap = sorted(set(VRP_ROBUSTNESS_COLUMNS) & set(VRP_LABEL_COLUMNS))
 
     if overlap:
         raise ValueError(
             f"Columns cannot be both features and labels: {overlap}"
+        )
+
+    if feature_robustness_overlap:
+        raise ValueError(
+            "Columns cannot be both primary features and robustness diagnostics: "
+            f"{feature_robustness_overlap}"
         )
 
     if robustness_label_overlap:

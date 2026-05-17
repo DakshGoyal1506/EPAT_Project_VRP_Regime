@@ -349,6 +349,13 @@ def compute_backward_vrp(
         allow_missing=True,
     )
 
+    negative_mask = rv.dropna() < 0
+    if negative_mask.any():
+        bad_count = int(negative_mask.sum())
+        raise ValueError(
+            f"{rv_col} contains {bad_count} negative variance value(s)."
+        )
+
     lag_col = f"{rv_col}_lag1"
 
     out[lag_col] = rv.shift(1)
@@ -392,6 +399,13 @@ def compute_backward_vrp_robustness(
             name="merged IV/RV panel",
             allow_missing=True,
         )
+
+        negative_mask = rv.dropna() < 0
+        if negative_mask.any():
+            bad_count = int(negative_mask.sum())
+            raise ValueError(
+                f"{rv_col} contains {bad_count} negative variance value(s)."
+            )
 
         lag_col = f"{rv_col}_lag1"
         vrp_col = f"vrp_backward_{estimator_name}"

@@ -27,6 +27,11 @@ def test_registry_has_no_feature_label_overlap() -> None:
     assert overlap == set()
 
 
+def test_registry_has_no_feature_robustness_overlap() -> None:
+    overlap = set(VRP_FEATURE_COLUMNS) & set(VRP_ROBUSTNESS_COLUMNS)
+    assert overlap == set()
+
+
 def test_feature_columns_do_not_contain_forbidden_substrings() -> None:
     for col in VRP_FEATURE_COLUMNS:
         col_lower = col.lower()

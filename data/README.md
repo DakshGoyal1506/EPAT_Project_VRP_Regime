@@ -1,32 +1,43 @@
-# Data directory overview
+# Data
 
-This folder holds the data artifacts produced and consumed by Phase 1 ingestion.
+This directory stores the phase inputs, intermediates, and canonical processed outputs for the project.
 
-Structure
----------
+## Directory Contract
 
-- `data/raw/` — Source-specific raw Parquet files saved after ingestion.
-- `data/interim/` — Cleaner/interim files created during processing (not final).
-- `data/processed/` — Final canonical datasets used for analysis and modelling.
-- `data/broker_cache/` — Optional broker-side cache (not committed).
+- `data/raw/` - source-specific raw files produced by ingestion.
+- `data/interim/` - temporary or cleaned intermediates that are not final outputs.
+- `data/processed/` - canonical datasets consumed by the feature pipeline and notebooks.
+- `data/manual/` - optional manually downloaded source files used by ingestion overrides.
+- `data/broker_cache/` - optional broker-side cache files, not intended for version control.
 
-Canonical processed datasets (Phase 1)
------------------------------------
+## Canonical Phase 1 Inputs
 
-- `data/processed/us_vix.parquet` — US implied-volatility panel (CBOE/FRED/Yahoo sources).
-- `data/processed/us_underlying.parquet` — US underlying OHLCV (SPX/SPY from Yahoo).
-- `data/processed/india_vix.parquet` — India implied-volatility panel (NSE/Yahoo sources).
-- `data/processed/india_underlying.parquet` — India underlying OHLCV (NIFTY from Yahoo/NSE).
+These are the key files produced by the ingestion layer and consumed by later phases:
 
-Per-source raw paths are configured in `configs/data_sources.yaml` under each
-`source_id` as `raw_path` (for example `data/raw/us_vix_cboe.parquet`).
+- `data/processed/us_vix.parquet`
+- `data/processed/us_underlying.parquet`
+- `data/processed/india_vix.parquet`
+- `data/processed/india_underlying.parquet`
 
-Notes
------
+## Canonical Phase 2 and 3 Outputs
 
-- Do not commit large raw or broker cache files to version control.
-- If a source requires manual CSV download (CBOE/NSE), place files under `data/manual/` and
-  use the `--local-csv` override with `scripts/download_data.py`.
-- For a quick audit of ingested datasets and validation results, see:
+Later phases write these canonical outputs here:
 
-  `notebooks/01_data_audit.ipynb`
+- `data/processed/us_rv.parquet`
+- `data/processed/india_rv.parquet`
+- `data/processed/us_iv.parquet`
+- `data/processed/india_iv.parquet`
+- `data/processed/us_vrp.parquet`
+- `data/processed/india_vrp.parquet`
+
+## Rules
+
+- Do not commit large raw, interim, or broker cache files.
+- Keep the processed parquet files stable and reproducible.
+- Treat the `processed/` directory as the handoff point between ingestion, feature building, notebooks, and reporting.
+
+## Related Docs
+
+- [scripts/README.md](../scripts/README.md)
+- [src/vrp/features/README.md](../src/vrp/features/README.md)
+- [notebooks/README.md](../notebooks/README.md)

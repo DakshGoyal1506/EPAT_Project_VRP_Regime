@@ -31,6 +31,8 @@ SRC_ROOT = PROJECT_ROOT / "src"
 if str(SRC_ROOT) not in sys.path:
     sys.path.insert(0, str(SRC_ROOT))
 
+from build_features_cli import validate_args as validate_cli_args  # noqa: E402
+
 
 from vrp.features.calendars import (  # noqa: E402
     report_calendar_mismatches,
@@ -200,17 +202,7 @@ def validate_args(args: argparse.Namespace) -> None:
     """
     Validate parsed arguments beyond argparse choices.
     """
-    if args.window < 2:
-        raise ValueError("--window must be an integer >= 2.")
-
-    if args.horizon < 1:
-        raise ValueError("--horizon must be an integer >= 1.")
-
-    if args.annualization_periods <= 0:
-        raise ValueError("--annualization-periods must be positive.")
-
-    if args.max_vix_value <= 0:
-        raise ValueError("--max-vix-value must be positive.")
+    validate_cli_args(args)
 
 
 def markets_to_process(market_arg: str) -> list[str]:

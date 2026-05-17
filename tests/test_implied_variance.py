@@ -34,6 +34,17 @@ def test_infer_iv_close_column_accepts_vix_close() -> None:
     assert infer_iv_close_column(df) == "vix_close"
 
 
+def test_infer_iv_close_column_accepts_india_vix_close() -> None:
+    df = pd.DataFrame(
+        {
+            "date": pd.date_range("2020-01-01", periods=3),
+            "india_vix_close": [10.0, 20.0, 30.0],
+        }
+    )
+
+    assert infer_iv_close_column(df) == "india_vix_close"
+
+
 def test_infer_iv_close_column_uses_single_numeric_non_date_column() -> None:
     df = pd.DataFrame(
         {
@@ -43,6 +54,17 @@ def test_infer_iv_close_column_uses_single_numeric_non_date_column() -> None:
     )
 
     assert infer_iv_close_column(df) == "PX_LAST"
+
+
+def test_infer_iv_close_column_accepts_adj_close_with_space() -> None:
+    df = pd.DataFrame(
+        {
+            "date": pd.date_range("2020-01-01", periods=3),
+            "Adj Close": [10.0, 20.0, 30.0],
+        }
+    )
+
+    assert infer_iv_close_column(df) == "Adj Close"
 
 
 def test_infer_iv_close_column_rejects_ambiguous_numeric_columns() -> None:

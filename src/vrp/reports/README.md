@@ -1,17 +1,13 @@
 # VRP Reports
 
-This package contains the reporting and diagnostic utilities used after feature construction.
+This package contains the reporting and diagnostic utilities used after feature construction. It does not build signals, regimes, forecasts, or backtests.
 
-The modules here do not build signals, regimes, forecasts, or backtests. Their role is to summarize what the feature pipeline produced and to write stable tables and figures for inspection.
+## Responsibilities
 
-## Purpose
-
-The reports package is responsible for:
-
-- descriptive statistics for VRP panels
-- metadata capture for the Phase 3 feature pipeline
-- plot generation for IV, lagged RV, and VRP series
-- simple report file writing under `reports/`
+- summarize RV and VRP panels
+- capture Phase 3 metadata
+- write stable tables and figures under `reports/`
+- keep reporting separate from feature validation and live feature construction
 
 ## Modules
 
@@ -19,62 +15,47 @@ The reports package is responsible for:
 
 Diagnostics for realised variance panels.
 
-Typical responsibilities include:
-
-- summary tables for RV columns
-- panel-level diagnostics
-- figures for RV inspection
-
 ### `vrp_diagnostics.py`
 
 Diagnostics for VRP panels.
 
-Responsibilities:
+- builds descriptive summaries for primary and robustness columns
+- writes metadata JSON describing the construction rules
+- plots the primary IV / RV / VRP series for each market
 
-- build a descriptive summary table for primary and robustness VRP columns
-- write metadata JSON describing the construction rules
-- plot the primary IV/RV/VRP series for each market
-- keep the reporting layer separate from live feature construction
+## Outputs
 
-## VRP Diagnostics Outputs
-
-The VRP reporting path writes the following artifacts by default:
+The VRP reporting path writes:
 
 - `reports/tables/vrp_summary.csv`
 - `reports/tables/vrp_metadata.json`
+- `reports/tables/calendar_mismatches.csv`
 - `reports/figures/us_iv_rv_vrp.png`
 - `reports/figures/india_iv_rv_vrp.png`
 
-Calendar mismatch reports are written separately by the build script:
+## Behavior
 
-- `reports/tables/calendar_mismatches.csv`
-
-## Summary Table Behavior
-
-The VRP summary table is intentionally permissive:
+The summary layer is intentionally permissive:
 
 - missing columns are skipped
 - values are coerced to numeric for reporting
 - non-numeric values become `NaN` in the report layer only
 
-This means the reporting package is not a validator. Validation should happen earlier in `src/vrp/features/`.
+Validation should happen earlier in `src/vrp/features/`.
 
-## Metadata Contract
+## Metadata
 
-The VRP metadata file records:
+The metadata file records:
 
 - phase name
 - primary estimator
 - robustness estimator list
-- formula definitions
-- horizon and annualization settings
+- formulas and horizon settings
 - feature registry metadata
-
-This metadata is intended to make the Phase 3 output self-describing and reproducible.
 
 ## Plotting Contract
 
-The main VRP plot is intentionally focused on the primary GK path:
+The main VRP figure stays focused on the primary GK path:
 
 - `iv_ann`
 - `rv_gk_22d_ann_lag1`
@@ -85,10 +66,6 @@ Robustness estimators are summarized in tables rather than crowded into the figu
 
 ## Common Usage
 
-From the repository root, the typical entry point is the build script:
-
 ```bash
 python scripts/build_features.py --market ALL --feature vrp
 ```
-
-That command builds the panels and writes the report outputs above.

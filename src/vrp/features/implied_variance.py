@@ -36,10 +36,12 @@ DEFAULT_IV_SYMBOLS = {
 IV_CLOSE_CANDIDATES = [
     "iv_close",
     "vix_close",
+    "india_vix_close",
     "close",
     "Close",
     "CLOSE",
     "adj_close",
+    "Adj Close",
     "Adj_Close",
     "ADJ_CLOSE",
     "Adj_close",

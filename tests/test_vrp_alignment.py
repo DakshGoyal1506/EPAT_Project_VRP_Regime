@@ -87,6 +87,19 @@ def test_backward_vrp_uses_lagged_rv_not_same_day_rv() -> None:
     assert out.loc[3, "vrp_backward_gk"] == pytest.approx(97.0)
 
 
+def test_backward_vrp_rejects_negative_rv_values() -> None:
+    panel = pd.DataFrame(
+        {
+            "date": pd.date_range("2020-01-01", periods=3, freq="B"),
+            "iv_ann": [100.0, 100.0, 100.0],
+            "rv_gk_22d_ann": [1.0, -2.0, 3.0],
+        }
+    )
+
+    with pytest.raises(ValueError, match="negative variance"):
+        compute_backward_vrp(panel, rv_col="rv_gk_22d_ann")
+
+
 def test_backward_vrp_robustness_uses_lagged_rv_not_same_day() -> None:
     panel = pd.DataFrame(
         {
@@ -118,6 +131,22 @@ def test_backward_vrp_robustness_uses_lagged_rv_not_same_day() -> None:
     assert out.loc[1, "vrp_backward_rs"] == pytest.approx(0.0)
     assert out.loc[1, "rv_yz_22d_ann_lag1"] == pytest.approx(1000.0)
     assert out.loc[1, "vrp_backward_yz"] == pytest.approx(-900.0)
+
+
+def test_backward_vrp_robustness_rejects_negative_rv_values() -> None:
+    panel = pd.DataFrame(
+        {
+            "date": pd.date_range("2020-01-01", periods=4, freq="B"),
+            "iv_ann": [100.0] * 4,
+            "rv_cc_22d_ann": [1.0, 2.0, -3.0, 4.0],
+            "rv_parkinson_22d_ann": [10.0, 20.0, 30.0, 40.0],
+            "rv_rs_22d_ann": [100.0, 200.0, 300.0, 400.0],
+            "rv_yz_22d_ann": [1000.0, 2000.0, 3000.0, 4000.0],
+        }
+    )
+
+    with pytest.raises(ValueError, match="negative variance"):
+        compute_backward_vrp_robustness(panel)
 
 
 def test_forward_expost_vrp_uses_t_plus_1_through_horizon() -> None:
