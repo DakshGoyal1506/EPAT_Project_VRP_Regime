@@ -1,5 +1,4 @@
-"""Column standardisation utilities for Phase 1 data ingestion.
-
+"""
 Cleaners normalize source-specific DataFrames into the canonical OHLCV schema:
 
 date, open, high, low, close, adj_close, volume, source, market, symbol

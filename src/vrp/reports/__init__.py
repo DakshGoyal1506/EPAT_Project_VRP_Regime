@@ -1,1 +1,5 @@
-"""Report table, plotting, and diagnostic utilities."""
+# src/vrp/reports/__init__.py
+
+"""
+Reporting utilities for VRP project.
+"""

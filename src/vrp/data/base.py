@@ -1,5 +1,4 @@
-"""Base types for Phase 1 data ingestion.
-
+"""
 This module contains shared loader contracts and result containers.
 Actual source-specific download logic belongs in:
 
