@@ -51,6 +51,12 @@ data/broker_cache/*
 !data/processed/.gitkeep
 !data/broker_cache/.gitkeep
 
+# Manual source downloads
+data/manual/*
+!data/manual/.gitkeep
+!data/manual/cboe/.gitkeep
+!data/manual/nse/.gitkeep
+
 # Reports generated from runs
 reports/figures/*
 reports/tables/*

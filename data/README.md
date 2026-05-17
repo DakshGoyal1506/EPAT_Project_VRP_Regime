@@ -29,4 +29,4 @@ Notes
   use the `--local-csv` override with `scripts/download_data.py`.
 - For a quick audit of ingested datasets and validation results, see:
 
-  `notebooks/01.ipynb`
+  `notebooks/01_data_audit.ipynb`

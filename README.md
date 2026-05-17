@@ -302,7 +302,7 @@ pip install -e ".[dev]"
 pytest
 ```
 
-## Phase 0 Dry Run
+## Phase 1 Data Ingestion Dry Run
 
 ```bash
 python scripts/download_data.py --dry-run
@@ -377,11 +377,11 @@ manual review checkpoint
 ## Current Phase Status
 
 ```text
-Phase: 0
-Status: repo foundation
+Phase: 1
+Status: data ingestion complete
 Finance logic: not implemented yet
 Broker logic: paper-signal placeholder only
-Tests: minimal schema and validation tests
+Tests: schema, validators, source loaders, and ingestion support
 ```
 
 ## Quick Start — Run data scripts and tests
