@@ -190,6 +190,7 @@ def summarize_har_coefficients(
         "t_har_rv_w_lag1_ann",
         "t_har_rv_m_lag1_ann",
         "hac_maxlags",
+        "hac_available",
     ]
 
     if isinstance(coefficient_rows, list):

@@ -1626,14 +1626,13 @@ def build_har_design_arrays(
     np.ndarray,
     np.ndarray,
     np.ndarray,
-    np.ndarray,
 ]:
     """
     Build batched design arrays for HAR model from an initialized forecast panel.
 
     Returns:
         dates, target_end_dates, market, X, y,
-        current_feature_valid, train_row_valid, target_available
+        current_feature_valid, train_row_valid
     """
     required = ["date", "target_start_date", "target_end_date", config.target_col]
     required += config.feature_cols
@@ -1660,7 +1659,7 @@ def build_har_design_arrays(
     # current features valid: current row has all features finite and non-negative
     current_feature_valid = np.all(np.isfinite(X[:, 1:]), axis=1) & (X[:, 1:] >= 0).all(axis=1)
 
-    # target available
+    # target available (kept for internal use)
     target_available = np.isfinite(y) & (y >= 0)
 
     # train_row_valid requires: current features complete, target available, target_end_date finite
@@ -1684,7 +1683,6 @@ def build_har_design_arrays(
         y,
         current_feature_valid,
         train_row_valid,
-        target_available,
     )
 
 
@@ -1849,50 +1847,74 @@ def batched_solve_ols_torch(
     dtype = torch.float64 if torch_dtype == "float64" else torch.float32
     device = torch.device("cuda" if torch_device == "cuda" else "cpu")
 
-    A = torch.from_numpy(XtX_batch).to(device=device, dtype=dtype)
-    b = torch.from_numpy(Xty_batch).to(device=device, dtype=dtype)
+    try:
+        A = torch.from_numpy(XtX_batch).to(device=device, dtype=dtype)
+        b = torch.from_numpy(Xty_batch).to(device=device, dtype=dtype)
 
-    k = A.shape[0]
-    p = A.shape[1]
+        k = A.shape[0]
+        p = A.shape[1]
 
-    betas = torch.full((k, p), float("nan"), device=device, dtype=dtype)
-    status = np.zeros(k, dtype=bool)
+        betas = torch.full((k, p), float("nan"), device=device, dtype=dtype)
+        status = np.zeros(k, dtype=bool)
 
-    for i in range(k):
-        Ai = A[i]
-        bi = b[i]
+        # Compute condition numbers in batch when possible
         try:
-            cond = torch.linalg.cond(Ai).item()
+            conds = torch.linalg.cond(A)
+            conds_np = conds.cpu().numpy()
         except Exception:
-            cond = float("inf")
+            # Fall back: mark all as ill-conditioned to force per-slice handling
+            conds_np = np.full((k,), np.inf, dtype=float)
 
-        if not np.isfinite(cond) or cond > condition_number_threshold:
+        good_mask = np.isfinite(conds_np) & (conds_np <= condition_number_threshold)
+        good_idx = np.flatnonzero(good_mask)
+        bad_idx = np.flatnonzero(~good_mask)
+
+        # Solve good systems in batch
+        if good_idx.size > 0:
+            try:
+                sols_good = torch.linalg.solve(A[good_idx], b[good_idx])
+                betas[good_idx] = sols_good
+                status[good_idx] = True
+            except Exception:
+                # If batch solve fails, fall back to per-sample solve for these
+                for ii in good_idx:
+                    try:
+                        betas[ii] = torch.linalg.solve(A[ii], b[ii])
+                        status[ii] = True
+                    except Exception:
+                        bad_idx = np.append(bad_idx, ii)
+
+        # Handle bad / ill-conditioned systems
+        if bad_idx.size > 0:
             if matrix_singularity_policy == "pinv":
                 try:
-                    pinv = torch.linalg.pinv(Ai)
-                    betas[i] = pinv.matmul(bi)
-                    status[i] = True
+                    pinv_batch = torch.linalg.pinv(A[bad_idx])
+                    b_bad = b[bad_idx].unsqueeze(-1)  # (m, p, 1)
+                    sols_bad = pinv_batch.matmul(b_bad).squeeze(-1)
+                    betas[bad_idx] = sols_bad
+                    status[bad_idx] = True
                 except Exception:
-                    status[i] = False
+                    # As a final fallback, try per-sample pinv
+                    for ii in bad_idx:
+                        try:
+                            pinv = torch.linalg.pinv(A[ii])
+                            betas[ii] = pinv.matmul(b[ii])
+                            status[ii] = True
+                        except Exception:
+                            status[ii] = False
             else:
-                status[i] = False
-        else:
-            try:
-                sol = torch.linalg.solve(Ai, bi)
-                betas[i] = sol
-                status[i] = True
-            except Exception:
-                if matrix_singularity_policy == "pinv":
-                    try:
-                        pinv = torch.linalg.pinv(Ai)
-                        betas[i] = pinv.matmul(bi)
-                        status[i] = True
-                    except Exception:
-                        status[i] = False
-                else:
-                    status[i] = False
+                # policy == skip: mark as unsolved
+                for ii in bad_idx:
+                    status[ii] = False
 
-    return betas.cpu().numpy(), status
+        return betas.cpu().numpy(), status
+
+    except Exception:
+        # If any torch-level operation fails, fall back to numpy solver
+        return batched_solve_ols_numpy(
+            XtX_batch, Xty_batch, matrix_singularity_policy=matrix_singularity_policy,
+            condition_number_threshold=condition_number_threshold,
+        )
 
 
 def _batched_audit_row_from_arrays(
@@ -1978,7 +2000,6 @@ def batched_har_forecast(
         y,
         current_feature_valid,
         train_row_valid,
-        target_available,
     ) = build_har_design_arrays(out, config)
 
     eligible_sorted, window_starts, window_ends = compute_training_bounds(
@@ -2194,8 +2215,110 @@ def batched_har_forecast(
     out2["har_forecast_available"] = har_forecast_available
     out2["har_blocked_reason"] = har_blocked_reason
 
-    coefficient_frame = coefficient_rows_to_frame(coefficient_rows) if coefficient_rows else pd.DataFrame()
+    # Always produce a DataFrame with the canonical coefficient schema
+    coefficient_frame = coefficient_rows_to_frame(coefficient_rows)
     audit_frame = pd.DataFrame(audit_rows, columns=_audit_columns()) if audit_rows else pd.DataFrame()
+
+    # Perform HAC checkpointing for coefficient inference if configured
+    try:
+        freq = str(config.coefficient_hac_frequency).lower().strip()
+    except Exception:
+        freq = "none"
+
+    if freq not in {"none", ""} and len(coefficient_frame) > 0:
+        # Support frequencies: daily, month_end, quarter_end, final
+        allowed = {
+            "daily": "daily",
+            "month_end": "month_end",
+            "monthly": "month_end",
+            "quarter_end": "quarter_end",
+            "quarterly": "quarter_end",
+            "final": "final",
+        }
+
+        canonical = allowed.get(freq, None)
+        if canonical is None:
+            warnings.warn(f"Unknown coefficient_hac_frequency: {config.coefficient_hac_frequency!r}; skipping HAC checkpointing")
+        else:
+            for idx in range(len(coefficient_frame)):
+                row_date = coefficient_frame.loc[idx, "date"]
+                try:
+                    rdate = pd.to_datetime(row_date, errors="coerce")
+                except Exception:
+                    rdate = pd.NaT
+
+                if pd.isna(rdate):
+                    continue
+
+                if canonical == "month_end" and not getattr(rdate, "is_month_end", False):
+                    continue
+
+                if canonical == "quarter_end" and not getattr(rdate, "is_quarter_end", False):
+                    continue
+
+                if canonical == "final" and idx != (len(coefficient_frame) - 1):
+                    continue
+
+                # get training rows used for this forecast date
+                forecast_date = rdate
+                try:
+                    _, valid_train_df = get_available_training_rows(
+                        df=out,
+                        forecast_date=forecast_date,
+                        feature_cols=list(config.feature_cols),
+                        target_col=config.target_col,
+                        config=config,
+                    )
+                except Exception as exc:
+                    warnings.warn(f"HAC: failed to get training rows for {forecast_date}: {exc}")
+                    continue
+
+                # need enough rows to fit
+                min_required = len(config.feature_cols) + 2
+                if valid_train_df is None or len(valid_train_df) < min_required:
+                    continue
+
+                try:
+                    result = fit_har_ols(
+                        valid_train_df,
+                        list(config.feature_cols),
+                        config.target_col,
+                        hac_maxlags=int(config.hac_maxlags),
+                    )
+                except Exception as exc:
+                    warnings.warn(f"HAC: fit_har_ols failed for {forecast_date}: {exc}")
+                    continue
+
+                try:
+                    hac_row = extract_har_coefficient_row(
+                        result,
+                        forecast_date=forecast_date,
+                        market=market,
+                        train_start_date=valid_train_df["date"].min(),
+                        train_end_date=valid_train_df["date"].max(),
+                        n_train=int(len(valid_train_df)),
+                        hac_maxlags=int(config.hac_maxlags),
+                        model_name=DEFAULT_HAR_MODEL_NAME,
+                    )
+                except Exception as exc:
+                    warnings.warn(f"HAC: extracting coefficient row failed for {forecast_date}: {exc}")
+                    continue
+
+                # copy HAC se_/t_ and set hac_available flag
+                for col in [
+                    "se_const",
+                    "se_har_rv_d_lag1_ann",
+                    "se_har_rv_w_lag1_ann",
+                    "se_har_rv_m_lag1_ann",
+                    "t_const",
+                    "t_har_rv_d_lag1_ann",
+                    "t_har_rv_w_lag1_ann",
+                    "t_har_rv_m_lag1_ann",
+                ]:
+                    if col in hac_row:
+                        coefficient_frame.loc[idx, col] = hac_row[col]
+
+                coefficient_frame.loc[idx, "hac_available"] = True
 
     return _finalize_forecast_panel(out2, config), coefficient_frame, audit_frame
 

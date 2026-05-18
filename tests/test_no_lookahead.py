@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import pandas as pd
+import numpy as np
+from pathlib import Path
 import pytest
 
 from vrp.features.feature_registry import (
@@ -146,3 +148,81 @@ def test_flag_feature_columns_vs_label_columns_requires_features_present() -> No
 
     with pytest.raises(ValueError, match="feature"):
         flag_feature_columns_vs_label_columns(df)
+
+
+def test_har_registry_and_audit_behaviour() -> None:
+    """
+    Basic HAR registry and audit checks:
+    - HAR feature set is exactly the three approved lagged predictors
+    - `fit_har_ols` rejects forbidden predictor lists (e.g. containing `iv_ann` or forward label)
+    - Audit rows report max_training_target_end_date < forecast_date when training is present
+    """
+    from vrp.forecasting.har_registry import HAR_FEATURE_COLUMNS, assert_primary_har_features
+    from vrp.forecasting.har_rv import (
+        fit_har_ols,
+        expanding_window_har_forecast,
+        load_har_config,
+    )
+
+    # registry exactness
+    assert HAR_FEATURE_COLUMNS == [
+        "har_rv_d_lag1_ann",
+        "har_rv_w_lag1_ann",
+        "har_rv_m_lag1_ann",
+    ]
+    assert_primary_har_features(list(HAR_FEATURE_COLUMNS))
+
+    # fit_har_ols should reject forbidden predictor lists via validate_primary_har_feature_cols
+    dummy = pd.DataFrame({
+        "date": pd.date_range("2020-01-01", periods=10, freq="D"),
+        "har_rv_d_lag1_ann": np.linspace(0.01, 0.02, 10),
+        "har_rv_w_lag1_ann": np.linspace(0.01, 0.02, 10),
+        "har_rv_m_lag1_ann": np.linspace(0.01, 0.02, 10),
+        "iv_ann": np.linspace(0.03, 0.04, 10),
+        "rv_gk_22d_forward_ann_label": np.linspace(0.02, 0.03, 10),
+    })
+
+    # Wrong feature list with iv_ann present
+    with pytest.raises(ValueError):
+        fit_har_ols(dummy, ["iv_ann", "har_rv_w_lag1_ann", "har_rv_m_lag1_ann"], "rv_gk_22d_forward_ann_label")
+
+    # Wrong feature list with forward label present
+    with pytest.raises(ValueError):
+        fit_har_ols(dummy, ["har_rv_d_lag1_ann", "har_rv_w_lag1_ann", "rv_gk_22d_forward_ann_label"], "rv_gk_22d_forward_ann_label")
+
+    # Audit behaviour: run quick expanding forecast and check audit invariant
+    panel = pd.DataFrame({
+        "date": pd.date_range("2020-01-01", periods=40, freq="D"),
+        "market": ["US"] * 40,
+        "rv_gk_daily": 0.0001 + 0.00001 * np.arange(40),
+    })
+    # build har features and forward label using existing helpers
+    from vrp.forecasting.har_rv import make_har_features, add_forward_target_metadata, load_har_config
+
+    panel = make_har_features(panel, daily_rv_col="rv_gk_daily", horizon=22, annualization_periods=252)
+    # build forward target using strictly future daily RV values
+    horizon = 22
+    future_cols = [panel["rv_gk_daily"].shift(-i) for i in range(1, horizon + 1)]
+    future_stack = pd.concat(future_cols, axis=1)
+    valid = future_stack.notna().sum(axis=1) == horizon
+    panel["rv_gk_22d_forward_ann_label"] = (252 * future_stack.mean(axis=1)).where(valid)
+    # add a simple positive IV column required by prepare_har_model_frame
+    # use monthly HAR feature as a proxy plus a small offset to ensure positivity
+    panel["iv_ann"] = panel["har_rv_m_lag1_ann"].fillna(0.0) + 0.00005
+    panel = add_forward_target_metadata(panel, horizon=22, target_col="rv_gk_22d_forward_ann_label")
+
+    cfg = load_har_config(Path("configs/har_rv.yaml")).model_copy(update={
+        "min_train_observations": 5,
+        "rolling_train_window": 10,
+        "forecast_horizon": 22,
+    })
+
+    f, c, a = expanding_window_har_forecast(panel.copy(), cfg)
+    if len(a) > 0:
+        # where there is a max_training_target_end_date present, it must be strictly before forecast_date
+        for _, r in a.iterrows():
+            if pd.notna(r.get("max_training_target_end_date")):
+                max_te = pd.to_datetime(r["max_training_target_end_date"], errors="coerce")
+                fdate = pd.to_datetime(r["forecast_date"], errors="coerce")
+                assert pd.notna(max_te) and pd.notna(fdate)
+                assert max_te < fdate
