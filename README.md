@@ -206,8 +206,22 @@ Notebook support for this phase lives in `notebooks/02_build_features.ipynb`.
 Construct implied variance proxies from VIX and India VIX, align them to realised variance, and construct VRP.
 
 #### Phase 4 - HAR-RV Forecasting
-
 Build HAR-RV forecasts using only information available at time `t`.
+
+Status: complete and ready for freeze (Phase 4). The HAR-RV engine produces
+walk-forward expanding and rolling forecasts under strict no-lookahead rules,
+coefficient histories with optional HAC inference checkpoints, and HAR-based
+prospective VRP panels for both US and India markets.
+
+Freeze / Run commands (appendix):
+
+```bash
+python scripts/train_har.py --market ALL --mode expanding --force --backend torch_batched --torch-device cuda --torch-dtype float64 --coefficient-hac-frequency none
+pytest
+```
+
+Audit and validation snippets are preserved in the repository's Phase 4
+appendix (see `src/vrp/forecasting/README.md` and the `scripts/` folder).
 
 #### Phase 5 - Threshold Regimes
 

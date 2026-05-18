@@ -80,4 +80,11 @@ Run the feature-focused test slice from the repository root:
 
 ```bash
 pytest tests/test_implied_variance.py tests/test_calendar_alignment.py tests/test_vrp_alignment.py tests/test_no_lookahead.py
+
+HAR / Phase 4 note
+
+The feature layer feeds the Phase 4 HAR engine. After building and validating
+VRP panels, the HAR forecasting module (`src/vrp/forecasting/har_rv.py`) is
+used to construct prospective HAR forecasts and HAR-based VRP outputs that are
+consumed by reporting and downstream regime/backtest components.
 ```

@@ -10,6 +10,7 @@ This folder contains the command-line entry points for the project. The scripts 
 - `run_ibkr_paper_signal.py` - optional paper-signal integration.
 - `run_robustness.py` - robustness evaluation workflows.
 - `train_regimes.py` - regime-model training workflows.
+ - `train_har.py` - Phase 4 HAR-RV forecasting orchestration and HAR-based VRP outputs.
 
 ## Build Features
 
@@ -39,6 +40,21 @@ The `vrp` mode is intentionally locked to the Phase 3 22-day contract so the out
 python scripts/build_features.py --market ALL --feature rv --window 22
 python scripts/build_features.py --market ALL --feature iv
 python scripts/build_features.py --market ALL --feature vrp
+
+### HAR Forecasting (Phase 4)
+
+Run the Phase 4 HAR forecasting workflow:
+
+```bash
+python scripts/train_har.py --market US --mode expanding
+python scripts/train_har.py --market ALL --mode expanding --force --backend torch_batched --torch-device cuda --torch-dtype float64
+```
+
+Quick backend parity check (synthetic data):
+
+```bash
+python scripts/smoke_backend_parity.py
+```
 ```
 
 ### Expected VRP Outputs

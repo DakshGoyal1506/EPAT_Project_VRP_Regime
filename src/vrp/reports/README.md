@@ -33,6 +33,19 @@ The VRP reporting path writes:
 - `reports/figures/us_iv_rv_vrp.png`
 - `reports/figures/india_iv_rv_vrp.png`
 
+Phase 4 HAR diagnostics
+
+The reporting layer also supports Phase 4 HAR diagnostics and tables produced
+by the HAR forecasting engine. Key outputs:
+
+- `reports/tables/har_forecast_accuracy.csv`
+- `reports/tables/har_coefficients.csv`
+- `reports/tables/har_vrp_summary.csv`
+- `reports/tables/har_no_lookahead_audit.csv`
+
+These are written by the `write_har_diagnostics` helper and are intended for
+final inspection and inclusion in reports.
+
 ## Behavior
 
 The summary layer is intentionally permissive:
