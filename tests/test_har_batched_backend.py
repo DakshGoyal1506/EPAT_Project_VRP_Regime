@@ -41,7 +41,11 @@ def make_synthetic_panel(n=80, horizon=22):
     # Use concat([daily.shift(-i) for i in 1..horizon])
     future_dailies = [df["rv_gk_daily"].shift(-i) for i in range(1, horizon + 1)]
     future_stack = pd.concat(future_dailies, axis=1)
-    df["rv_gk_22d_forward_ann_label"] = 252 * future_stack.mean(axis=1)
+    # Only compute mean where all horizon values are available
+    valid = future_stack.notna().sum(axis=1) == horizon
+    df["rv_gk_22d_forward_ann_label"] = (
+        252 * future_stack.mean(axis=1)
+    ).where(valid)
 
     # HAR features
     df["har_rv_d_lag1_ann"] = df["rv_gk_daily"].shift(1) * 252

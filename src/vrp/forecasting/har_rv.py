@@ -192,16 +192,15 @@ def resolve_compute_backend(config: HARConfig) -> str:
     requested = str(config.compute_backend).lower().strip()
 
     if requested == "auto":
-        # prefer torch if available and device is cuda or cpu but torch present
+        # torch_batched only if torch + CUDA available; otherwise cpu_numpy_batched
         try:
             torch_spec = importlib.import_module("torch")
             cuda_available = getattr(torch_spec.cuda, "is_available", lambda: False)()
             if cuda_available:
                 return "torch_batched"
-            # torch installed but cuda not available: still allow torch cpu
-            return "torch_batched"
         except Exception:
-            return "cpu_numpy_batched"
+            pass
+        return "cpu_numpy_batched"
 
     if requested == "torch_batched":
         try:
@@ -1089,6 +1088,51 @@ def extract_har_coefficient_row(
     return row
 
 
+def make_batched_coefficient_row(
+    *,
+    beta: np.ndarray,
+    forecast_date: Any,
+    market: str,
+    train_start_date: Any,
+    train_end_date: Any,
+    n_train: int,
+    hac_maxlags: int,
+    model_name: str = DEFAULT_HAR_MODEL_NAME,
+    hac_available: bool = False,
+) -> dict[str, object]:
+    """
+    Create a coefficient-history row directly from batched OLS results.
+    
+    Used by batched_har_forecast() to avoid calling extract_har_coefficient_row()
+    with model_result=None, which is unsafe.
+    """
+    if n_train < 1:
+        raise ValueError(f"n_train must be positive. Got: {n_train}")
+    
+    return {
+        "date": _format_date_for_row(forecast_date),
+        "market": str(market).upper(),
+        "model_name": model_name,
+        "train_start_date": _format_date_for_row(train_start_date),
+        "train_end_date": _format_date_for_row(train_end_date),
+        "n_train": int(n_train),
+        "coef_const": float(beta[0]),
+        "coef_har_rv_d_lag1_ann": float(beta[1]),
+        "coef_har_rv_w_lag1_ann": float(beta[2]),
+        "coef_har_rv_m_lag1_ann": float(beta[3]),
+        "se_const": np.nan,
+        "se_har_rv_d_lag1_ann": np.nan,
+        "se_har_rv_w_lag1_ann": np.nan,
+        "se_har_rv_m_lag1_ann": np.nan,
+        "t_const": np.nan,
+        "t_har_rv_d_lag1_ann": np.nan,
+        "t_har_rv_w_lag1_ann": np.nan,
+        "t_har_rv_m_lag1_ann": np.nan,
+        "hac_maxlags": int(hac_maxlags),
+        "hac_available": bool(hac_available),
+    }
+
+
 def coefficient_rows_to_frame(rows: list[dict[str, object]]) -> pd.DataFrame:
     """
     Convert coefficient-history rows to a stable schema DataFrame.
@@ -1113,6 +1157,7 @@ def coefficient_rows_to_frame(rows: list[dict[str, object]]) -> pd.DataFrame:
         "t_har_rv_w_lag1_ann",
         "t_har_rv_m_lag1_ann",
         "hac_maxlags",
+        "hac_available",
     ]
 
     if not rows:
@@ -1857,12 +1902,18 @@ def _batched_audit_row_from_arrays(
     dates: np.ndarray,
     target_end_dates: np.ndarray,
     train_row_valid: np.ndarray,
+    eligible_sorted: np.ndarray,
+    window_start: int,
+    window_end: int,
     min_train_required: int,
     forecast_available: bool,
     blocked_reason: str | None,
 ) -> dict[str, object]:
     """
     Build a no-lookahead audit row directly from arrays (avoids DataFrame construction).
+    
+    Uses the actual training window defined by eligible_sorted[window_start:window_end]
+    to compute training statistics, making this accurate for both expanding and rolling modes.
     """
     forecast_ts = pd.to_datetime(forecast_date, errors="coerce")
     if pd.isna(forecast_ts):
@@ -1872,23 +1923,20 @@ def _batched_audit_row_from_arrays(
     candidate_mask = dates < np.datetime64(forecast_ts.isoformat(), "ns")
     n_candidate = int(candidate_mask.sum())
 
-    # Count valid rows: target_end_date < forecast_date and train_row_valid
-    valid_mask = target_end_dates < np.datetime64(forecast_ts.isoformat(), "ns")
-    valid_mask = valid_mask & train_row_valid
-    n_valid = int(valid_mask.sum())
-
-    # Get max training row date and target_end_date
+    # Training stats from actual window: eligible_sorted[window_start:window_end]
+    train_indices = eligible_sorted[window_start:window_end]
+    n_valid = len(train_indices)
+    
     max_training_row_date = None
     max_training_target_end_date = None
     rule_passed = False
 
     if n_valid > 0:
-        valid_indices = np.flatnonzero(valid_mask)
-        valid_dates = dates[valid_indices]
-        valid_target_end_dates = target_end_dates[valid_indices]
-
-        max_training_row_date = pd.Timestamp(valid_dates.max())
-        max_training_target_end_date = pd.Timestamp(valid_target_end_dates.max())
+        train_dates = dates[train_indices]
+        train_target_end_dates = target_end_dates[train_indices]
+        
+        max_training_row_date = pd.Timestamp(train_dates.max())
+        max_training_target_end_date = pd.Timestamp(train_target_end_dates.max())
 
         if pd.notna(max_training_target_end_date):
             rule_passed = bool(max_training_target_end_date < forecast_ts)
@@ -1966,12 +2014,14 @@ def batched_har_forecast(
     har_n_train = np.zeros(n, dtype=int)
     har_oos_flag = np.zeros(n, dtype=bool)
     har_forecast_available = np.zeros(n, dtype=bool)
-    har_blocked_reason = [pd.NA] * n
+    # use None for missing blocked reasons to avoid pandas' pd.NA boolean ambiguity
+    har_blocked_reason = [None] * n
 
     # Precompute naive baseline column if present
     naive_col = _primary_naive_baseline_col(config)
     if naive_col in out.columns:
-        naive_baseline = pd.to_numeric(out[naive_col], errors="coerce").to_numpy(dtype=float)
+        # ensure a writable numpy array (pandas may return a read-only view)
+        naive_baseline = pd.to_numeric(out[naive_col], errors="coerce").to_numpy(dtype=float).copy()
 
     # Determine which rows need solving
     solve_indices: list[int] = []
@@ -2020,6 +2070,9 @@ def batched_har_forecast(
             blocked_reason = "insufficient_training_history"
         elif not current_feature_valid[i]:
             blocked_reason = "missing_har_features"
+        # record blocked reason for audit parity with statsmodels path
+        if blocked_reason is not None:
+            har_blocked_reason[i] = blocked_reason
         else:
             # prepare XtX and Xty for this train window
             XtX = prefix_xtx[end] - prefix_xtx[start]
@@ -2040,6 +2093,9 @@ def batched_har_forecast(
                 dates=dates,
                 target_end_dates=target_end_dates,
                 train_row_valid=train_row_valid,
+                eligible_sorted=eligible_sorted,
+                window_start=int(start),
+                window_end=int(end),
                 min_train_required=config.min_train_observations,
                 forecast_available=False,
                 blocked_reason=blocked_reason,
@@ -2104,9 +2160,9 @@ def batched_har_forecast(
                 har_train_start[i] = pd.to_datetime(out.loc[train_indices, "date"]).min()
                 har_train_end[i] = pd.to_datetime(out.loc[train_indices, "date"]).max()
 
-            # coefficient row
-            coef_row = extract_har_coefficient_row(
-                model_result=None,
+            # coefficient row from batched OLS solution
+            coef_row = make_batched_coefficient_row(
+                beta=beta,
                 forecast_date=out.loc[i, "date"],
                 market=market,
                 train_start_date=har_train_start[i],
@@ -2114,23 +2170,14 @@ def batched_har_forecast(
                 n_train=har_n_train[i],
                 hac_maxlags=config.hac_maxlags,
                 model_name=DEFAULT_HAR_MODEL_NAME,
-            )
-            # overwrite coefficient values with numeric betas
-            coef_row.update(
-                {
-                    "coef_const": float(beta[0]),
-                    "coef_har_rv_d_lag1_ann": float(beta[1]),
-                    "coef_har_rv_w_lag1_ann": float(beta[2]),
-                    "coef_har_rv_m_lag1_ann": float(beta[3]),
-                    "hac_available": False,
-                }
+                hac_available=False,
             )
             coefficient_rows.append(coef_row)
 
     # Update audit rows with forecast_available status
     for i in range(len(audit_rows)):
         audit_rows[i]["forecast_available"] = bool(har_forecast_available[i])
-        if har_blocked_reason[i] is not pd.NA:
+        if har_blocked_reason[i] is not None:
             audit_rows[i]["blocked_reason"] = har_blocked_reason[i]
 
     # Construct output frames
