@@ -660,3 +660,252 @@ def build_vrp_panel(
     ]
 
     return out[ordered_columns].copy()
+
+def compute_har_vrp(
+    vrp_panel: pd.DataFrame,
+    har_forecast_panel: pd.DataFrame,
+) -> pd.DataFrame:
+    """
+    Join Phase 4 HAR forecasts back to the Phase 3 VRP panel.
+
+    Formula:
+        vrp_har_gk_t = iv_ann_t - har_rv_gk_22d_forecast_ann_t
+
+    Conditional validity rule:
+        vrp_har_gk is non-null only when har_forecast_available == True.
+
+    Parameters
+    ----------
+    vrp_panel:
+        Phase 3 VRP panel. Must contain:
+            date
+            market
+            iv_ann
+
+        This panel is not mutated. Existing Phase 3 columns are preserved.
+
+    har_forecast_panel:
+        Phase 4 HAR forecast panel. Must contain:
+            date
+            market
+            har_rv_gk_22d_forecast_ann
+            har_forecast_available
+            har_blocked_reason
+
+    Returns
+    -------
+    pd.DataFrame
+        Phase 3 VRP panel plus:
+            har_rv_gk_22d_forecast_ann
+            har_forecast_available
+            har_blocked_reason
+            vrp_har_gk
+            vrp_har_gk_positive
+
+    Notes
+    -----
+    - Join is by date and market.
+    - No Phase 3 backward/ex-post VRP column is overwritten.
+    - No forecast is forward-filled or backfilled.
+    - Rows with unavailable HAR forecasts get NaN vrp_har_gk.
+    """
+    vrp = _sort_by_date(vrp_panel, name="Phase 3 VRP panel")
+    har = _sort_by_date(har_forecast_panel, name="Phase 4 HAR forecast panel")
+
+    _require_columns(
+        vrp,
+        ["date", "market", "iv_ann"],
+        name="Phase 3 VRP panel",
+    )
+
+    _require_columns(
+        har,
+        [
+            "date",
+            "market",
+            "har_rv_gk_22d_forecast_ann",
+            "har_forecast_available",
+            "har_blocked_reason",
+        ],
+        name="Phase 4 HAR forecast panel",
+    )
+
+    forbidden_existing_output_cols = [
+        "har_rv_gk_22d_forecast_ann",
+        "har_forecast_available",
+        "har_blocked_reason",
+        "vrp_har_gk",
+        "vrp_har_gk_positive",
+    ]
+
+    already_present = [
+        col for col in forbidden_existing_output_cols
+        if col in vrp.columns
+    ]
+
+    if already_present:
+        raise ValueError(
+            "Phase 3 VRP panel already contains HAR output column(s). "
+            "Pass the original Phase 3 *_vrp.parquet, not *_vrp_har.parquet. "
+            f"Existing columns: {already_present}"
+        )
+
+    vrp["market"] = vrp["market"].astype(str).str.upper().str.strip()
+    har["market"] = har["market"].astype(str).str.upper().str.strip()
+
+    vrp_market_values = vrp["market"].dropna().unique().tolist()
+    har_market_values = har["market"].dropna().unique().tolist()
+
+    if len(vrp_market_values) != 1:
+        raise ValueError(
+            "Phase 3 VRP panel must contain exactly one market. "
+            f"Found: {vrp_market_values}"
+        )
+
+    if len(har_market_values) != 1:
+        raise ValueError(
+            "Phase 4 HAR forecast panel must contain exactly one market. "
+            f"Found: {har_market_values}"
+        )
+
+    if vrp_market_values[0] != har_market_values[0]:
+        raise ValueError(
+            "VRP/HAR market mismatch. "
+            f"VRP market={vrp_market_values[0]}, HAR market={har_market_values[0]}"
+        )
+
+    if vrp[["date", "market"]].duplicated().any():
+        duplicate_count = int(vrp[["date", "market"]].duplicated().sum())
+        raise ValueError(
+            f"Phase 3 VRP panel contains {duplicate_count} duplicate date/market row(s)."
+        )
+
+    if har[["date", "market"]].duplicated().any():
+        duplicate_count = int(har[["date", "market"]].duplicated().sum())
+        raise ValueError(
+            f"Phase 4 HAR forecast panel contains {duplicate_count} duplicate date/market row(s)."
+        )
+
+    vrp["iv_ann"] = _coerce_numeric_column(
+        vrp,
+        "iv_ann",
+        name="Phase 3 VRP panel",
+        allow_missing=False,
+    )
+
+    har["har_rv_gk_22d_forecast_ann"] = _coerce_numeric_column(
+        har,
+        "har_rv_gk_22d_forecast_ann",
+        name="Phase 4 HAR forecast panel",
+        allow_missing=True,
+    )
+
+    negative_forecast_mask = (
+        har["har_rv_gk_22d_forecast_ann"].dropna() < 0
+    )
+
+    if negative_forecast_mask.any():
+        bad_count = int(negative_forecast_mask.sum())
+        raise ValueError(
+            "har_rv_gk_22d_forecast_ann contains "
+            f"{bad_count} negative forecast value(s)."
+        )
+
+    if pd.api.types.is_bool_dtype(har["har_forecast_available"]):
+        har_available = har["har_forecast_available"].astype(bool)
+    else:
+        normalized_available = (
+            har["har_forecast_available"]
+            .astype(str)
+            .str.lower()
+            .str.strip()
+        )
+
+        allowed_values = {"true", "false", "1", "0", "yes", "no"}
+
+        bad_values = sorted(
+            set(normalized_available.dropna().unique().tolist()) - allowed_values
+        )
+
+        if bad_values:
+            raise ValueError(
+                "har_forecast_available contains non-boolean-like value(s): "
+                f"{bad_values}"
+            )
+
+        har_available = normalized_available.map(
+            {
+                "true": True,
+                "1": True,
+                "yes": True,
+                "false": False,
+                "0": False,
+                "no": False,
+            }
+        ).astype(bool)
+
+    har["har_forecast_available"] = har_available
+
+    join_columns = [
+        "date",
+        "market",
+        "har_rv_gk_22d_forecast_ann",
+        "har_forecast_available",
+        "har_blocked_reason",
+    ]
+
+    optional_har_columns = [
+        "target_start_date",
+        "target_end_date",
+        "har_train_start_date",
+        "har_train_end_date",
+        "har_n_train",
+    ]
+
+    for col in optional_har_columns:
+        if col in har.columns:
+            join_columns.append(col)
+
+    out = vrp.merge(
+        har[join_columns],
+        on=["date", "market"],
+        how="left",
+        validate="one_to_one",
+    )
+
+    missing_har_rows = out["har_forecast_available"].isna()
+
+    if missing_har_rows.any():
+        out.loc[missing_har_rows, "har_forecast_available"] = False
+        out.loc[missing_har_rows, "har_blocked_reason"] = "missing_har_forecast_row"
+
+    out["har_forecast_available"] = out["har_forecast_available"].astype(bool)
+
+    out["vrp_har_gk"] = np.where(
+        out["har_forecast_available"],
+        out["iv_ann"] - out["har_rv_gk_22d_forecast_ann"],
+        np.nan,
+    )
+
+    unavailable_non_null_mask = (
+        (~out["har_forecast_available"])
+        & out["vrp_har_gk"].notna()
+    )
+
+    if unavailable_non_null_mask.any():
+        bad_count = int(unavailable_non_null_mask.sum())
+        raise ValueError(
+            "Internal error: vrp_har_gk is non-null for unavailable forecast row(s). "
+            f"Bad rows: {bad_count}"
+        )
+
+    out["vrp_har_gk_positive"] = pd.Series(
+        [
+            pd.NA if pd.isna(value) else bool(value > 0)
+            for value in out["vrp_har_gk"]
+        ],
+        index=out.index,
+        dtype="boolean",
+    )
+
+    return out.sort_values("date").reset_index(drop=True)

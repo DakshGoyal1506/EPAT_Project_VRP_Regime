@@ -1,0 +1,96 @@
+# configs/har_rv.yaml
+
+# Phase 4: HAR-RV forecasting and HAR-based prospective VRP construction.
+#
+# Primary target source:
+#   Use the existing Phase 3 label:
+#       rv_gk_22d_forward_ann_label
+#
+# Validation-only recomputation:
+#   252 * mean(rv_gk_daily_{t+1}, ..., rv_gk_daily_{t+22})
+#
+# Core no-lookahead rule:
+#   For forecast date t, a training row s is allowed only when:
+#       target_end_date_s < t
+
+primary_estimator: garman_klass
+primary_daily_rv_col: rv_gk_daily
+primary_forward_label_col: rv_gk_22d_forward_ann_label
+primary_iv_col: iv_ann
+
+forecast_horizon: 22
+annualization_periods: 252
+
+timing_mode: conservative_lag1
+model_type: direct_har_22d
+
+oos_mode: expanding
+min_train_observations: 500
+rolling_train_window: 1000
+
+# Compute backend settings for batched OLS
+compute_backend: torch_batched
+# choices: auto | cpu_statsmodels | cpu_numpy_batched | torch_batched
+
+# Torch device selection for batched backend when available
+torch_device: auto
+# choices: auto | cuda | cpu
+
+# Torch dtype for batched computation
+torch_dtype: float64
+# choices: float64 | float32
+
+# Frequency for running HAC covariance estimation for coefficient inference
+coefficient_hac_frequency: month_end
+# choices: daily | month_end | quarter_end | final | none
+
+# How often to store coefficient history (values saved daily but HAC may be less frequent)
+coefficient_history_frequency: daily
+# choices: daily | month_end | quarter_end | final
+
+# Matrix singularity policy for XtX solves
+matrix_singularity_policy: pinv
+# choices: pinv | skip
+
+condition_number_threshold: 1.0e12
+
+hac_maxlags: 22
+forecast_floor: 1.0e-8
+
+target_source: phase3_existing_label
+target_validation_mode: recompute_and_compare
+target_validation_atol: 1.0e-12
+target_validation_rtol: 1.0e-10
+
+write_rolling_baseline: true
+
+markets:
+  - US
+  - INDIA
+
+input_paths:
+  US: data/processed/us_vrp.parquet
+  INDIA: data/processed/india_vrp.parquet
+
+forecast_output_paths:
+  US: data/processed/us_har_forecast.parquet
+  INDIA: data/processed/india_har_forecast.parquet
+
+vrp_har_output_paths:
+  US: data/processed/us_vrp_har.parquet
+  INDIA: data/processed/india_vrp_har.parquet
+
+report_paths:
+  forecast_accuracy: reports/tables/har_forecast_accuracy.csv
+  coefficients: reports/tables/har_coefficients.csv
+  vrp_summary: reports/tables/har_vrp_summary.csv
+  metadata: reports/tables/har_metadata.json
+  no_lookahead_audit: reports/tables/har_no_lookahead_audit.csv
+
+figure_paths:
+  forecast_US: reports/figures/har_forecast_us.png
+  forecast_INDIA: reports/figures/har_forecast_india.png
+  residuals_US: reports/figures/har_residuals_us.png
+  residuals_INDIA: reports/figures/har_residuals_india.png
+  vrp_US: reports/figures/har_vrp_us.png
+  vrp_INDIA: reports/figures/har_vrp_india.png
