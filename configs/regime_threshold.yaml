@@ -1,0 +1,166 @@
+model_name: threshold_baseline_v1
+
+primary_input_files:
+  US: data/processed/us_vrp_har.parquet
+  INDIA: data/processed/india_vrp_har.parquet
+
+primary_output_files:
+  US: data/processed/us_threshold_regimes.parquet
+  INDIA: data/processed/india_threshold_regimes.parquet
+
+annualization_periods: 252
+
+states:
+  calm: 0
+  transition: 1
+  stress: 2
+
+regime_learning_policy:
+  regime_type: deterministic_unsupervised_threshold
+  uses_manual_crisis_labels_for_training: false
+  uses_crisis_windows_for_reporting_only: true
+  uses_forward_labels_for_training: false
+  uses_forward_labels_for_reporting_only: true
+  no_manual_state_overrides: true
+
+diagnostic_window_policy:
+  use_crisis_windows_only_for_reporting: true
+  skip_windows_outside_sample: true
+  do_not_tune_thresholds_on_crisis_windows: true
+
+threshold_policy:
+  method: rolling_expanding
+  use_strict_prior_thresholds: true
+  min_history: 252
+  rolling_window: 756
+  percentile_interpolation: linear
+  prohibit_full_sample_percentiles: true
+  prohibit_cross_market_threshold_pooling: true
+
+iv_filter:
+  feature_col: iv_ann
+  calm_percentile: 0.50
+  stress_percentile: 0.80
+  high_is_stress: true
+  required: true
+
+rv_filter:
+  feature_col: rv_gk_22d_ann_lag1
+  calm_percentile: 0.50
+  stress_percentile: 0.80
+  high_is_stress: true
+  required: true
+
+drawdown_filter:
+  price_col_candidates:
+    - close
+    - adj_close
+    - underlying_close
+  fallback_return_col_candidates:
+    - log_return
+    - simple_return
+  lookback_window: 252
+  transition_drawdown: -0.07
+  stress_drawdown: -0.12
+  required: false
+
+iv_slope_filter:
+  feature_col: iv_ann
+  short_ma_window: 21
+  long_ma_window: 63
+  transition_slope_threshold: 0.00
+  stress_slope_threshold: 0.10
+  required: false
+
+vrp_har_filter:
+  feature_col: vrp_har_gk
+  require_har_forecast_available: true
+  availability_col: har_forecast_available
+  zscore_window: 756
+  min_history: 252
+  calm_zscore: 0.00
+  stress_zscore: -1.00
+  required: true
+
+component_policy:
+  required_components:
+    - iv_percentile_state
+    - rv_percentile_state
+    - vrp_har_state
+  optional_components:
+    - drawdown_state
+    - iv_slope_state
+  do_not_fill_missing_component_states: true
+  do_not_backfill_component_states: true
+  do_not_forward_fill_component_states: true
+  missing_required_blocks_final_regime: true
+  score_optional_components_when_available_only: true
+  score_missing_components_as: null
+
+combined_filter:
+  score_method: weighted_sum
+  component_weights:
+    iv_percentile_state: 1.0
+    rv_percentile_state: 1.0
+    drawdown_state: 1.5
+    iv_slope_state: 0.5
+    vrp_har_state: 1.0
+  calm_score_cutoff: 1.0
+  stress_score_cutoff: 2.5
+  hard_stress_components:
+    - iv_percentile_state
+    - rv_percentile_state
+    - drawdown_state
+  calm_required_conditions:
+    iv_percentile_state: calm
+    rv_percentile_state_not: stress
+    drawdown_state: calm_or_unavailable
+    vrp_har_state: calm
+  require_score_cutoffs_reachable: true
+  write_trigger_explanations: true
+
+sample_coverage_policy:
+  warn_if_available_fraction_after_warmup_below: 0.60
+  hard_fail_if_no_available_regimes: true
+
+metadata_policy:
+  write_config_sha256: true
+  write_input_file_metadata: true
+  write_git_commit_if_available: true
+  write_created_at_utc: true
+
+diagnostics:
+  write_reports: true
+  write_figures: true
+  allow_forward_labels_only_after_regime_assignment: true
+  duration_diagnostics: true
+  annual_state_distribution: true
+  crisis_hit_table: true
+  crisis_lead_lag_table: true
+  forward_label_by_state_table: true
+  no_lookahead_audit: true
+
+crisis_windows:
+  US:
+    - ["2008-09-01", "2009-06-30", "GFC_Lehman"]
+    - ["2011-08-01", "2011-12-31", "US_DebtCeiling_EuroDebt"]
+    - ["2013-05-22", "2013-09-30", "TaperTantrum"]
+    - ["2015-08-11", "2016-02-29", "ChinaDeval_GlobalGrowthScare"]
+    - ["2018-02-01", "2018-02-28", "Volmageddon"]
+    - ["2018-10-01", "2018-12-31", "Q4_2018_RiskOff"]
+    - ["2020-02-20", "2020-06-30", "COVID"]
+    - ["2022-01-01", "2022-12-31", "RateShock_Inflation"]
+    - ["2023-03-08", "2023-05-31", "RegionalBankingStress"]
+    - ["2024-08-05", "2024-08-30", "YenCarryUnwind"]
+    - ["2025-04-02", "2025-04-30", "TariffShock"]
+
+  INDIA:
+    - ["2013-05-22", "2013-09-30", "TaperTantrum_INR_EM"]
+    - ["2015-08-11", "2016-02-29", "ChinaDeval_GlobalGrowthScare"]
+    - ["2016-11-08", "2016-12-31", "Demonetization_US_Election"]
+    - ["2018-09-01", "2019-02-28", "ILFS_NBFC_LiquidityStress"]
+    - ["2020-02-20", "2020-06-30", "COVID"]
+    - ["2022-01-01", "2022-12-31", "RateShock_Ukraine_Inflation"]
+    - ["2024-05-01", "2024-06-30", "ElectionVolatility"]
+    - ["2024-08-05", "2024-08-30", "YenCarryUnwind_GlobalRiskOff"]
+    - ["2025-04-02", "2025-04-30", "TariffShock_GlobalRiskOff"]

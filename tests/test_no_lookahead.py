@@ -35,6 +35,108 @@ from vrp.forecasting.har_rv import (
 from vrp.features.vrp import flag_feature_columns_vs_label_columns, compute_har_vrp
 
 
+from pathlib import Path
+import sys
+
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+SRC_ROOT = PROJECT_ROOT / "src"
+
+if str(SRC_ROOT) not in sys.path:
+    sys.path.insert(0, str(SRC_ROOT))
+
+
+from vrp.regimes.regime_registry import (  # noqa: E402
+    assert_no_forbidden_regime_features,
+    assert_regime_features_are_point_in_time,
+    get_allowed_diagnostic_labels,
+    get_allowed_regime_features,
+)
+from vrp.reports.regime_diagnostics import (  # noqa: E402
+    build_threshold_no_lookahead_audit,
+)
+from .test_threshold_regimes import _base_config, _synthetic_panel  # noqa: E402
+from vrp.regimes.threshold import (  # noqa: E402
+    classify_all_threshold_components,
+    combine_threshold_regimes,
+)
+
+
+def test_regime_registry_rejects_forbidden_regime_columns():
+    forbidden_cols = [
+        "future_rv",
+        "rv_gk_22d_forward_ann_label",
+        "vrp_forward_expost_gk_label",
+        "regime_label",
+    ]
+
+    for col in forbidden_cols:
+        with pytest.raises(ValueError):
+            assert_no_forbidden_regime_features(["iv_ann", col])
+
+        with pytest.raises(ValueError):
+            assert_regime_features_are_point_in_time(["iv_ann", col])
+
+
+def test_phase3_labels_are_not_allowed_in_threshold_regime_feature_lists():
+    diagnostic_labels = get_allowed_diagnostic_labels()
+    regime_features = get_allowed_regime_features()
+
+    for label_col in diagnostic_labels:
+        assert label_col not in regime_features
+
+        with pytest.raises(ValueError):
+            assert_regime_features_are_point_in_time(regime_features + [label_col])
+
+
+def test_threshold_no_lookahead_audit_has_no_forbidden_columns_for_available_regimes():
+    config = _base_config()
+    panel = _synthetic_panel(8)
+
+    components = classify_all_threshold_components(panel, config)
+    regimes = combine_threshold_regimes(components, config)
+
+    audit = build_threshold_no_lookahead_audit(regimes)
+
+    available_audit = audit[audit["regime_available"]]
+
+    assert not available_audit.empty
+    assert available_audit["uses_forbidden_columns"].eq(False).all()
+    assert available_audit["uses_strict_prior_thresholds"].eq(True).all()
+
+
+def test_forward_labels_can_exist_in_panel_but_not_drive_construction():
+    config = _base_config()
+    panel = _synthetic_panel(8)
+
+    panel["rv_gk_22d_forward_ann_label"] = [1000.0] * len(panel)
+    panel["vrp_forward_expost_gk_label"] = [-1000.0] * len(panel)
+
+    panel_without_labels = panel.drop(
+        columns=[
+            "rv_gk_22d_forward_ann_label",
+            "vrp_forward_expost_gk_label",
+        ]
+    )
+
+    regimes_with_labels = combine_threshold_regimes(
+        classify_all_threshold_components(panel, config),
+        config,
+    )
+
+    regimes_without_labels = combine_threshold_regimes(
+        classify_all_threshold_components(panel_without_labels, config),
+        config,
+    )
+
+    assert regimes_with_labels["threshold_state"].tolist() == regimes_without_labels[
+        "threshold_state"
+    ].tolist()
+
+    assert regimes_with_labels["threshold_trigger_reason"].tolist() == regimes_without_labels[
+        "threshold_trigger_reason"
+    ].tolist()
+
+
 def test_registry_has_no_feature_label_overlap() -> None:
     assert_registry_is_valid()
 
