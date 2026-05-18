@@ -59,6 +59,9 @@ from vrp.forecasting.har_rv import (  # noqa: E402
     expanding_window_har_forecast,
     load_har_config,
     rolling_window_har_forecast,
+    resolve_compute_backend,
+    resolve_torch_device,
+    resolve_torch_dtype,
 )
 from vrp.forecasting.forecast_evaluation import (  # noqa: E402
     build_forecast_accuracy_table,
@@ -325,11 +328,30 @@ def _print_config_summary(config: HARConfig, selected_markets: list[str]) -> Non
     print(f"[har] rolling_train_window: {config.rolling_train_window}")
     print(f"[har] hac_maxlags: {config.hac_maxlags}")
     print(f"[har] forecast_floor: {config.forecast_floor}")
-    # Backend info
+    # Backend info (config values)
     print(f"[har] compute_backend: {config.compute_backend}")
     print(f"[har] torch_device: {config.torch_device}")
     print(f"[har] torch_dtype: {config.torch_dtype}")
     print(f"[har] coefficient_hac_frequency: {config.coefficient_hac_frequency}")
+    # Backend info (resolved values)
+    try:
+        resolved_backend = resolve_compute_backend(config)
+        print(f"[har] resolved_compute_backend: {resolved_backend}")
+    except Exception as e:
+        print(f"[har] resolved_compute_backend: ERROR ({e})")
+    
+    try:
+        resolved_device = resolve_torch_device(config)
+        print(f"[har] resolved_torch_device: {resolved_device}")
+    except Exception as e:
+        print(f"[har] resolved_torch_device: ERROR ({e})")
+    
+    try:
+        resolved_dtype = resolve_torch_dtype(config)
+        print(f"[har] resolved_torch_dtype: {resolved_dtype}")
+    except Exception as e:
+        print(f"[har] resolved_torch_dtype: ERROR ({e})")
+    
     print(
         "[har] timing rule: training row s allowed only when "
         "target_end_date_s < forecast_date_t"

@@ -1850,6 +1850,66 @@ def batched_solve_ols_torch(
     return betas.cpu().numpy(), status
 
 
+def _batched_audit_row_from_arrays(
+    market: str,
+    forecast_date: Any,
+    forecast_idx: int,
+    dates: np.ndarray,
+    target_end_dates: np.ndarray,
+    train_row_valid: np.ndarray,
+    min_train_required: int,
+    forecast_available: bool,
+    blocked_reason: str | None,
+) -> dict[str, object]:
+    """
+    Build a no-lookahead audit row directly from arrays (avoids DataFrame construction).
+    """
+    forecast_ts = pd.to_datetime(forecast_date, errors="coerce")
+    if pd.isna(forecast_ts):
+        raise ValueError(f"Invalid forecast_date: {forecast_date}")
+
+    # Count candidate rows: date < forecast_date
+    candidate_mask = dates < np.datetime64(forecast_ts.isoformat(), "ns")
+    n_candidate = int(candidate_mask.sum())
+
+    # Count valid rows: target_end_date < forecast_date and train_row_valid
+    valid_mask = target_end_dates < np.datetime64(forecast_ts.isoformat(), "ns")
+    valid_mask = valid_mask & train_row_valid
+    n_valid = int(valid_mask.sum())
+
+    # Get max training row date and target_end_date
+    max_training_row_date = None
+    max_training_target_end_date = None
+    rule_passed = False
+
+    if n_valid > 0:
+        valid_indices = np.flatnonzero(valid_mask)
+        valid_dates = dates[valid_indices]
+        valid_target_end_dates = target_end_dates[valid_indices]
+
+        max_training_row_date = pd.Timestamp(valid_dates.max())
+        max_training_target_end_date = pd.Timestamp(valid_target_end_dates.max())
+
+        if pd.notna(max_training_target_end_date):
+            rule_passed = bool(max_training_target_end_date < forecast_ts)
+
+    day_gap = _days_between_dates(forecast_ts, max_training_target_end_date)
+
+    return {
+        "market": str(market).upper(),
+        "forecast_date": _to_date_string_or_none(forecast_ts),
+        "n_candidate_train_rows": int(n_candidate),
+        "n_valid_train_rows": int(n_valid),
+        "min_train_required": int(min_train_required),
+        "max_training_row_date": _to_date_string_or_none(max_training_row_date),
+        "max_training_target_end_date": _to_date_string_or_none(max_training_target_end_date),
+        "forecast_date_minus_max_target_end_days": day_gap,
+        "rule_target_end_before_forecast_date": bool(rule_passed),
+        "forecast_available": bool(forecast_available),
+        "blocked_reason": blocked_reason,
+    }
+
+
 def batched_har_forecast(
     out: pd.DataFrame,
     config: HARConfig,
@@ -1921,19 +1981,6 @@ def batched_har_forecast(
     solve_train_bounds = []
 
     for i in range(n):
-        # candidate and valid counts
-        candidate_mask = pd.to_datetime(out["date"]) < pd.to_datetime(out.loc[i, "date"])
-        n_candidate = int(candidate_mask.sum())
-
-        # valid mask: target_end_date < forecast_date and numeric & non-negative
-        valid_mask = (
-            pd.to_datetime(out["target_end_date"]) < pd.to_datetime(out.loc[i, "date"])
-        )
-
-        # numeric checks
-        numeric_ok = np.isfinite(pd.to_numeric(out[config.target_col], errors="coerce")).to_numpy()
-        n_valid = int((valid_mask & numeric_ok).sum())
-
         # Baselines from prefix sums
         start = int(window_starts[i])
         end = int(window_ends[i])
@@ -1984,24 +2031,20 @@ def batched_har_forecast(
             solve_X_current.append(X[i])
             solve_train_bounds.append((start, end))
 
-        # fill audit row now, forecast_value will be filled later if available
-        # candidate_df and valid_df counts are approximate here but sufficient for audit
+        # Build audit row from arrays (not empty DataFrames)
         audit_rows.append(
-            build_no_lookahead_audit_row(
+            _batched_audit_row_from_arrays(
                 market=market,
                 forecast_date=out.loc[i, "date"],
-                candidate_train_df=pd.DataFrame(),
-                valid_train_df=pd.DataFrame(),
+                forecast_idx=i,
+                dates=dates,
+                target_end_dates=target_end_dates,
+                train_row_valid=train_row_valid,
                 min_train_required=config.min_train_observations,
                 forecast_available=False,
                 blocked_reason=blocked_reason,
             )
         )
-
-        # set baseline placeholders
-        baseline_expanding[i] = baseline_expanding[i]
-        baseline_rolling[i] = baseline_rolling[i]
-        naive_baseline[i] = naive_baseline[i]
 
     # Solve batch
     if len(solve_indices) > 0:
@@ -2083,6 +2126,12 @@ def batched_har_forecast(
                 }
             )
             coefficient_rows.append(coef_row)
+
+    # Update audit rows with forecast_available status
+    for i in range(len(audit_rows)):
+        audit_rows[i]["forecast_available"] = bool(har_forecast_available[i])
+        if har_blocked_reason[i] is not pd.NA:
+            audit_rows[i]["blocked_reason"] = har_blocked_reason[i]
 
     # Construct output frames
     out2 = out.copy()
