@@ -1272,6 +1272,42 @@ def _days_between_dates(later: Any, earlier: Any) -> int | None:
     return int((later_ts.normalize() - earlier_ts.normalize()).days)
 
 
+def _is_hac_checkpoint_date(coef_dates: pd.Series, idx: int, frequency: str) -> bool:
+    """
+    Return True if coefficient row idx is a HAC checkpoint.
+
+    Uses last available trading/coefficient date in the period, not calendar month-end.
+    """
+    freq = str(frequency).lower().strip()
+
+    if freq in {"none", ""}:
+        return False
+
+    if freq == "daily":
+        return True
+
+    # always checkpoint the last available row
+    if idx == len(coef_dates) - 1:
+        return True
+
+    current = pd.to_datetime(coef_dates.iloc[idx], errors="coerce")
+    nxt = pd.to_datetime(coef_dates.iloc[idx + 1], errors="coerce")
+
+    if pd.isna(current) or pd.isna(nxt):
+        return False
+
+    if freq == "final":
+        return idx == len(coef_dates) - 1
+
+    if freq == "month_end":
+        return current.to_period("M") != nxt.to_period("M")
+
+    if freq == "quarter_end":
+        return current.to_period("Q") != nxt.to_period("Q")
+
+    raise ValueError(f"Unsupported HAC frequency: {frequency}")
+
+
 def _has_complete_current_features(
     row: pd.Series,
     feature_cols: list[str],
@@ -2240,27 +2276,13 @@ def batched_har_forecast(
         if canonical is None:
             warnings.warn(f"Unknown coefficient_hac_frequency: {config.coefficient_hac_frequency!r}; skipping HAC checkpointing")
         else:
+            coef_dates = pd.to_datetime(coefficient_frame["date"], errors="coerce")
+
             for idx in range(len(coefficient_frame)):
-                row_date = coefficient_frame.loc[idx, "date"]
-                try:
-                    rdate = pd.to_datetime(row_date, errors="coerce")
-                except Exception:
-                    rdate = pd.NaT
-
-                if pd.isna(rdate):
+                if not _is_hac_checkpoint_date(coef_dates, idx, canonical):
                     continue
 
-                if canonical == "month_end" and not getattr(rdate, "is_month_end", False):
-                    continue
-
-                if canonical == "quarter_end" and not getattr(rdate, "is_quarter_end", False):
-                    continue
-
-                if canonical == "final" and idx != (len(coefficient_frame) - 1):
-                    continue
-
-                # get training rows used for this forecast date
-                forecast_date = rdate
+                forecast_date = coef_dates.iloc[idx]
                 try:
                     _, valid_train_df = get_available_training_rows(
                         df=out,
