@@ -40,6 +40,7 @@ The `vrp` mode is intentionally locked to the Phase 3 22-day contract so the out
 python scripts/build_features.py --market ALL --feature rv --window 22
 python scripts/build_features.py --market ALL --feature iv
 python scripts/build_features.py --market ALL --feature vrp
+```
 
 ### HAR Forecasting (Phase 4)
 
@@ -47,14 +48,28 @@ Run the Phase 4 HAR forecasting workflow:
 
 ```bash
 python scripts/train_har.py --market US --mode expanding
-python scripts/train_har.py --market ALL --mode expanding --force --backend torch_batched --torch-device cuda --torch-dtype float64
+python scripts/train_har.py --market INDIA --mode expanding
+python scripts/train_har.py --market ALL --mode expanding --force --backend torch_batched --torch-device cuda --torch-dtype float64 --coefficient-hac-frequency none
 ```
 
-Quick backend parity check (synthetic data):
+Quick backend parity check:
 
 ```bash
 python scripts/smoke_backend_parity.py
 ```
+
+Expected HAR outputs:
+
+```text
+data/processed/us_har_forecast.parquet
+data/processed/india_har_forecast.parquet
+data/processed/us_vrp_har.parquet
+data/processed/india_vrp_har.parquet
+reports/tables/har_forecast_accuracy.csv
+reports/tables/har_coefficients.csv
+reports/tables/har_vrp_summary.csv
+reports/tables/har_metadata.json
+reports/tables/har_no_lookahead_audit.csv
 ```
 
 ### Expected VRP Outputs

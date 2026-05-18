@@ -94,6 +94,8 @@ Current notebook index:
 
 - `01_data_audit.ipynb` - data-quality checks and audit exploration.
 - `02_build_features.ipynb` - realized-variance feature build walkthrough for the processed OHLC panels.
+- `03.ipynb` - implied variance and VRP inspection.
+- `03_har_rv.ipynb` - HAR-RV forecast and HAR-based VRP inspection.
 
 ## Phase Roadmap
 
@@ -199,11 +201,43 @@ reports/figures/
 
 Notebook support for this phase lives in `notebooks/02_build_features.ipynb`.
 
-### Next Phases
-
 #### Phase 3 - Implied Variance and VRP
 
-Construct implied variance proxies from VIX and India VIX, align them to realised variance, and construct VRP.
+Status: complete.
+
+What is implemented:
+
+```text
+VIX / India VIX implied variance construction
+exact-date IV/RV alignment
+backward-looking point-in-time VRP
+forward ex-post RV and VRP labels
+feature/label separation registry
+calendar mismatch diagnostics
+VRP metadata and plots
+```
+
+Key commands:
+
+```bash
+python scripts/build_features.py --market ALL --feature iv
+python scripts/build_features.py --market ALL --feature vrp
+pytest tests/test_vrp_alignment.py tests/test_no_lookahead.py tests/test_build_features_cli.py
+```
+
+Expected outputs:
+
+```text
+data/processed/us_iv.parquet
+data/processed/india_iv.parquet
+data/processed/us_vrp.parquet
+data/processed/india_vrp.parquet
+reports/tables/vrp_summary.csv
+reports/tables/vrp_metadata.json
+reports/tables/calendar_mismatches.csv
+reports/figures/us_iv_rv_vrp.png
+reports/figures/india_iv_rv_vrp.png
+```
 
 #### Phase 4 - HAR-RV Forecasting
 Build HAR-RV forecasts using only information available at time `t`.
@@ -222,6 +256,8 @@ pytest
 
 Audit and validation snippets are preserved in the repository's Phase 4
 appendix (see `src/vrp/forecasting/README.md` and the `scripts/` folder).
+
+### Next Phases
 
 #### Phase 5 - Threshold Regimes
 

@@ -46,6 +46,32 @@ by the HAR forecasting engine. Key outputs:
 These are written by the `write_har_diagnostics` helper and are intended for
 final inspection and inclusion in reports.
 
+Phase 4 HAR-RV Reports
+
+Phase 4 writes the following reproducible report artifacts:
+
+```text
+reports/tables/har_forecast_accuracy.csv
+reports/tables/har_coefficients.csv
+reports/tables/har_vrp_summary.csv
+reports/tables/har_metadata.json
+reports/tables/har_no_lookahead_audit.csv
+reports/figures/har_forecast_us.png
+reports/figures/har_forecast_india.png
+reports/figures/har_residuals_us.png
+reports/figures/har_residuals_india.png
+reports/figures/har_vrp_us.png
+reports/figures/har_vrp_india.png
+```
+
+Key audit condition:
+
+```text
+max_training_target_end_date < forecast_date
+```
+
+This must hold for every available HAR forecast row.
+
 ## Behavior
 
 The summary layer is intentionally permissive:
