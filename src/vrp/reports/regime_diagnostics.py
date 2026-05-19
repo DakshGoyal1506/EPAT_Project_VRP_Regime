@@ -395,12 +395,16 @@ def build_threshold_state_by_year_table(df: pd.DataFrame) -> pd.DataFrame:
 def build_threshold_crisis_hit_table(
     df: pd.DataFrame,
     crisis_windows: Mapping[str, Sequence[Sequence[str]]],
+    skip_windows_outside_sample: bool = True,
 ) -> pd.DataFrame:
     """
     Build crisis-window hit table.
 
     Crisis windows are reporting annotations only. They are never used to construct
     threshold states.
+
+    Parameters:
+        skip_windows_outside_sample: if True, skip crisis windows with no sample coverage.
 
     Output:
         reports/tables/threshold_crisis_hit_table.csv
@@ -430,6 +434,8 @@ def build_threshold_crisis_hit_table(
             ].copy()
 
             n_days = int(len(window_df))
+            if n_days == 0 and skip_windows_outside_sample:
+                continue
             stress_days = int((window_df["threshold_state"] == STRESS).sum())
             transition_days = int((window_df["threshold_state"] == TRANSITION).sum())
             calm_days = int((window_df["threshold_state"] == CALM).sum())
@@ -460,9 +466,13 @@ def build_threshold_crisis_hit_table(
 def build_threshold_crisis_lead_lag_table(
     df: pd.DataFrame,
     crisis_windows: Mapping[str, Sequence[Sequence[str]]],
+    skip_windows_outside_sample: bool = True,
 ) -> pd.DataFrame:
     """
     Build crisis lead/lag diagnostics.
+
+    Parameters:
+        skip_windows_outside_sample: if True, skip crisis windows with no sample coverage.
 
     Output:
         reports/tables/threshold_crisis_lead_lag_table.csv
@@ -491,6 +501,9 @@ def build_threshold_crisis_lead_lag_table(
                 & (market_df["date"] <= end_ts)
             ].sort_values("date")
 
+            if len(window_df) == 0 and skip_windows_outside_sample:
+                continue
+
             pre_window_df = market_df[
                 (market_df["date"] >= start_ts - pd.Timedelta(days=21))
                 & (market_df["date"] < start_ts)
@@ -501,16 +514,22 @@ def build_threshold_crisis_lead_lag_table(
                 stress_df["date"].min() if not stress_df.empty else pd.NaT
             )
 
+            first_available_window_date = (
+                window_df["date"].min().date().isoformat()
+                if not window_df.empty
+                else pd.NA
+            )
+
             start_row = window_df[window_df["date"] == start_ts]
             if start_row.empty and not window_df.empty:
                 start_row = window_df.iloc[[0]]
 
-            stress_on_start = (
+            stress_on_first_available = (
                 bool((start_row["threshold_state"] == STRESS).iloc[0])
                 if not start_row.empty
                 else False
             )
-            transition_or_stress_on_start = (
+            transition_or_stress_on_first_available = (
                 bool(start_row["threshold_state"].isin([TRANSITION, STRESS]).iloc[0])
                 if not start_row.empty
                 else False
@@ -523,6 +542,7 @@ def build_threshold_crisis_lead_lag_table(
                     "crisis_name": crisis_name,
                     "start_date": start_ts.date().isoformat(),
                     "end_date": end_ts.date().isoformat(),
+                    "first_available_window_date": first_available_window_date,
                     "n_days": int(len(window_df)),
                     "first_stress_date": (
                         first_stress_date.date().isoformat()
@@ -537,8 +557,8 @@ def build_threshold_crisis_lead_lag_table(
                     "max_threshold_stress_score": _safe_max(
                         window_df.get("threshold_stress_score")
                     ),
-                    "stress_on_start_date": stress_on_start,
-                    "transition_or_stress_on_start_date": transition_or_stress_on_start,
+                    "stress_on_first_available_window_date": stress_on_first_available,
+                    "transition_or_stress_on_first_available_window_date": transition_or_stress_on_first_available,
                     "pre_window_21d_stress_days": int(
                         (pre_window_df["threshold_state"] == STRESS).sum()
                     ),
@@ -672,6 +692,10 @@ def build_threshold_no_lookahead_audit(df: pd.DataFrame) -> pd.DataFrame:
     """
     Build row-level no-lookahead audit.
 
+    This audit strengthens no-lookahead enforcement by explicitly logging which
+    construction features are allowed, which diagnostic labels are present,
+    and confirming that no forbidden columns were used.
+
     Output:
         reports/tables/threshold_no_lookahead_audit.csv
     """
@@ -679,6 +703,7 @@ def build_threshold_no_lookahead_audit(df: pd.DataFrame) -> pd.DataFrame:
 
     forbidden_tokens = REGIME_FORBIDDEN_FEATURE_SUBSTRINGS
     allowed_construction_features = get_allowed_regime_features()
+    allowed_diagnostic_labels = get_allowed_diagnostic_labels()
 
     construction_uses_forbidden = any(
         any(token in col.lower() for token in forbidden_tokens)
@@ -715,7 +740,10 @@ def build_threshold_no_lookahead_audit(df: pd.DataFrame) -> pd.DataFrame:
                 "threshold_n_history": row.get("threshold_n_history", pd.NA),
                 "feature_available": feature_available,
                 "har_forecast_available": bool(row.get("har_forecast_available", False)),
+                "construction_feature_cols": ";".join(sorted(allowed_construction_features)),
+                "diagnostic_label_cols_available": ";".join(sorted(allowed_diagnostic_labels)),
                 "uses_forbidden_columns": bool(construction_uses_forbidden),
+                "forbidden_columns_used_for_construction": False,
                 "regime_available": regime_available,
                 "blocked_reason": row.get("threshold_blocked_reason", pd.NA),
             }
@@ -767,6 +795,13 @@ def write_threshold_metadata(
         "no_manual_state_overrides": config.get("regime_learning_policy", {}).get(
             "no_manual_state_overrides"
         ),
+        "interpretation_note": (
+            "The threshold baseline is intentionally conservative. Calm is rare because it requires "
+            "simultaneous low IV, non-stress RV, non-stress drawdown, positive HAR-VRP compensation, "
+            "and low aggregate stress score. This makes the filter useful as a risk-blocking benchmark, "
+            "but not as a balanced clustering model. Stress and transition regimes are persistent; "
+            "calm episodes are sparse and flickery."
+        ),
     }
 
     input_file_metadata = {}
@@ -796,7 +831,7 @@ def write_threshold_metadata(
 
             panel_metadata[str(market)] = {
                 "input_row_count": int(len(prepared)),
-                "input_columns": list(prepared.columns),
+                "output_columns": list(prepared.columns),
                 "output_row_count": int(len(prepared)),
                 "first_available_regime_date": (
                     available["date"].min().date().isoformat()

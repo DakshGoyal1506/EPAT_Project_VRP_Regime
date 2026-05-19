@@ -246,14 +246,21 @@ def _write_reports(
     )
 
     crisis_windows = config.get("crisis_windows", {})
+    skip_windows_outside_sample = config.get("diagnostic_window_policy", {}).get(
+        "skip_windows_outside_sample", True
+    )
 
     _write_csv(
-        build_threshold_crisis_hit_table(combined, crisis_windows),
+        build_threshold_crisis_hit_table(
+            combined, crisis_windows, skip_windows_outside_sample=skip_windows_outside_sample
+        ),
         REPORT_TABLE_DIR / "threshold_crisis_hit_table.csv",
     )
 
     _write_csv(
-        build_threshold_crisis_lead_lag_table(combined, crisis_windows),
+        build_threshold_crisis_lead_lag_table(
+            combined, crisis_windows, skip_windows_outside_sample=skip_windows_outside_sample
+        ),
         REPORT_TABLE_DIR / "threshold_crisis_lead_lag_table.csv",
     )
 
