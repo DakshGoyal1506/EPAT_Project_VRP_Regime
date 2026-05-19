@@ -1,79 +1,367 @@
-version: 1
+model_name: gaussian_hmm_v1
+implementation: hmmlearn
+random_seed: 42
 
-model:
-  name: gaussian_hmm
-  library: hmmlearn
-  enabled: true
+description: >
+  Phase 6 Gaussian HMM regime model for the EPAT VRP project.
+  This phase estimates latent volatility/VRP regimes using train-only fitting,
+  train-only scaling, custom point-in-time forward filtering, and diagnostic-only
+  smoothed probabilities. No strategy, backtest, AR-HMM, MSGARCH, or broker layer
+  is included in this phase.
 
-purpose:
-  description: Gaussian HMM regime classification for VRP, realised volatility, implied volatility, and returns.
-  phase: 6
+primary_model:
+  feature_set: F3
+  n_states: 3
+  covariance_type: diag
 
-state_counts:
-  candidates:
+fallback_model:
+  feature_set: F3
+  n_states: 2
+  covariance_type: diag
+  fallback_is_not_silent: true
+
+candidate_models:
+  feature_sets:
+    - F1
+    - F2
+    - F3
+    - F4
+  n_states:
     - 2
     - 3
-  default: 3
+  covariance_types:
+    - diag
+    - full
 
-features:
-  # These are placeholders for later phases.
-  # They must be produced by src/vrp/features before HMM training.
-  candidate_columns:
-    - vrp
-    - realised_variance
-    - implied_variance
+train_test_split:
+  method: chronological_fraction
+  train_fraction: 0.70
+  min_train_observations: 750
+  min_test_observations: 250
+  shuffle: false
+
+hmm_fit:
+  n_iter: 1000
+  tol: 1.0e-4
+  algorithm: viterbi
+  implementation: log
+  min_covar: 1.0e-6
+  n_init: 10
+  covariance_regularization: 1.0e-6
+  select_best_initialization_by: train_loglik
+  fail_on_non_convergence: false
+
+feature_sets:
+  F1:
+    - vrp_har_gk
+
+  F2:
+    - vrp_har_gk
+    - rv_gk_22d_ann_lag1
     - index_return
-    - realised_volatility
-    - implied_volatility
-  default_columns:
-    - vrp
-    - realised_volatility
-    - implied_volatility
+
+  F3:
+    - vrp_har_gk
+    - rv_gk_22d_ann_lag1
+    - iv_ann
     - index_return
 
-preprocessing:
-  drop_missing: true
-  standardize_features: true
-  standardizer_fit_scope: train_only
-  winsorize:
-    enabled: false
-    lower_quantile: 0.01
-    upper_quantile: 0.99
+  F4:
+    - vrp_har_gk
+    - rv_gk_22d_ann_lag1
+    - iv_ann
+    - iv_ann_change_1d
+    - index_return
 
-training:
-  covariance_type: full
-  n_iter: 500
-  tol: 0.0001
-  random_seed: 42
-  min_train_observations: 756
-  refit_frequency_days: 21
-  training_mode: expanding_window
-  allow_walk_forward: true
+feature_name_aliases:
+  VRP_HAR: vrp_har_gk
+  RV: rv_gk_22d_ann_lag1
+  IV: iv_ann
+  IV_CHANGE: iv_ann_change_1d
+  INDEX_RETURN: index_return
 
-inference:
-  allowed_for_backtest: filtered_probabilities_only
-  forbidden_for_backtest:
-    - full_sample_smoothed_probabilities
-    - future_state_labels
-    - viterbi_path_from_full_sample
-  signal_probability_column_prefix: hmm_p_state_
-  regime_label_column: hmm_regime
+feature_construction:
+  index_return_preference:
+    - log_return
+    - simple_return
+  price_col_candidates:
+    - close
+    - adj_close
+    - underlying_close
+  iv_change_lag: 1
+  require_har_forecast_available_for_vrp_har: true
+  require_har_forecast_available_for_har_rv_forecast: true
+  block_rows_without_required_condition: true
+  do_not_forward_fill_features: true
+
+conditional_features:
+  vrp_har_gk: har_forecast_available
+  har_rv_gk_22d_forecast_ann: har_forecast_available
+
+forbidden_regime_construction_features:
+  forbidden_substrings:
+    - future
+    - forward
+    - expost
+    - label
+  forbidden_exact:
+    - threshold_state
+    - threshold_state_name
+    - threshold_stress_score
+    - threshold_regime_available
+    - threshold_trigger_reason
+    - rv_gk_22d_forward_ann_label
+    - vrp_forward_expost_gk_label
+  forbidden_prefixes:
+    - threshold_
+    - crisis_
+    - hmm_
+  forbidden_contains:
+    - crisis
+
+scaling:
+  method: standard
+  fit_on_train_only: true
+  apply_train_scaler_to_full_eligible_panel: true
+  write_scaled_feature_columns: true
+  scaled_feature_prefix: hmm_feature_
+  scaled_feature_suffix: _scaled
+  require_prefix_invariance_test: true
+
+scaled_feature_output_columns:
+  vrp_har_gk: hmm_feature_vrp_har_gk_scaled
+  rv_gk_22d_ann_lag1: hmm_feature_rv_gk_22d_ann_lag1_scaled
+  iv_ann: hmm_feature_iv_ann_scaled
+  iv_ann_change_1d: hmm_feature_iv_ann_change_1d_scaled
+  index_return: hmm_feature_index_return_scaled
+
+model_validation:
+  reject_candidate_if:
+    min_train_state_occupancy_lt: 0.05
+    min_test_state_occupancy_lt: 0.02
+    near_absorbing_transition_gt: 0.995
+    covariance_non_positive_definite: true
+    covariance_numerically_unstable: true
+    economic_monotonicity_failed: true
+    filtered_probability_row_sum_failed: true
+    model_does_not_converge: true
+    feature_availability_too_low: true
+  feature_availability:
+    min_eligible_observations: 1000
+    min_eligible_fraction: 0.50
+  probability_row_sum:
+    atol: 1.0e-8
+  allowed_failure_reasons:
+    - insufficient_data
+    - state_collapse
+    - non_convergence
+    - unstable_covariance
+    - economically_uninterpretable_states
+    - poor_oos_likelihood
+    - feature_availability_too_low
+    - filtered_probability_invalid
+    - unknown_failure
 
 state_labeling:
-  method: rank_by_realised_volatility
-  labels:
-    low_vol_state: calm
-    middle_state: transition
-    high_vol_state: stress
-  require_manual_diagnostic_review: true
+  use_train_period_only: true
+  use_scaled_features_for_labeling: false
+  use_crisis_windows_for_mapping: false
+  use_threshold_state_for_mapping: false
+  stress_score_components:
+    mean_iv_ann:
+      feature: iv_ann
+      direction: high
+    mean_rv_gk_22d_ann_lag1:
+      feature: rv_gk_22d_ann_lag1
+      direction: high
+    mean_index_return:
+      feature: index_return
+      direction: low
+    mean_vrp_har_gk:
+      feature: vrp_har_gk
+      direction: low
+  labels_for_3_state_model:
+    lowest_stress_score: calm
+    middle_stress_score: transition
+    highest_stress_score: stress
+  labels_for_2_state_model:
+    lowest_stress_score: calm
+    highest_stress_score: stress
+    transition_state_modelled: false
 
-outputs:
-  model_dir: data/processed/models/hmm
-  probabilities_dir: data/processed/regimes/hmm
-  diagnostics_dir: reports/tables/hmm
-  figures_dir: reports/figures/hmm
+probability_outputs:
+  raw_filtered_probability_prefix: hmm_filtered_prob_raw_state_
+  economic_filtered_probability_columns:
+    calm: hmm_filtered_prob_calm
+    transition: hmm_filtered_prob_transition
+    stress: hmm_filtered_prob_stress
+  diagnostic_smoothed_probability_prefix: hmm_diagnostic_smoothed_prob_raw_state_
+  transition_state_modelled_column: hmm_transition_state_modelled
+  use_hmmlearn_predict_proba_for_backtest: false
+  use_smoothed_probabilities_for_backtest: false
+  use_custom_forward_filter: true
 
-anti_lookahead:
-  enforce_train_test_split: true
-  enforce_filtered_probabilities: true
-  reject_full_sample_backtest_probabilities: true
+signal_availability:
+  signal_uses_date_t_close_data: true
+  signal_tradable_from_next_session: true
+  required_columns:
+    - hmm_signal_observation_date
+    - hmm_signal_available_after_close_date
+    - hmm_signal_trade_date
+    - hmm_state_for_next_session
+    - hmm_state_name_for_next_session
+    - hmm_filtered_prob_calm_for_next_session
+    - hmm_filtered_prob_transition_for_next_session
+    - hmm_filtered_prob_stress_for_next_session
+
+output_policy:
+  write_model_specific_outputs: true
+  write_primary_alias_outputs: true
+  include_smoothed_probabilities_diagnostic: true
+  include_threshold_comparison_diagnostics: true
+  include_crisis_diagnostics: true
+  include_forward_label_diagnostics: true
+  include_probability_audit: true
+  include_no_lookahead_audit: true
+  include_metadata_hashes: true
+
+paths:
+  input:
+    us_har_vrp: data/processed/us_vrp_har.parquet
+    india_har_vrp: data/processed/india_vrp_har.parquet
+    us_threshold_regimes: data/processed/us_threshold_regimes.parquet
+    india_threshold_regimes: data/processed/india_threshold_regimes.parquet
+  output:
+    processed_dir: data/processed
+    model_dir: models
+    tables_dir: reports/tables/phase_6
+    figures_dir: reports/figures/phase_6
+
+expected_primary_outputs:
+  processed:
+    - data/processed/us_hmm_regimes.parquet
+    - data/processed/india_hmm_regimes.parquet
+  models:
+    - models/us_gaussian_hmm.pkl
+    - models/india_gaussian_hmm.pkl
+
+expected_model_specific_output_pattern:
+  processed: data/processed/{market}_hmm_{feature_set}_k{n_states}_{covariance_type}.parquet
+  model: models/{market}_hmm_{feature_set}_k{n_states}_{covariance_type}.pkl
+
+expected_tables:
+  - reports/tables/phase_6/hmm_candidate_model_ranking.csv
+  - reports/tables/phase_6/hmm_feature_availability.csv
+  - reports/tables/phase_6/hmm_state_summary.csv
+  - reports/tables/phase_6/hmm_transition_matrix.csv
+  - reports/tables/phase_6/hmm_state_duration_summary.csv
+  - reports/tables/phase_6/hmm_state_by_year.csv
+  - reports/tables/phase_6/hmm_threshold_agreement.csv
+  - reports/tables/phase_6/hmm_crisis_hit_table.csv
+  - reports/tables/phase_6/hmm_crisis_lead_lag_table.csv
+  - reports/tables/phase_6/hmm_forward_label_by_state.csv
+  - reports/tables/phase_6/hmm_probability_audit.csv
+  - reports/tables/phase_6/hmm_no_lookahead_audit.csv
+  - reports/tables/phase_6/hmm_metadata.json
+
+candidate_ranking_table:
+  path: reports/tables/phase_6/hmm_candidate_model_ranking.csv
+  required_columns:
+    - market
+    - feature_set
+    - n_states
+    - covariance_type
+    - n_features
+    - n_observations
+    - n_train
+    - n_test
+    - train_loglik
+    - test_loglik
+    - train_loglik_per_obs
+    - test_loglik_per_obs
+    - aic
+    - bic
+    - converged
+    - n_iter
+    - min_state_occupancy_train
+    - min_state_occupancy_test
+    - economic_monotonicity_passed
+    - selected_primary
+    - rejection_reason
+
+feature_availability_table:
+  path: reports/tables/phase_6/hmm_feature_availability.csv
+  required_columns:
+    - market
+    - feature_set
+    - required_feature
+    - source_column
+    - required_condition
+    - n_total_rows
+    - n_missing_feature
+    - n_condition_failed
+    - n_eligible_rows_after_feature
+    - first_available_date
+    - last_available_date
+    - blocked_reason
+
+probability_audit_table:
+  path: reports/tables/phase_6/hmm_probability_audit.csv
+  required_columns:
+    - market
+    - feature_set
+    - n_states
+    - covariance_type
+    - filtered_prob_columns
+    - smoothed_prob_columns
+    - backtest_probability_columns
+    - uses_custom_forward_filter
+    - uses_hmmlearn_predict_proba_for_backtest
+    - uses_smoothed_probabilities_for_backtest
+    - future_invariance_passed
+    - row_sum_min
+    - row_sum_max
+    - max_abs_prefix_difference
+    - passed
+
+metadata:
+  path: reports/tables/phase_6/hmm_metadata.json
+  required_fields:
+    - input_data_hash
+    - feature_panel_hash
+    - train_window_hash
+    - scaler_hash
+    - hmm_parameter_hash
+    - config_hash
+    - code_version_or_git_commit
+    - created_at_utc
+
+crisis_windows_source:
+  use_from_threshold_config_if_available: true
+  diagnostics_only: true
+  allowed_outputs:
+    - crisis_stress_overlap
+    - crisis_lead_lag
+    - crisis_false_negative_days
+  forbidden_uses:
+    - tuning_feature_set
+    - tuning_n_states
+    - tuning_covariance_type
+    - state_mapping
+    - manual_stress_assignment
+
+threshold_comparison_policy:
+  allowed_after_hmm_state_assignment: true
+  threshold_state_as_feature: false
+  threshold_state_as_target: false
+  choose_hmm_model_by_threshold_match: false
+
+phase_scope:
+  include_gaussian_hmm: true
+  include_strategy_signals: false
+  include_pnl_backtest: false
+  include_ar_hmm: false
+  include_markov_autoregression: false
+  include_msgarch: false
+  include_ibridgepy: false
+  download_new_data: false

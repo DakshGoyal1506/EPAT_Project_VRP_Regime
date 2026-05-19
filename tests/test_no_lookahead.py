@@ -632,3 +632,177 @@ def test_har_forward_label_remains_forbidden_as_live_feature_name() -> None:
             raise AssertionError(f"{column} must not be a HAR live feature")
 
     assert "rv_gk_22d_forward_ann_label" in HAR_TARGET_COLUMNS
+    
+
+# ---------------------------------------------------------------------------
+# Phase 6 HMM no-lookahead integration checks
+# ---------------------------------------------------------------------------
+
+
+def test_hmm_registry_rejects_forward_threshold_crisis_and_hmm_derived_features() -> None:
+    from vrp.regimes.hmm_validation import assert_hmm_feature_columns_are_legal
+
+    forbidden = [
+        "future_rv",
+        "rv_gk_22d_forward_ann_label",
+        "vrp_forward_expost_gk_label",
+        "threshold_state",
+        "threshold_trigger_reason",
+        "crisis_window_flag",
+        "hmm_filtered_prob_stress",
+    ]
+
+    for col in forbidden:
+        with pytest.raises(ValueError):
+            assert_hmm_feature_columns_are_legal(["iv_ann", col])
+
+
+def test_hmm_probability_policy_forbids_smoothed_probabilities_for_backtest() -> None:
+    from vrp.regimes.hmm_validation import assert_output_probability_policy_is_safe
+
+    assert_output_probability_policy_is_safe(
+        uses_custom_forward_filter=True,
+        uses_hmmlearn_predict_proba_for_backtest=False,
+        uses_smoothed_probabilities_for_backtest=False,
+    )
+
+    with pytest.raises(ValueError):
+        assert_output_probability_policy_is_safe(
+            uses_custom_forward_filter=True,
+            uses_hmmlearn_predict_proba_for_backtest=False,
+            uses_smoothed_probabilities_for_backtest=True,
+        )
+
+    with pytest.raises(ValueError):
+        assert_output_probability_policy_is_safe(
+            uses_custom_forward_filter=True,
+            uses_hmmlearn_predict_proba_for_backtest=True,
+            uses_smoothed_probabilities_for_backtest=False,
+        )
+
+
+def test_hmm_crisis_windows_and_threshold_states_are_diagnostic_only() -> None:
+    from vrp.regimes.hmm_validation import (
+        validate_crisis_windows_usage,
+        validate_threshold_comparison_usage,
+    )
+
+    validate_crisis_windows_usage(
+        used_for="crisis_stress_overlap",
+        diagnostics_only=True,
+    )
+
+    validate_crisis_windows_usage(
+        used_for="crisis_lead_lag",
+        diagnostics_only=True,
+    )
+
+    validate_threshold_comparison_usage(
+        threshold_state_as_feature=False,
+        threshold_state_as_target=False,
+        choose_model_by_threshold_match=False,
+    )
+
+    with pytest.raises(ValueError):
+        validate_crisis_windows_usage(
+            used_for="model_selection",
+            diagnostics_only=True,
+        )
+
+    with pytest.raises(ValueError):
+        validate_threshold_comparison_usage(
+            threshold_state_as_feature=True,
+        )
+
+
+def test_hmm_signal_columns_encode_next_session_usage() -> None:
+    from vrp.regimes.hmm_features import build_hmm_feature_panel
+    from vrp.regimes.hmm_scaling import scale_hmm_feature_panel
+    from vrp.regimes.gaussian_hmm import (
+        HMMCandidateSpec,
+        HMMFitConfig,
+        fit_and_build_hmm_candidate_output,
+    )
+
+    rng = np.random.default_rng(123)
+
+    regime = np.tile(np.r_[np.zeros(60), np.ones(60)], 10).astype(int)
+    n = len(regime)
+
+    df = pd.DataFrame(
+        {
+            "date": pd.date_range("2020-01-01", periods=n),
+            "vrp_har_gk": np.where(
+                regime == 0,
+                rng.normal(0.04, 0.01, n),
+                rng.normal(-0.02, 0.02, n),
+            ),
+            "rv_gk_22d_ann_lag1": np.where(
+                regime == 0,
+                rng.normal(0.10, 0.02, n),
+                rng.normal(0.35, 0.05, n),
+            ),
+            "iv_ann": np.where(
+                regime == 0,
+                rng.normal(0.15, 0.02, n),
+                rng.normal(0.45, 0.05, n),
+            ),
+            "log_return": np.where(
+                regime == 0,
+                rng.normal(0.001, 0.005, n),
+                rng.normal(-0.002, 0.02, n),
+            ),
+            "har_forecast_available": True,
+        }
+    )
+
+    feature_panel = build_hmm_feature_panel(
+        df,
+        market="US",
+        feature_set="F3",
+        min_eligible_observations=1000,
+        min_eligible_fraction=0.50,
+    )
+
+    scaled = scale_hmm_feature_panel(
+        feature_panel,
+        train_fraction=0.70,
+        min_train_observations=750,
+        min_test_observations=250,
+    )
+
+    output = fit_and_build_hmm_candidate_output(
+        scaled,
+        spec=HMMCandidateSpec("F3", 2, "diag"),
+        fit_config=HMMFitConfig(
+            n_init=2,
+            n_iter=150,
+            random_seed=42,
+        ),
+    )
+
+    assert output.output_panel is not None
+
+    panel = output.output_panel.copy()
+
+    required = [
+        "hmm_signal_observation_date",
+        "hmm_signal_available_after_close_date",
+        "hmm_signal_trade_date",
+        "hmm_state_for_next_session",
+        "hmm_state_name_for_next_session",
+        "hmm_filtered_prob_calm_for_next_session",
+        "hmm_filtered_prob_transition_for_next_session",
+        "hmm_filtered_prob_stress_for_next_session",
+    ]
+
+    for col in required:
+        assert col in panel.columns
+
+    dates = pd.to_datetime(panel["date"])
+    trade_dates = pd.to_datetime(panel["hmm_signal_trade_date"], errors="coerce")
+    usable = trade_dates.notna()
+
+    assert usable.any()
+    assert (trade_dates.loc[usable] > dates.loc[usable]).all()
+    assert pd.isna(panel.loc[len(panel) - 1, "hmm_signal_trade_date"])
