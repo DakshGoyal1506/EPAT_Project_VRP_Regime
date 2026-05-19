@@ -744,6 +744,7 @@ __all__ = [
 
 from vrp.regimes.hmm_registry import (
     HMM_SIGNAL_AVAILABILITY_COLUMNS,
+    HMM_DIAGNOSTIC_SMOOTHED_RAW_PROB_PREFIX,
     get_hmm_filtered_economic_probability_columns,
 )
 from vrp.regimes.hmm_validation import (
@@ -1405,7 +1406,7 @@ def build_hmm_no_lookahead_audit_table(
     econ_cols = get_hmm_filtered_economic_probability_columns()
     diagnostic_smoothed_cols = [
         col for col in panel.columns
-        if col.startswith(HMM_FILTERED_RAW_PROB_PREFIX)
+        if col.startswith(HMM_DIAGNOSTIC_SMOOTHED_RAW_PROB_PREFIX)
     ]
     backtest_cols_safe = all(col in panel.columns for col in econ_cols) and not any(
         col in econ_cols for col in diagnostic_smoothed_cols

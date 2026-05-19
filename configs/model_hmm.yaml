@@ -250,22 +250,22 @@ expected_model_specific_output_pattern:
   model: models/{market}_hmm_{feature_set}_k{n_states}_{covariance_type}.pkl
 
 expected_tables:
-  - reports/tables/phase_6/hmm_candidate_model_ranking.csv
-  - reports/tables/phase_6/hmm_feature_availability.csv
-  - reports/tables/phase_6/hmm_state_summary.csv
-  - reports/tables/phase_6/hmm_transition_matrix.csv
-  - reports/tables/phase_6/hmm_state_duration_summary.csv
-  - reports/tables/phase_6/hmm_state_by_year.csv
-  - reports/tables/phase_6/hmm_threshold_agreement.csv
-  - reports/tables/phase_6/hmm_crisis_hit_table.csv
-  - reports/tables/phase_6/hmm_crisis_lead_lag_table.csv
-  - reports/tables/phase_6/hmm_forward_label_by_state.csv
-  - reports/tables/phase_6/hmm_probability_audit.csv
-  - reports/tables/phase_6/hmm_no_lookahead_audit.csv
-  - reports/tables/phase_6/hmm_metadata.json
+  - reports/tables/phase_6/{market}/hmm_candidate_model_ranking.csv
+  - reports/tables/phase_6/{market}/hmm_feature_availability.csv
+  - reports/tables/phase_6/{market}/hmm_state_summary.csv
+  - reports/tables/phase_6/{market}/hmm_transition_matrix.csv
+  - reports/tables/phase_6/{market}/hmm_state_duration_summary.csv
+  - reports/tables/phase_6/{market}/hmm_state_by_year.csv
+  - reports/tables/phase_6/{market}/hmm_threshold_agreement.csv
+  - reports/tables/phase_6/{market}/hmm_crisis_hit_table.csv
+  - reports/tables/phase_6/{market}/hmm_crisis_lead_lag_table.csv
+  - reports/tables/phase_6/{market}/hmm_forward_label_by_state.csv
+  - reports/tables/phase_6/{market}/hmm_probability_audit.csv
+  - reports/tables/phase_6/{market}/hmm_no_lookahead_audit.csv
+  - reports/tables/phase_6/{market}/hmm_metadata.json
 
 candidate_ranking_table:
-  path: reports/tables/phase_6/hmm_candidate_model_ranking.csv
+  path: reports/tables/phase_6/{market}/hmm_candidate_model_ranking.csv
   required_columns:
     - market
     - feature_set
@@ -290,7 +290,7 @@ candidate_ranking_table:
     - rejection_reason
 
 feature_availability_table:
-  path: reports/tables/phase_6/hmm_feature_availability.csv
+  path: reports/tables/phase_6/{market}/hmm_feature_availability.csv
   required_columns:
     - market
     - feature_set
@@ -306,7 +306,7 @@ feature_availability_table:
     - blocked_reason
 
 probability_audit_table:
-  path: reports/tables/phase_6/hmm_probability_audit.csv
+  path: reports/tables/phase_6/{market}/hmm_probability_audit.csv
   required_columns:
     - market
     - feature_set
@@ -325,7 +325,7 @@ probability_audit_table:
     - passed
 
 metadata:
-  path: reports/tables/phase_6/hmm_metadata.json
+  path: reports/tables/phase_6/{market}/hmm_metadata.json
   required_fields:
     - input_data_hash
     - feature_panel_hash
