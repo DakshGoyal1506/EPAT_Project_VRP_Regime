@@ -1,0 +1,278 @@
+# Phase 7 — Markov autoregression / AR-aware regime model
+#
+# Primary objective:
+# Add a point-in-time safe, AR-aware regime model using statsmodels'
+# MarkovAutoregression. This model is separate from the Phase 6 Gaussian HMM
+# pipeline and uses the `mar_*` output prefix.
+#
+# Scope:
+# - model fitting
+# - filtered probabilities
+# - diagnostic smoothed probabilities
+# - economic state labelling
+# - HMM/threshold comparison after MAR states are assigned
+
+model_name: markov_autoreg_v1
+implementation: statsmodels_markov_autoregression
+output_prefix: mar
+random_seed: 42
+
+primary_model:
+  target: vrp_har
+  order: 1
+  n_states: 2
+  switching_ar: true
+  switching_trend: true
+  switching_variance: true
+  primary: true
+
+candidate_models:
+  targets:
+    - vrp_har
+    - rv
+  orders:
+    - 1
+  n_states:
+    - 2
+    - 3
+  switching_ar:
+    - true
+  switching_trend:
+    - true
+  switching_variance:
+    - true
+    - false
+
+primary_selection_policy:
+  k2_only_primary: true
+  k3_robustness_only: true
+  allow_k3_primary_promotion: false
+  reject_k3_by_ranking_alone: true
+  hmm_agreement_is_selection_objective: false
+
+target_columns:
+  vrp_har: vrp_har_gk
+  rv: rv_gk_22d_ann_lag1
+  iv: iv_ann
+  returns: index_return
+
+target_availability_rules:
+  vrp_har:
+    required_boolean_column: har_forecast_available
+    required_boolean_value: true
+  rv:
+    required_boolean_column: null
+    required_boolean_value: null
+  iv:
+    required_boolean_column: null
+    required_boolean_value: null
+  returns:
+    required_boolean_column: null
+    required_boolean_value: null
+
+target_transform:
+  vrp_har:
+    method: winsorize_train_quantiles_then_standardize
+    lower_quantile: 0.005
+    upper_quantile: 0.995
+
+  rv:
+    method: log_positive
+    floor: 1.0e-8
+
+  iv:
+    method: log_positive
+    floor: 1.0e-8
+
+  returns:
+    method: none
+
+train_test_split:
+  method: chronological_fraction
+  train_fraction: 0.70
+  min_train_observations: 750
+  min_test_observations: 250
+
+fit:
+  maxiter: 1000
+  em_iter: 20
+  search_reps: 20
+  cov_type: approx
+  disp: false
+
+fit_firewall:
+  require_converged: true
+  require_finite_llf: true
+  require_valid_covariance: true
+  require_filtered_probabilities: true
+  reject_nan_probabilities: true
+  reject_invalid_probability_row_sums: true
+  reject_invalid_variance: true
+  reject_explosive_ar: true
+
+validation:
+  min_train_state_occupancy: 0.05
+  min_test_state_occupancy: 0.02
+  near_absorbing_transition_threshold: 0.995
+  probability_row_sum_tolerance: 1.0e-8
+  min_available_fraction_after_warmup: 0.60
+  ar_explosive_abs_phi_threshold: 1.00
+
+economic_state_checks:
+  enabled: true
+  reject_primary_if_incoherent: true
+
+  target_rules:
+    vrp_har:
+      stress_has_lower_target_mean: true
+      stress_has_higher_target_volatility: true
+      stress_has_lower_index_return_if_available: true
+      stress_has_higher_iv_if_available: true
+      stress_has_higher_rv_if_available: true
+
+    rv:
+      stress_has_higher_target_mean: true
+      stress_has_higher_target_volatility: true
+      stress_has_lower_index_return_if_available: true
+      stress_has_higher_iv_if_available: true
+
+signal_timing:
+  observation_timing: after_close
+  signal_trade_lag_sessions: 1
+
+  required_columns:
+    - mar_signal_observation_date
+    - mar_signal_available_after_close_date
+    - mar_signal_trade_date
+    - mar_model_observation_available
+    - mar_state_for_next_session
+    - mar_state_name_for_next_session
+    - mar_filtered_prob_calm_for_next_session
+    - mar_filtered_prob_transition_for_next_session
+    - mar_filtered_prob_stress_for_next_session
+
+input_policy:
+  allowed_target_candidates:
+    - vrp_har_gk
+    - rv_gk_22d_ann_lag1
+    - iv_ann
+    - index_return
+
+  forbidden_exact_columns:
+    - rv_gk_22d_forward_ann_label
+    - vrp_forward_expost_gk_label
+    - threshold_state
+    - threshold_state_name
+
+  forbidden_prefixes:
+    - hmm_state
+    - hmm_filtered_prob
+    - hmm_diagnostic_smoothed
+    - threshold_state
+    - threshold_regime
+    - crisis_window
+    - crisis_label
+
+  forbidden_substrings:
+    - future
+    - forward
+    - expost
+    - ex_post
+    - label
+
+  diagnostic_only_allowed_after_assignment:
+    - threshold_state
+    - threshold_state_name
+    - hmm_state_for_next_session
+    - hmm_state_name_for_next_session
+    - hmm_filtered_prob_calm_for_next_session
+    - hmm_filtered_prob_transition_for_next_session
+    - hmm_filtered_prob_stress_for_next_session
+
+output_policy:
+  include_smoothed_probabilities_diagnostic: true
+  write_model_specific_outputs: true
+  write_primary_alias_outputs: true
+  include_hmm_comparison: true
+  include_threshold_comparison: true
+  include_crisis_windows_diagnostic_only: true
+  write_model_pickle: true
+  write_metadata_json: true
+  write_candidate_ranking: true
+  write_no_lookahead_audit: true
+  write_ar_stability: true
+
+probability_columns:
+  raw_filtered_prefix: mar_filtered_prob_raw_state_
+  raw_smoothed_diagnostic_prefix: mar_diagnostic_smoothed_prob_raw_state_
+
+  economic_filtered:
+    calm: mar_filtered_prob_calm
+    transition: mar_filtered_prob_transition
+    stress: mar_filtered_prob_stress
+
+  economic_filtered_for_next_session:
+    calm: mar_filtered_prob_calm_for_next_session
+    transition: mar_filtered_prob_transition_for_next_session
+    stress: mar_filtered_prob_stress_for_next_session
+
+k2_policy:
+  transition_state_modelled: false
+  transition_probability_value_after_warmup: 0.0
+  do_not_fill_warmup_transition_probability: true
+
+k3_policy:
+  transition_state_modelled: true
+  transition_state_role: middle_stress_score
+
+audit:
+  parameter_lookahead_required_fields:
+    - mar_fit_window_start
+    - mar_fit_window_end
+    - mar_filter_window_start
+    - mar_filter_window_end
+    - params_estimated_using_full_sample
+    - filtered_probabilities_use_train_params_only
+    - smoothed_probabilities_used_for_backtest
+    - passed
+
+  mandatory_values:
+    params_estimated_using_full_sample: false
+    filtered_probabilities_use_train_params_only: true
+    smoothed_probabilities_used_for_backtest: false
+
+paths:
+  processed_input:
+    US: data/processed/us_vrp_har.parquet
+    INDIA: data/processed/india_vrp_har.parquet
+
+  threshold_regimes:
+    US: data/processed/us_threshold_regimes.parquet
+    INDIA: data/processed/india_threshold_regimes.parquet
+
+  hmm_regimes:
+    US: data/processed/us_hmm_regimes.parquet
+    INDIA: data/processed/india_hmm_regimes.parquet
+
+  model_specific_output_template: data/processed/markov_autoreg/{market_lower}_markov_autoreg_{suffix}.parquet
+  primary_alias_output_template: data/processed/{market_lower}_markov_autoreg_regimes.parquet
+
+  model_specific_model_template: models/markov_autoreg/{market_lower}_markov_autoreg_{suffix}.pkl
+  primary_alias_model_template: models/{market_lower}_markov_autoreg.pkl
+
+  report_dir_template: reports/tables/phase_7/{market_lower}
+  figure_dir_template: reports/figures/phase_7/{market_lower}
+
+  metadata_template: reports/tables/phase_7/{market_lower}/mar_metadata.json
+  candidate_ranking_template: reports/tables/phase_7/{market_lower}/mar_candidate_model_ranking.csv
+  no_lookahead_audit_template: reports/tables/phase_7/{market_lower}/mar_no_lookahead_audit.csv
+  ar_stability_template: reports/tables/phase_7/{market_lower}/mar_ar_stability.csv
+  state_summary_template: reports/tables/phase_7/{market_lower}/mar_state_summary.csv
+  transition_matrix_template: reports/tables/phase_7/{market_lower}/mar_transition_matrix.csv
+  duration_summary_template: reports/tables/phase_7/{market_lower}/mar_duration_summary.csv
+  state_by_year_template: reports/tables/phase_7/{market_lower}/mar_state_by_year.csv
+  probability_audit_template: reports/tables/phase_7/{market_lower}/mar_probability_audit.csv
+  hmm_agreement_template: reports/tables/phase_7/{market_lower}/mar_hmm_agreement.csv
+  threshold_agreement_template: reports/tables/phase_7/{market_lower}/mar_threshold_agreement.csv
+
+  global_regime_model_comparison: reports/tables/regime_model_comparison.csv
