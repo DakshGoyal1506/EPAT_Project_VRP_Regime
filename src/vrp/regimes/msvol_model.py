@@ -435,11 +435,16 @@ def fit_msvol_markov_regression(
     if k_regimes != 2:
         raise MSVolError("Phase 8 Python MSVOL supports exactly 2 regimes.")
 
+    trend = str(spec.get("trend", "c"))
+    switching_variance = bool(spec.get("switching_variance", True))
+    switching_trend = bool(spec.get("switching_trend", False))
+
     model = MarkovRegression(
         endog=residuals,
         k_regimes=2,
-        trend=str(spec.get("trend", "c")),
-        switching_variance=bool(spec.get("switching_variance", True)),
+        trend=trend,
+        switching_trend=switching_trend,
+        switching_variance=switching_variance,
     )
 
     result = model.fit(
@@ -478,7 +483,11 @@ def fit_msvol_markov_regression(
         conditional_variance=conditional_variance,
         fit_status="ok",
         convergence_status=convergence_status,
-        selected_spec="MarkovRegression/k_regimes=2/trend=c/switching_variance=True",
+        selected_spec=(
+            f"MarkovRegression/k_regimes=2/trend={trend}/"
+            f"switching_trend={switching_trend}/"
+            f"switching_variance={switching_variance}"
+        ),
         probability_extraction_method=prob_method,
         loglike=_extract_metric(result, "llf"),
         aic=_extract_metric(result, "aic"),
