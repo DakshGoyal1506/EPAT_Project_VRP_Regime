@@ -1,0 +1,94 @@
+model_name: msgarch_appendix_v1
+implementation: R_MSGARCH
+optional_phase: true
+required_for_main_pipeline: false
+
+phase_scope:
+  appendix_only: true
+  main_question: "Do MSGARCH return-volatility regimes broadly agree with stress regimes from threshold, Gaussian HMM, and Markov autoregression?"
+  use_for_strategy: false
+  use_for_backtest: false
+  use_for_position_sizing: false
+
+input_policy:
+  primary_input: index_log_return
+  prefilter_mean: true
+  prefilter_method: AR1
+  return_scale: percent
+  min_observations: 1000
+
+markets:
+  US:
+    source_panel: data/processed/us_vrp_har.parquet
+    output_input_csv: data/interim/msgarch/us_msgarch_input.csv
+  INDIA:
+    source_panel: data/processed/india_vrp_har.parquet
+    output_input_csv: data/interim/msgarch/india_msgarch_input.csv
+
+return_column_candidates:
+  - log_return
+  - index_return
+  - simple_return
+
+price_column_candidates:
+  - close
+  - adj_close
+  - underlying_close
+
+primary_spec:
+  variance_model: sGARCH
+  distribution: std
+  n_states: 2
+
+fallback_specs:
+  - variance_model: sGARCH
+    distribution: norm
+    n_states: 2
+
+disabled_specs:
+  - variance_model: gjrGARCH
+    distribution: std
+    n_states: 2
+    disabled_reason: "Rejected from first implementation; enable only later if both sGARCH models fit cleanly for both markets."
+
+state_policy:
+  n_processed_states: 2
+  state_names:
+    calm: calm
+    stress: stress
+  transition_state_modelled: false
+  transition_probability_for_valid_rows: 0.0
+  mapping_rule: "lower average conditional volatility -> calm; higher average conditional volatility -> stress"
+
+timing_policy:
+  filtered_probability_observation: "date t close"
+  signal_available: "after date t close"
+  signal_trade_date: "next available trading session"
+
+output_policy:
+  write_skip_report_if_unavailable: true
+  include_smoothed_probabilities_diagnostic: true
+  write_primary_alias_outputs: true
+  interim_dir: data/interim/msgarch
+  phase8_report_dir: reports/tables/phase_8
+  input_summary_csv: reports/tables/phase_8/msgarch_input_summary.csv
+
+diagnostics:
+  compare_threshold: true
+  compare_hmm: true
+  compare_markov_autoreg: true
+  crisis_windows_diagnostics_only: true
+  forward_labels_diagnostics_only: true
+
+forbidden:
+  har_residual_input: true
+  vrp_har_input: true
+  gjr_garch_first_pass: true
+  k3_msgarch: true
+  var_es: true
+  strategy_signal: true
+  backtest: true
+  cross_market_lead_lag: true
+  large_parameter_grid: true
+  crisis_window_model_selection: true
+  mandatory_r_dependency: true

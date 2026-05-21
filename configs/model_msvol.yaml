@@ -1,0 +1,95 @@
+model_name: msvol_appendix_v1
+implementation: PYTHON_STATSMODELS_MARKOV_REGRESSION
+optional_phase: true
+required_for_main_pipeline: false
+
+phase_scope:
+  appendix_only: true
+  true_msgarch: false
+  report_label: "Python-only Markov-switching volatility robustness model"
+  main_question: "Do independently estimated return-volatility regimes broadly agree with stress regimes from threshold, Gaussian HMM, and Markov autoregression?"
+  use_for_strategy: false
+  use_for_backtest: false
+  use_for_position_sizing: false
+
+input_policy:
+  primary_input: index_log_return
+  input_csv_is_legacy_msgarch_export: true
+  prefilter_mean: true
+  prefilter_method: AR1
+  return_scale: percent
+  min_observations: 1000
+
+markets:
+  US:
+    input_csv: data/interim/msgarch/us_msgarch_input.csv
+    raw_output_csv: data/interim/msvol/us_msvol_raw_output.csv
+    preflight_json: data/interim/msvol/us_msvol_preflight.json
+    skip_report_json: data/interim/msvol/us_msvol_skip_report.json
+    model_summary_json: data/interim/msvol/us_msvol_model_summary.json
+  INDIA:
+    input_csv: data/interim/msgarch/india_msgarch_input.csv
+    raw_output_csv: data/interim/msvol/india_msvol_raw_output.csv
+    preflight_json: data/interim/msvol/india_msvol_preflight.json
+    skip_report_json: data/interim/msvol/india_msvol_skip_report.json
+    model_summary_json: data/interim/msvol/india_msvol_model_summary.json
+
+model_spec:
+  library: statsmodels
+  model_class: MarkovRegression
+  k_regimes: 2
+  trend: c
+  switching_variance: true
+  switching_trend: false
+
+fit_policy:
+  maxiter: 300
+  em_iter: 20
+  search_reps: 20
+  search_iter: 20
+  disp: false
+
+state_policy:
+  n_processed_states: 2
+  state_names:
+    calm: calm
+    stress: stress
+  transition_state_modelled: false
+  transition_probability_for_valid_rows: 0.0
+  mapping_rule: "lower variance state -> calm; higher variance state -> stress"
+
+timing_policy:
+  filtered_probability_observation: "date t close"
+  signal_available: "after date t close"
+  signal_trade_date: "next available trading session"
+
+output_policy:
+  interim_dir: data/interim/msvol
+  processed_dir: data/processed
+  phase8_report_dir: reports/tables/phase_8
+  include_smoothed_probabilities_diagnostic: true
+
+diagnostics:
+  compare_threshold: true
+  compare_hmm: true
+  compare_markov_autoreg: true
+  crisis_windows_diagnostics_only: true
+  forward_labels_diagnostics_only: true
+
+report_wording:
+  active_model_description: "Phase 8 implements a Python-only Markov-switching volatility model using statsmodels MarkovRegression with regime-specific variance. This is not a full Markov-switching GARCH model."
+  true_msgarch_note: "True MSGARCH remains an optional future appendix because it requires R's MSGARCH package."
+
+forbidden:
+  call_python_model_msgarch: true
+  har_residual_input: true
+  vrp_har_input: true
+  gjr_garch_first_pass: true
+  k3_regimes: true
+  var_es: true
+  strategy_signal: true
+  backtest: true
+  cross_market_lead_lag: true
+  large_parameter_grid: true
+  crisis_window_model_selection: true
+  r_dependency_in_main_pipeline: true
