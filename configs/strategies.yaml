@@ -1,0 +1,188 @@
+# Phase 9 strategy-signal configuration.
+#
+# This file defines ex-ante short-vol exposure-intention rules only.
+# It does not define backtest returns, PnL, transaction costs, Sharpe,
+# drawdown, optimisation, option-chain execution, or live trading.
+
+phase: 9
+version: 1
+
+description: >
+  Phase 9 converts validated regime outputs into next-session short-vol
+  exposure intentions. The strategy universe is intentionally small,
+  fixed before Phase 10, and restricted to seven approved strategies.
+
+report_note: >
+  Phase 9 defines ex-ante exposure intentions only. It does not evaluate
+  realised strategy performance. The rules were fixed before Phase 10
+  backtesting. Reported diagnostics describe signal availability, exposure
+  distribution, and rule activation only; they are not evidence of
+  profitability.
+
+exposure_bounds:
+  min_exposure: -1.0
+  max_exposure: 0.0
+
+frozen_constants:
+  transition_exposure: -0.25
+  stress_probability_cutoff: 0.40
+  probability_sum_tolerance: 0.001
+  primary_probability_rule: calm_minus_stress
+  carry_gate_vrp_column: vrp_har_gk
+  carry_gate_operator: gt
+  carry_gate_threshold: 0.0
+  use_vrp_har_positive_as_source_of_truth: false
+
+timing_policy:
+  signal_computed_after_close: true
+  threshold_shift_to_next_trade_date: true
+  hmm_next_session_columns_are_pre_shifted: true
+  mar_next_session_columns_are_pre_shifted: true
+  do_not_double_shift_hmm_or_mar: true
+
+msvol_policy:
+  status: excluded_diagnostic_only
+  read_input_files: false
+  hash_input_files: false
+  merge_columns: false
+  include_in_diagnostics: false
+
+allowed_strategy_models:
+  - unconditional
+  - threshold
+  - gaussian_hmm
+  - markov_autoreg
+
+forbidden_strategy_models:
+  - msvol
+  - msgarch
+
+approved_strategy_names:
+  - unconditional_full
+  - threshold_hard_filter
+  - threshold_defensive
+  - hmm_prob_linear
+  - hmm_prob_linear_carry
+  - mar_prob_linear
+  - mar_prob_linear_carry
+
+rejected_strategy_names:
+  - threshold_carry_aware
+  - hmm_hard
+  - hmm_defensive
+  - mar_hard
+  - mar_defensive
+  - probability_product
+  - probability_cutoff_filter
+  - msvol
+  - msgarch
+
+input_files:
+  US:
+    har: data/processed/us_vrp_har.parquet
+    threshold: data/processed/us_threshold_regimes.parquet
+    gaussian_hmm: data/processed/us_hmm_regimes.parquet
+    markov_autoreg: data/processed/us_markov_autoreg_regimes.parquet
+
+  INDIA:
+    har: data/processed/india_vrp_har.parquet
+    threshold: data/processed/india_threshold_regimes.parquet
+    gaussian_hmm: data/processed/india_hmm_regimes.parquet
+    markov_autoreg: data/processed/india_markov_autoreg_regimes.parquet
+
+output_files:
+  US: data/processed/us_strategy_signals.parquet
+  INDIA: data/processed/india_strategy_signals.parquet
+
+report_files:
+  signal_summary: reports/tables/phase_9/strategy_signal_summary.csv
+  exposure_by_year: reports/tables/phase_9/strategy_exposure_by_year.csv
+  exposure_change_summary: reports/tables/phase_9/strategy_exposure_change_summary.csv
+  blocked_reason_summary: reports/tables/phase_9/strategy_blocked_reason_summary.csv
+  no_lookahead_audit: reports/tables/phase_9/strategy_no_lookahead_audit.csv
+  metadata: reports/tables/phase_9/strategy_metadata.json
+
+strategies:
+  unconditional_full:
+    active: true
+    model_family: unconditional
+    rule_name: unconditional_full
+    requires_probabilities: false
+    requires_har: false
+    probability_rule: null
+    transition_exposure: null
+    max_stress_probability: null
+    require_vrp_har_positive: false
+    description: Unconditional full short-vol benchmark.
+
+  threshold_hard_filter:
+    active: true
+    model_family: threshold
+    rule_name: hard_filter
+    requires_probabilities: false
+    requires_har: false
+    probability_rule: null
+    transition_exposure: null
+    max_stress_probability: null
+    require_vrp_har_positive: false
+    description: Deterministic threshold stress-veto baseline.
+
+  threshold_defensive:
+    active: true
+    model_family: threshold
+    rule_name: defensive
+    requires_probabilities: false
+    requires_har: false
+    probability_rule: null
+    transition_exposure: -0.25
+    max_stress_probability: null
+    require_vrp_har_positive: false
+    description: Threshold baseline with partial transition exposure.
+
+  hmm_prob_linear:
+    active: true
+    model_family: gaussian_hmm
+    rule_name: probability_linear_margin
+    requires_probabilities: true
+    requires_har: false
+    probability_rule: calm_minus_stress
+    transition_exposure: null
+    max_stress_probability: null
+    require_vrp_har_positive: false
+    description: HMM filtered-probability linear exposure sizing.
+
+  hmm_prob_linear_carry:
+    active: true
+    model_family: gaussian_hmm
+    rule_name: probability_linear_margin_carry
+    requires_probabilities: true
+    requires_har: true
+    probability_rule: calm_minus_stress
+    transition_exposure: null
+    max_stress_probability: 0.40
+    require_vrp_har_positive: true
+    description: HMM probability sizing with positive prospective VRP gate.
+
+  mar_prob_linear:
+    active: true
+    model_family: markov_autoreg
+    rule_name: probability_linear_margin
+    requires_probabilities: true
+    requires_har: false
+    probability_rule: calm_minus_stress
+    transition_exposure: null
+    max_stress_probability: null
+    require_vrp_har_positive: false
+    description: MAR filtered-probability linear exposure sizing.
+
+  mar_prob_linear_carry:
+    active: true
+    model_family: markov_autoreg
+    rule_name: probability_linear_margin_carry
+    requires_probabilities: true
+    requires_har: true
+    probability_rule: calm_minus_stress
+    transition_exposure: null
+    max_stress_probability: 0.40
+    require_vrp_har_positive: true
+    description: MAR probability sizing with positive prospective VRP gate.
