@@ -561,6 +561,8 @@ def write_metadata_json(
     """
     Write Phase 9 metadata JSON.
     """
+    assert_diagnostics_are_phase9_only(tables={}, metadata=metadata)
+
     path = Path(output_path)
     path.parent.mkdir(parents=True, exist_ok=True)
 
