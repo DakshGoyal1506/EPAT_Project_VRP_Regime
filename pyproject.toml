@@ -7,7 +7,7 @@ name = "epat-vrp-regime"
 version = "0.1.0"
 description = "Variance Risk Premium decomposition and regime-conditional harvesting across US and Indian volatility markets."
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 authors = [
     { name = "Daksh Goyal" }
 ]
@@ -50,8 +50,8 @@ addopts = "-q"
 
 [tool.black]
 line-length = 88
-target-version = ["py310"]
+target-version = ["py311"]
 
 [tool.ruff]
 line-length = 88
-target-version = "py310"
+target-version = "py311"
