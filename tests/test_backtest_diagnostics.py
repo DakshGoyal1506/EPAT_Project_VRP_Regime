@@ -163,6 +163,26 @@ def test_year_table_and_crisis_table_build(tmp_path: Path) -> None:
     assert set(crisis["subperiod"]) == {"ToyWindow"}
 
 
+def test_crisis_table_includes_missing_strategies_as_empty_groups(
+    tmp_path: Path,
+) -> None:
+    config_path = _write_config(tmp_path)
+    config = load_backtest_config(config_path)
+
+    panel = _build_toy_panel()
+    panel = panel.loc[panel["strategy_name"] != "mar_prob_linear_carry"].copy()
+
+    crisis = build_crisis_window_performance_table(panel, config=config)
+
+    missing_row = crisis.loc[
+        crisis["strategy_name"].astype(str).eq("mar_prob_linear_carry")
+    ].iloc[0]
+
+    assert "mar_prob_linear_carry" in set(crisis["strategy_name"])
+    assert int(missing_row["n_obs"]) == 0
+    assert int(missing_row["n_eligible"]) == 0
+
+
 def test_no_lookahead_audit_passes_on_toy_panel(tmp_path: Path) -> None:
     config_path = _write_config(tmp_path)
     config = load_backtest_config(config_path)

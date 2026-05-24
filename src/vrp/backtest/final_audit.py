@@ -342,6 +342,70 @@ def audit_backtest_panel(
                 ),
             )
 
+        exposure = pd.to_numeric(
+            panel.loc[eligible, "target_exposure_for_backtest"],
+            errors="coerce",
+        )
+        label = pd.to_numeric(
+            panel.loc[eligible, "vrp_forward_expost_gk_label"],
+            errors="coerce",
+        )
+        gross = pd.to_numeric(
+            panel.loc[eligible, "gross_return_proxy"],
+            errors="coerce",
+        )
+        cost = pd.to_numeric(
+            panel.loc[eligible, "cost_proxy"],
+            errors="coerce",
+        )
+        net = pd.to_numeric(
+            panel.loc[eligible, "net_return_proxy"],
+            errors="coerce",
+        )
+
+        expected_gross = -exposure * label
+        expected_net = gross - cost.fillna(0.0)
+
+        n_bad_gross = int(
+            (~np.isclose(
+                gross.to_numpy(dtype=float),
+                expected_gross.to_numpy(dtype=float),
+                atol=1e-12,
+                rtol=0.0,
+            )).sum()
+        )
+        if n_bad_gross > 0:
+            _add_issue(
+                issues,
+                severity="error",
+                component=component,
+                message=(
+                    "Payoff identity violation: gross_return_proxy must equal "
+                    "-target_exposure_for_backtest * vrp_forward_expost_gk_label. "
+                    f"Count={n_bad_gross}."
+                ),
+            )
+
+        n_bad_net = int(
+            (~np.isclose(
+                net.to_numpy(dtype=float),
+                expected_net.to_numpy(dtype=float),
+                atol=1e-12,
+                rtol=0.0,
+            )).sum()
+        )
+        if n_bad_net > 0:
+            _add_issue(
+                issues,
+                severity="error",
+                component=component,
+                message=(
+                    "Net return identity violation: net_return_proxy must equal "
+                    "gross_return_proxy - cost_proxy. "
+                    f"Count={n_bad_net}."
+                ),
+            )
+
     ineligible = ~eligible
     if ineligible.any():
         n_bad_ineligible_exposure = int(

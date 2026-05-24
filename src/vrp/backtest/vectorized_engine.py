@@ -438,6 +438,13 @@ def run_market_backtest(
 
     strategy = _normalize_strategy(strategy)
 
+    if write and strategy != "all":
+        raise VectorizedBacktestError(
+            "Writing a single-strategy panel to the canonical Phase 10 output path "
+            "is disabled. Use --dry-run for single-strategy inspection, or run "
+            "--strategy all to write data/processed/*_backtest_panel.parquet."
+        )
+
     config = _resolve_config_paths(config, repo_root=repo_root)
     assert_strategy_universe_locked(config.strategy_universe)
 

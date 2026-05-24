@@ -262,15 +262,33 @@ def test_run_market_backtest_single_strategy_filter(tmp_path: Path) -> None:
         strategy="unconditional_full",
         cost_bps=5.0,
         force=False,
-        write=True,
+        write=False,
     )
-
-    panel = pd.read_parquet(result.output_path)
 
     assert result.n_rows == 3
     assert result.n_eligible == 3
     assert result.n_strategies == 1
-    assert set(panel["strategy_name"]) == {"unconditional_full"}
+    assert result.wrote_files is False
+    assert not result.output_path.exists()
+    assert not result.metadata_path.exists()
+
+
+def test_run_market_backtest_rejects_writing_single_strategy_to_canonical_output(
+    tmp_path: Path,
+) -> None:
+    config_path = _prepare_tmp_repo(tmp_path)
+    config = load_backtest_config(config_path)
+
+    with pytest.raises(VectorizedBacktestError):
+        run_market_backtest(
+            market="US",
+            config=config,
+            repo_root=tmp_path,
+            strategy="unconditional_full",
+            cost_bps=5.0,
+            force=True,
+            write=True,
+        )
 
 
 def test_run_market_backtest_dry_run_does_not_write(tmp_path: Path) -> None:

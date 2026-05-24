@@ -9,6 +9,7 @@ import yaml
 from vrp.backtest.backtest_config import load_backtest_config
 from vrp.backtest.final_audit import (
     assert_final_audit_passed,
+    audit_backtest_panel,
     run_phase10_final_audit,
     write_final_audit_report,
 )
@@ -195,3 +196,30 @@ def test_final_audit_fails_when_required_output_missing(tmp_path: Path) -> None:
     assert result.status == "failed"
     assert result.n_errors > 0
     assert any("Missing panel" in issue.message for issue in result.issues)
+
+
+def test_final_audit_detects_payoff_identity_violations(tmp_path: Path) -> None:
+    config_path = _prepare_tmp_repo(tmp_path)
+    config = load_backtest_config(config_path)
+
+    run_backtests(
+        markets=["US", "INDIA"],
+        config=config,
+        repo_root=tmp_path,
+        strategy="all",
+        cost_bps=5.0,
+        force=True,
+        write=True,
+    )
+
+    panel = pd.read_parquet(tmp_path / "data" / "processed" / "us_backtest_panel.parquet")
+    panel.loc[panel["is_backtest_eligible"].astype(bool).idxmax(), "gross_return_proxy"] += 0.01
+    panel.loc[panel["is_backtest_eligible"].astype(bool).idxmax(), "net_return_proxy"] += 0.02
+
+    issues: list = []
+    audit_backtest_panel(panel, market="US", issues=issues)
+
+    messages = "\n".join(issue.message for issue in issues)
+
+    assert "Payoff identity violation" in messages
+    assert "Net return identity violation" in messages

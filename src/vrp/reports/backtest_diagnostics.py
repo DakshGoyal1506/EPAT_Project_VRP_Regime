@@ -519,11 +519,11 @@ def build_crisis_window_performance_table(
                 (trade_dates >= start_ts) & (trade_dates <= end_ts)
             ].copy()
 
-            for strategy_name, group in window_panel.groupby(
-                "strategy_name",
-                dropna=False,
-                sort=True,
-            ):
+            for strategy_name in config.strategy_universe:
+                group = window_panel.loc[
+                    window_panel["strategy_name"].astype(str).eq(strategy_name)
+                ].copy()
+
                 row = {
                     "market": market,
                     "subperiod": label,
