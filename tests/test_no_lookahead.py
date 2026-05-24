@@ -806,3 +806,155 @@ def test_hmm_signal_columns_encode_next_session_usage() -> None:
     assert usable.any()
     assert (trade_dates.loc[usable] > dates.loc[usable]).all()
     assert pd.isna(panel.loc[len(panel) - 1, "hmm_signal_trade_date"])
+
+import json
+from pathlib import Path
+
+import pandas as pd
+import pytest
+
+from vrp.backtest.backtest_config import load_backtest_config
+from vrp.backtest.final_audit import run_phase10_final_audit
+from vrp.backtest.payoff_proxies import (
+    PRIMARY_PAYOFF_LABEL,
+    build_forward_vrp_outcome_panel,
+    compute_forward_vrp_strategy_payoff,
+    join_strategy_with_outcome,
+)
+
+
+REPO_ROOT = Path(__file__).resolve().parents[1]
+BACKTEST_CONFIG_PATH = REPO_ROOT / "configs" / "backtest.yaml"
+FIXTURE_DIR = Path(__file__).resolve().parent / "fixtures"
+
+
+def _load_toy_signals() -> pd.DataFrame:
+    return pd.read_csv(FIXTURE_DIR / "phase10_signals_toy.csv")
+
+
+def _load_toy_outcomes() -> pd.DataFrame:
+    return pd.read_csv(FIXTURE_DIR / "phase10_outcomes_toy.csv")
+
+
+def test_phase10_outcome_label_not_present_in_raw_toy_signals() -> None:
+    signals = _load_toy_signals()
+
+    assert PRIMARY_PAYOFF_LABEL not in signals.columns
+
+
+def test_phase10_outcome_label_appears_only_after_outcome_join() -> None:
+    signals = _load_toy_signals()
+    outcomes = build_forward_vrp_outcome_panel(_load_toy_outcomes())
+
+    joined = join_strategy_with_outcome(signals, outcomes)
+
+    assert PRIMARY_PAYOFF_LABEL in joined.columns
+
+
+def test_phase10_default_join_uses_signal_date_not_trade_date() -> None:
+    signals = pd.DataFrame(
+        {
+            "market": ["US"],
+            "strategy_name": ["unconditional_full"],
+            "signal_observation_date": ["2020-01-02"],
+            "target_trade_date": ["2020-01-03"],
+            "target_exposure": [-1.0],
+            "strategy_available": [True],
+        }
+    )
+
+    outcomes = pd.DataFrame(
+        {
+            "market": ["US", "US"],
+            "date": ["2020-01-02", "2020-01-03"],
+            PRIMARY_PAYOFF_LABEL: [0.04, -0.99],
+        }
+    )
+
+    outcome_panel = build_forward_vrp_outcome_panel(outcomes)
+    joined = join_strategy_with_outcome(
+        signals,
+        outcome_panel,
+        alignment="signal_observation_date",
+    )
+    payoff = compute_forward_vrp_strategy_payoff(joined)
+
+    row = payoff.iloc[0]
+
+    assert row["outcome_label_date"] == pd.Timestamp("2020-01-02")
+    assert float(row[PRIMARY_PAYOFF_LABEL]) == 0.04
+    assert float(row["gross_return_proxy"]) == 0.04
+
+
+def test_phase10_eligible_rows_trade_after_signal_in_real_outputs_if_present() -> None:
+    us_panel = REPO_ROOT / "data" / "processed" / "us_backtest_panel.parquet"
+    india_panel = REPO_ROOT / "data" / "processed" / "india_backtest_panel.parquet"
+
+    missing = [path for path in [us_panel, india_panel] if not path.exists()]
+    if missing:
+        pytest.skip(f"Phase 10 real backtest panels not present: {missing}")
+
+    for path in [us_panel, india_panel]:
+        panel = pd.read_parquet(path)
+        eligible = panel["is_backtest_eligible"].fillna(False).astype(bool)
+
+        signal_dates = pd.to_datetime(
+            panel.loc[eligible, "signal_observation_date"],
+            errors="coerce",
+        )
+        trade_dates = pd.to_datetime(
+            panel.loc[eligible, "target_trade_date"],
+            errors="coerce",
+        )
+        outcome_dates = pd.to_datetime(
+            panel.loc[eligible, "outcome_label_date"],
+            errors="coerce",
+        )
+
+        assert (trade_dates > signal_dates).all()
+        assert (outcome_dates == signal_dates).all()
+
+
+def test_phase10_real_metadata_has_zero_no_lookahead_violations_if_present() -> None:
+    metadata_paths = [
+        REPO_ROOT / "data" / "processed" / "us_backtest_panel_metadata.json",
+        REPO_ROOT / "data" / "processed" / "india_backtest_panel_metadata.json",
+    ]
+
+    missing = [path for path in metadata_paths if not path.exists()]
+    if missing:
+        pytest.skip(f"Phase 10 metadata sidecars not present: {missing}")
+
+    for path in metadata_paths:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+
+        assert payload["n_target_not_after_signal_violations"] == 0
+        assert payload["n_outcome_not_equal_signal_date_violations"] == 0
+        assert payload["label_role"] == "realised_outcome_only"
+        assert payload["research_proxy_not_trade_pnl"] is True
+        assert payload["overlapping_labels"] is True
+
+
+def test_phase10_final_audit_passes_on_real_outputs_if_present() -> None:
+    required = [
+        REPO_ROOT / "configs" / "backtest.yaml",
+        REPO_ROOT / "data" / "processed" / "us_backtest_panel.parquet",
+        REPO_ROOT / "data" / "processed" / "india_backtest_panel.parquet",
+        REPO_ROOT / "reports" / "tables" / "phase_10" / "backtest_metadata.json",
+        REPO_ROOT / "reports" / "tables" / "phase_10" / "robustness_metadata.json",
+    ]
+
+    missing = [path for path in required if not path.exists()]
+    if missing:
+        pytest.skip(f"Phase 10 real outputs not present: {missing}")
+
+    config = load_backtest_config(BACKTEST_CONFIG_PATH)
+    result = run_phase10_final_audit(
+        config=config,
+        repo_root=REPO_ROOT,
+        market="ALL",
+        require_robustness=True,
+    )
+
+    assert result.status == "passed"
+    assert result.n_errors == 0

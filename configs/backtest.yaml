@@ -1,95 +1,78 @@
-version: 1
+backtest_phase: phase_10
 
-backtest:
-  name: vrp_regime_conditioned_backtest
-  phase: 8
-  engine: vectorized_daily
-  frequency: daily
+description: >
+  Vectorised research-layer backtest of fixed Phase 9 strategy signals.
+  Primary payoff is ex-post forward VRP label used as realised outcome,
+  not as a signal.
 
-capital:
-  initial_capital: 1000000.0
-  base_currency: USD
-  allow_fractional_exposure: true
+input_files:
+  US:
+    strategy_signals: data/processed/us_strategy_signals.parquet
+    vrp_har: data/processed/us_vrp_har.parquet
+    vrp: data/processed/us_vrp.parquet
+    threshold: data/processed/us_threshold_regimes.parquet
+    hmm: data/processed/us_hmm_regimes.parquet
+    mar: data/processed/us_markov_autoreg_regimes.parquet
+  INDIA:
+    strategy_signals: data/processed/india_strategy_signals.parquet
+    vrp_har: data/processed/india_vrp_har.parquet
+    vrp: data/processed/india_vrp.parquet
+    threshold: data/processed/india_threshold_regimes.parquet
+    hmm: data/processed/india_hmm_regimes.parquet
+    mar: data/processed/india_markov_autoreg_regimes.parquet
 
-markets:
-  enabled:
-    - US
-    - INDIA
+strategy_universe:
+  - unconditional_full
+  - threshold_hard_filter
+  - threshold_defensive
+  - hmm_prob_linear
+  - hmm_prob_linear_carry
+  - mar_prob_linear
+  - mar_prob_linear_carry
 
-strategies:
-  unconditional_short_vol:
-    enabled: true
-    description: Baseline strategy with constant short-volatility exposure.
-    target_exposure: -1.0
-
-  threshold_regime_conditioned:
-    enabled: true
-    description: Exposure controlled by threshold regime labels.
-    calm_exposure: -1.0
-    transition_exposure: -0.5
-    stress_exposure: 0.0
-
-  hmm_regime_conditioned:
-    enabled: true
-    description: Exposure controlled by filtered HMM probabilities.
-    calm_exposure: -1.0
-    transition_exposure: -0.5
-    stress_exposure: 0.0
-    stress_probability_cutoff: 0.5
-
-  arhmm_regime_conditioned:
-    enabled: true
-    description: Exposure controlled by filtered AR-HMM / Markov autoregression probabilities.
-    calm_exposure: -1.0
-    transition_exposure: -0.5
-    stress_exposure: 0.0
-    stress_probability_cutoff: 0.5
-
-signal_timing:
-  signal_timestamp: close_t
-  execution_timestamp: close_t_plus_1
-  use_next_day_returns: true
-  allow_same_day_return_capture: false
-  require_signal_shift_by_one_period: true
+primary_payoff:
+  name: forward_vrp_research_proxy
+  label_col: vrp_forward_expost_gk_label
+  label_role: realised_outcome_only
+  outcome_alignment: signal_observation_date
+  payoff_formula: "-target_exposure * label"
+  annualization_periods: 252
+  horizon_trading_days: 22
+  allow_horizon_override: false
+  overlapping_labels: true
+  report_as_research_proxy: true
 
 costs:
   enabled: true
-  transaction_cost_bps_per_turnover: 5.0
-  slippage_bps_per_turnover: 5.0
-  borrow_cost_bps_annualized: 0.0
-  financing_cost_bps_annualized: 0.0
+  default_cost_bps: 5.0
+  apply_to_abs_exposure_change: true
+  cost_formula: abs(delta_exposure) * cost_bps / 10000
 
-risk:
-  max_abs_exposure: 1.0
-  allow_leverage: false
-  stop_loss_enabled: false
-  volatility_targeting_enabled: false
-  notes: Keep Phase 8 baseline simple before adding sizing complexity.
+robustness:
+  cost_bps_grid: [0, 2.5, 5, 10, 20]
+  rebalance_frequencies: [daily, weekly]
+  subperiods:
+    US:
+      - ["2008-09-01", "2009-06-30", "GFC"]
+      - ["2011-08-01", "2011-12-31", "EuroDebt_US_Downgrade"]
+      - ["2015-08-01", "2016-02-29", "China_Devaluation_Vol_Shock"]
+      - ["2018-01-01", "2018-03-31", "Volmageddon"]
+      - ["2020-02-01", "2020-06-30", "COVID"]
+      - ["2022-01-01", "2022-12-31", "RateShock"]
+    INDIA:
+      - ["2013-05-01", "2013-09-30", "TaperTantrum"]
+      - ["2015-08-01", "2016-02-29", "China_Devaluation_Vol_Shock"]
+      - ["2020-02-01", "2020-06-30", "COVID"]
+      - ["2022-01-01", "2022-12-31", "RateShock"]
 
-metrics:
-  annualization_days: 252
-  include:
-    - total_return
-    - annualized_return
-    - annualized_volatility
-    - sharpe_ratio
-    - sortino_ratio
-    - max_drawdown
-    - calmar_ratio
-    - hit_rate
-    - average_daily_return
-    - worst_daily_return
-    - turnover
-    - exposure_days
-    - stress_exposure_days
+output_files:
+  US:
+    backtest_panel: data/processed/us_backtest_panel.parquet
+    metadata: data/processed/us_backtest_panel_metadata.json
+  INDIA:
+    backtest_panel: data/processed/india_backtest_panel.parquet
+    metadata: data/processed/india_backtest_panel_metadata.json
 
-outputs:
-  equity_curves_dir: data/processed/backtest/equity_curves
-  trades_dir: data/processed/backtest/trades
-  metrics_dir: reports/tables/backtest
-  figures_dir: reports/figures/backtest
-
-anti_lookahead:
-  reject_unshifted_signals: true
-  reject_future_realised_variance_signal: true
-  reject_full_sample_smoothed_regimes: true
+reporting:
+  table_dir: reports/tables/phase_10
+  figure_dir: reports/figures/phase_10

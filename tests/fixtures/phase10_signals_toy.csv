@@ -1,0 +1,10 @@
+market,strategy_name,signal_observation_date,target_trade_date,target_exposure,strategy_available
+US,unconditional_full,2020-01-02,2020-01-03,-1.0,True
+US,unconditional_full,2020-01-03,2020-01-06,0.0,True
+US,unconditional_full,2020-01-06,2020-01-07,-0.5,True
+US,threshold_hard_filter,2020-01-02,2020-01-03,-1.0,True
+US,threshold_defensive,2020-01-02,2020-01-03,-0.5,True
+US,hmm_prob_linear,2020-01-02,2020-01-03,-0.25,True
+US,hmm_prob_linear_carry,2020-01-02,2020-01-03,-0.25,True
+US,mar_prob_linear,2020-01-02,2020-01-03,-0.75,True
+US,mar_prob_linear_carry,2020-01-02,2020-01-03,-0.75,True

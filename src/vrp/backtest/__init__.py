@@ -1,1 +1,123 @@
-"""Backtesting engines, costs, metrics, and robustness utilities."""
+"""Backtesting utilities for the VRP regime project."""
+
+from vrp.backtest.backtest_config import (
+    BacktestConfig,
+    CostConfig,
+    PayoffConfig,
+    RobustnessConfig,
+    get_market_backtest_inputs,
+    get_market_output_path,
+    get_strategy_universe,
+    load_backtest_config,
+    validate_backtest_config,
+)
+from vrp.backtest.backtest_registry import (
+    BACKTEST_ALLOWED_OUTCOME_LABELS,
+    BACKTEST_FORBIDDEN_SIGNAL_COLUMNS,
+    BACKTEST_STRATEGY_UNIVERSE,
+)
+from vrp.backtest.costs import (
+    apply_costs_to_backtest_panel,
+    compute_exposure_change_costs,
+)
+from vrp.backtest.final_audit import (
+    FinalAuditResult,
+    assert_final_audit_passed,
+    render_final_audit_summary,
+    run_phase10_final_audit,
+    write_final_audit_report,
+)
+from vrp.backtest.metrics import (
+    build_availability_summary,
+    build_strategy_metric_table,
+    compute_cte,
+    compute_downside_deviation,
+    compute_equity_curve,
+    compute_max_drawdown,
+    compute_strategy_metrics,
+    get_metrics_metadata,
+)
+from vrp.backtest.payoff_proxies import (
+    build_forward_vrp_outcome_panel,
+    build_research_backtest_panel,
+    compute_forward_vrp_strategy_payoff,
+    join_strategy_with_outcome,
+    validate_payoff_sign_convention,
+)
+from vrp.backtest.robustness import (
+    RobustnessRunResult,
+    render_robustness_summary,
+    run_cost_sensitivity_robustness,
+    run_robustness_suite,
+    run_subperiod_robustness,
+    run_tradable_proxy_detection,
+    write_weekly_rebalance_skip_report,
+)
+from vrp.backtest.tradable_proxy_detector import (
+    TradableProxyDetectionResult,
+    detect_tradable_proxy_data,
+    write_tradable_proxy_detection_report,
+)
+from vrp.backtest.vectorized_engine import (
+    BacktestRunResult,
+    build_backtest_metadata,
+    render_run_summary,
+    resolve_markets,
+    run_backtests,
+    run_market_backtest,
+    validate_backtest_panel_integrity,
+    write_backtest_outputs,
+)
+
+__all__ = [
+    "BacktestConfig",
+    "CostConfig",
+    "PayoffConfig",
+    "RobustnessConfig",
+    "get_market_backtest_inputs",
+    "get_market_output_path",
+    "get_strategy_universe",
+    "load_backtest_config",
+    "validate_backtest_config",
+    "BACKTEST_ALLOWED_OUTCOME_LABELS",
+    "BACKTEST_FORBIDDEN_SIGNAL_COLUMNS",
+    "BACKTEST_STRATEGY_UNIVERSE",
+    "apply_costs_to_backtest_panel",
+    "compute_exposure_change_costs",
+    "FinalAuditResult",
+    "assert_final_audit_passed",
+    "render_final_audit_summary",
+    "run_phase10_final_audit",
+    "write_final_audit_report",
+    "build_availability_summary",
+    "build_strategy_metric_table",
+    "compute_cte",
+    "compute_downside_deviation",
+    "compute_equity_curve",
+    "compute_max_drawdown",
+    "compute_strategy_metrics",
+    "get_metrics_metadata",
+    "build_forward_vrp_outcome_panel",
+    "build_research_backtest_panel",
+    "compute_forward_vrp_strategy_payoff",
+    "join_strategy_with_outcome",
+    "validate_payoff_sign_convention",
+    "RobustnessRunResult",
+    "render_robustness_summary",
+    "run_cost_sensitivity_robustness",
+    "run_robustness_suite",
+    "run_subperiod_robustness",
+    "run_tradable_proxy_detection",
+    "write_weekly_rebalance_skip_report",
+    "TradableProxyDetectionResult",
+    "detect_tradable_proxy_data",
+    "write_tradable_proxy_detection_report",
+    "BacktestRunResult",
+    "build_backtest_metadata",
+    "render_run_summary",
+    "resolve_markets",
+    "run_backtests",
+    "run_market_backtest",
+    "validate_backtest_panel_integrity",
+    "write_backtest_outputs",
+]

@@ -12,33 +12,24 @@ if str(SRC_ROOT) not in sys.path:
     sys.path.insert(0, str(SRC_ROOT))
 
 from vrp.backtest.backtest_config import load_backtest_config  # noqa: E402
-from vrp.backtest.robustness import (  # noqa: E402
-    render_robustness_summary,
-    run_robustness_suite,
-)
-from vrp.backtest.schema_audit import (  # noqa: E402
-    assert_no_audit_errors,
-    audit_phase10_inputs,
-    render_audit_summary,
+from vrp.backtest.final_audit import (  # noqa: E402
+    assert_final_audit_passed,
+    render_final_audit_summary,
+    run_phase10_final_audit,
+    write_final_audit_report,
 )
 
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="Run Phase 10 robustness diagnostics."
+        description="Run final Phase 10 integration and artifact audit."
     )
 
     parser.add_argument(
         "--market",
         choices=["US", "INDIA", "ALL"],
         default="ALL",
-        help="Market to run.",
-    )
-    parser.add_argument(
-        "--test",
-        choices=["costs", "subperiod", "weekly", "tradable_proxy", "all"],
-        default="all",
-        help="Robustness test to run.",
+        help="Market to audit.",
     )
     parser.add_argument(
         "--config",
@@ -53,14 +44,20 @@ def parse_args() -> argparse.Namespace:
         help="Repository root.",
     )
     parser.add_argument(
-        "--force",
-        action="store_true",
-        help="Overwrite existing robustness outputs.",
+        "--output",
+        type=Path,
+        default=REPO_ROOT / "reports" / "tables" / "phase_10" / "phase10_final_audit.json",
+        help="Final audit JSON output path.",
     )
     parser.add_argument(
-        "--skip-audit",
+        "--no-require-robustness",
         action="store_true",
-        help="Skip Phase 10 input audit before running robustness.",
+        help="Do not fail if robustness outputs are missing.",
+    )
+    parser.add_argument(
+        "--no-strict",
+        action="store_true",
+        help="Do not exit non-zero when audit has errors.",
     )
 
     return parser.parse_args()
@@ -71,23 +68,19 @@ def main() -> int:
 
     config = load_backtest_config(args.config)
 
-    if not args.skip_audit:
-        audit_results = audit_phase10_inputs(
-            repo_root=args.repo_root,
-            market=args.market,
-        )
-        print(render_audit_summary(audit_results))
-        assert_no_audit_errors(audit_results)
-
-    results = run_robustness_suite(
+    result = run_phase10_final_audit(
         config=config,
         repo_root=args.repo_root,
         market=args.market,
-        test=args.test,
-        force=args.force,
+        require_robustness=not args.no_require_robustness,
     )
 
-    print(render_robustness_summary(results))
+    write_final_audit_report(result, args.output)
+    print(render_final_audit_summary(result))
+    print(f"Final audit JSON: {args.output}")
+
+    if not args.no_strict:
+        assert_final_audit_passed(result)
 
     return 0
 
