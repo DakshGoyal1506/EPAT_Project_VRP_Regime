@@ -1,75 +1,266 @@
-version: 1
+phase: phase_11
+mode: paper_signal_only
+
+paper_only: true
+kill_switch: true
+live_orders_enabled: false
+allow_order_placement: false
+
+default_strategy: mar_prob_linear_carry
+
+approved_strategies:
+  - unconditional_full
+  - threshold_hard_filter
+  - threshold_defensive
+  - hmm_prob_linear
+  - hmm_prob_linear_carry
+  - mar_prob_linear
+  - mar_prob_linear_carry
+
+forbidden_active_strategy_models:
+  - msvol
+  - msgarch
+
+signal_inputs:
+  US: data/processed/us_strategy_signals.parquet
+  INDIA: data/processed/india_strategy_signals.parquet
+
+signal_schema:
+  canonical_required_columns:
+    - target_trade_date
+    - target_exposure
+    - strategy_available
+    - blocked_reason
+    - decision_reason
+
+  strategy_column_candidates:
+    - strategy_name
+    - strategy
+
+  optional_columns:
+    - market
+    - signal_observation_date
+    - signal_date
+    - source_model
+    - vrp_har_gk
+    - har_forecast_available
+    - state_name
+    - p_calm
+    - p_transition
+    - p_stress
+
+  aliases:
+    strategy: strategy_name
+    signal_date: signal_observation_date
+
+  validation:
+    target_exposure_min: -1.0
+    target_exposure_max: 0.0
+    latest_signal_sort_column: target_trade_date
+    require_latest_by_target_trade_date: true
+    allow_boolean_like_strategy_available: true
+
+signal_freshness:
+  max_signal_age_days: 5
+  block_stale_signal: true
+  allow_weekend_gap: true
+
+backtest_context:
+  summary: reports/tables/phase_10/backtest_summary.csv
+  common_start_summary: reports/tables/phase_10/backtest_common_start_summary.csv
+  availability_summary: reports/tables/phase_10/backtest_availability_summary.csv
+  no_lookahead_audit: reports/tables/phase_10/backtest_no_lookahead_audit.csv
+  metadata: reports/tables/phase_10/backtest_metadata.json
+  robustness_costs: reports/tables/phase_10/robustness_costs.csv
+  research_proxy_warning: true
+
+research_proxy_warning: "Phase 10 backtest returns are research-layer proxy units, not executable option-trading account returns. Phase 11 does not infer starting capital, margin, option contracts, or live order size from Phase 10."
 
 broker:
-  name: ibkr_ibridgepy
-  phase: 11
-  enabled: false
-  required_for_core_research: false
+  provider: ibkr
+  adapter: ibridgepy
+  optional_dependency: true
+  host: "127.0.0.1"
+  port: 7497
+  client_id: 11
+  account: "PAPER_ACCOUNT_PLACEHOLDER"
+  require_env_account: true
 
-safety:
-  paper_signal_only: true
-  live_trading_enabled: false
-  allow_live_orders: false
-  require_manual_confirmation: true
-  fail_if_live_order_flag_detected: true
+env:
+  account_var: IBKR_PAPER_ACCOUNT
+  host_var: IBKR_HOST
+  port_var: IBKR_PORT
+  client_id_var: IBKR_CLIENT_ID
 
-connection:
-  host_env_var: IBKR_HOST
-  port_env_var: IBKR_PORT
-  client_id_env_var: IBKR_CLIENT_ID
-  account_id_env_var: IBKR_ACCOUNT_ID
-  default_host: 127.0.0.1
-  default_paper_port: 7497
-  default_client_id: 101
+broker_status_taxonomy:
+  - IBRIDGEPY_NOT_INSTALLED
+  - IBRIDGEPY_IMPORT_OK
+  - BROKER_CONNECTION_NOT_ATTEMPTED
+  - BROKER_CONNECTION_FAILED
+  - BROKER_DATA_UNAVAILABLE
+  - BROKER_DATA_AVAILABLE
 
-cache:
-  enabled: true
-  directory: data/broker_cache
-  market_data_cache: data/broker_cache/market_data.parquet
-  signal_cache: data/broker_cache/signals.parquet
-  position_snapshot_cache: data/broker_cache/positions.parquet
+final_status_taxonomy:
+  - ALLOWED_PAPER_INTENT
+  - BLOCKED_BY_KILL_SWITCH
+  - BLOCKED_STALE_SIGNAL
+  - BLOCKED_CONFIG_SAFETY
+  - BLOCKED_RISK_LIMIT
+  - BLOCKED_MISSING_SIGNAL
+  - BLOCKED_BROKER_DATA
+  - NO_SIGNAL
+  - STAY_FLAT
+  - BROKER_INSPECTION_ONLY
 
-signal_policy:
-  generate_daily_signal: true
-  place_orders: false
-  publish_format: parquet
-  include_fields:
-    - date
-    - market
-    - symbol
-    - regime_model
-    - regime_label
-    - target_exposure
-    - current_exposure
-    - suggested_action
-    - risk_status
-    - notes
+allowed_markets:
+  - US
+  - INDIA
 
-instruments:
+allowed_instruments:
   US:
-    enabled: false
-    reason: Research only unless account permissions and legal constraints are reviewed.
-    watchlist:
-      - SPY
-      - VIX
+    - SPY
+    - VXX
+    - SVXY
   INDIA:
-    enabled: false
-    reason: Broker availability depends on account permissions.
-    watchlist:
-      - NIFTY
-      - INDIA_VIX
+    - NIFTY_PROXY_MANUAL_ONLY
+
+blocked_instruments:
+  - naked_short_options
+  - live_short_options
+  - futures_without_permission
+  - margin_unknown_products
+
+instrument_mapping:
+  US:
+    research_underlying: SPX_or_SPY
+    default_paper_proxy: SPY
+    short_vol_proxy_candidates:
+      - VXX
+      - SVXY
+    notes: "Paper signal only. Do not assume tradability from research proxy."
+
+  INDIA:
+    research_underlying: NIFTY
+    default_paper_proxy: NIFTY_PROXY_MANUAL_ONLY
+    notes: "India execution requires separate instrument-permission verification. Signal-only by default."
+
+manual_overrides:
+  INDIA:
+    manual_instrument_verified: false
+
+paper_sizing:
+  paper_notional_per_full_exposure: 10000
+  min_order_notional: 0
+  round_shares: true
+  allow_fractional_shares: false
+  max_contracts: 0
+  max_shares: 100
+  max_notional: 10000
+  max_delta: 0
+  max_vega: 0
+  max_margin_usage: 0.0
+  allow_options: false
+  allow_naked_short_options: false
+
+  sizing_formula:
+    paper_target_notional: "abs(target_exposure) * paper_notional_per_full_exposure"
+    shares: "floor(paper_target_notional / reference_price)"
+
+  forbidden_sizing_inputs:
+    - phase_10_total_return_proxy
+    - phase_10_sharpe
+    - phase_10_drawdown
+    - phase_10_net_return_proxy
+    - phase_10_strategy_ranking
+    - phase_10_proxy_pnl
+    - inferred_option_contracts
+    - inferred_margin_from_backtest
 
 risk_checks:
-  require_non_null_signal: true
-  require_known_symbol: true
-  require_market_open_check: true
-  require_position_snapshot: true
-  max_abs_target_exposure: 1.0
-  block_if_missing_regime_probability: true
-  block_if_stress_regime: true
+  require_paper_only: true
+  require_kill_switch_off_for_allowed_intent: false
+  block_if_kill_switch_on: true
+  require_market_open: false
+  max_quote_age_seconds: 300
+  max_bid_ask_spread_bps: 100
+  require_quote_for_allowed_intent: false
+  block_stale_quote_if_quote_available: true
+  block_missing_quote: false
+  block_live_order_functions: true
+  block_stale_signal: true
+  block_naked_short_options: true
+  block_india_unverified_instrument: true
 
-logging:
-  log_dir: logs/broker
-  log_signals: true
-  log_blocked_actions: true
-  log_connection_attempts: true
+quote_schema:
+  required_fields:
+    - symbol
+    - market
+    - bid
+    - ask
+    - last
+    - mid
+    - timestamp_utc
+    - quote_age_seconds
+    - spread_bps
+    - source
+    - status
+
+  validation:
+    bid_non_negative: true
+    ask_non_negative: true
+    ask_greater_equal_bid: true
+    compute_mid_from_bid_ask: true
+    compute_spread_bps_from_bid_ask_mid: true
+
+state:
+  use_position_state: false
+  paper_position_state: reports/tables/phase_11/paper_position_state.csv
+
+paper_signal_actions:
+  strategy_unavailable: NO_SIGNAL
+  available_zero_exposure_without_state: STAY_FLAT
+  available_zero_exposure_with_prior_short_state: REDUCE_TO_ZERO
+  negative_exposure: PAPER_SHORT_VOL_INTENT
+
+paper_intent_rules:
+  write_intent_for_no_signal: false
+  write_intent_for_stay_flat_without_state: false
+  write_reduce_to_zero_only_with_position_state: true
+  live_order_sent: false
+
+audit:
+  write_config_snapshot: true
+  write_run_metadata: true
+  include_phase10_proxy_warning: true
+  scan_for_live_order_functions: true
+  require_kill_switch_visibility: true
+  require_structured_broker_status: true
+
+no_live_order_guard:
+  enabled: true
+  blocked_strings:
+    - placeOrder
+    - order_target
+    - order_value
+    - order_percent
+    - submit_order
+    - marketOrder
+    - limitOrder
+    - bracketOrder
+    - "buy("
+    - "sell("
+  allowed_string_values:
+    - BUY
+    - SELL
+
+outputs:
+  broker_cache_dir: data/broker_cache
+  tables_dir: reports/tables/phase_11
+  logs_dir: logs
+
+  latest_signal_table: reports/tables/phase_11/daily_paper_signal.csv
+  paper_order_intents: reports/tables/phase_11/paper_order_intents.csv
+  risk_check_report: reports/tables/phase_11/risk_check_report.csv
+  broker_metadata: reports/tables/phase_11/broker_metadata.json
+  run_metadata: reports/tables/phase_11/run_metadata.json
+  config_snapshot: reports/tables/phase_11/ibkr_paper_config_snapshot.yaml
