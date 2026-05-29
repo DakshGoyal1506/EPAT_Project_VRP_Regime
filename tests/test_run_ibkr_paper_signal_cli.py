@@ -461,9 +461,16 @@ def test_cli_stale_signal_blocks(tmp_path: Path) -> None:
     payload = json.loads(result.stdout)
 
     assert payload["daily_signal_final_status"] == "BLOCKED_STALE_SIGNAL"
-    assert payload["paper_intent_final_status"] == "BLOCKED_STALE_SIGNAL"
+    assert payload["paper_intent_written"] is False
+    assert payload["paper_intent_final_status"] is None
     assert payload["final_status"] == "BLOCKED_STALE_SIGNAL"
     assert payload["live_order_sent"] is False
+
+    intents = pd.read_csv(tmp_path / "phase_11" / "paper_order_intents.csv")
+    risk_report = pd.read_csv(tmp_path / "phase_11" / "risk_check_report.csv")
+
+    assert intents.empty
+    assert risk_report.empty
 
 
 def test_cli_rejects_bad_as_of_date(tmp_path: Path) -> None:

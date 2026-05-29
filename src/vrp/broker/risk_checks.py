@@ -44,6 +44,28 @@ NO_SIGNAL = "NO_SIGNAL"
 STAY_FLAT = "STAY_FLAT"
 BROKER_INSPECTION_ONLY = "BROKER_INSPECTION_ONLY"
 
+RISK_CHECK_REPORT_COLUMNS = [
+    "market",
+    "symbol",
+    "recommended_action",
+    "paper_only",
+    "kill_switch",
+    "live_orders_enabled",
+    "allow_order_placement",
+    "intent_allowed_before_kill_switch",
+    "intent_allowed_after_kill_switch",
+    "final_status",
+    "primary_block_reason",
+    "quote_status",
+    "live_order_sent",
+    "check_name",
+    "status",
+    "blocks_intent",
+    "reason",
+    "observed_value",
+    "limit_value",
+]
+
 
 class RiskCheckError(RuntimeError):
     """Raised when risk-check inputs are invalid."""
@@ -351,7 +373,21 @@ def write_risk_check_report(
     if not records:
         records = [summary.as_dict()]
 
-    pd.DataFrame(records).to_csv(path, index=False)
+    pd.DataFrame(records, columns=RISK_CHECK_REPORT_COLUMNS).to_csv(path, index=False)
+    return path
+
+
+def write_empty_risk_check_report(output_path: str | Path) -> Path:
+    """Write header-only risk-check report.
+
+    Used when no paper intent is allowed to reach risk checks.
+    This prevents stale risk_check_report.csv content from previous runs.
+    """
+
+    path = Path(output_path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+
+    pd.DataFrame(columns=RISK_CHECK_REPORT_COLUMNS).to_csv(path, index=False)
     return path
 
 

@@ -36,6 +36,7 @@ from vrp.broker.paper_state import (
 from vrp.broker.risk_checks import (
     RiskCheckSummary,
     run_phase11_risk_checks,
+    write_empty_risk_check_report,
     write_risk_check_report,
 )
 from vrp.broker.signal_publisher import (
@@ -76,6 +77,13 @@ PAPER_ORDER_INTENT_COLUMNS = [
     "live_order_sent",
     "research_proxy_warning",
 ]
+
+TERMINAL_NO_INTENT_FINAL_STATUSES = {
+    "BLOCKED_MISSING_SIGNAL",
+    "BLOCKED_STALE_SIGNAL",
+    "NO_SIGNAL",
+    "STAY_FLAT",
+}
 
 
 class PaperTraderError(RuntimeError):
@@ -229,6 +237,18 @@ def build_paper_order_intent(
 
     action = daily_signal.recommended_action
 
+    if daily_signal.final_status in TERMINAL_NO_INTENT_FINAL_STATUSES:
+        return PaperIntentBuildResult(
+            intent=None,
+            contract=None,
+            sizing=None,
+            risk_summary=None,
+            reason=(
+                f"{daily_signal.final_status} is terminal and does not create "
+                "paper order intent"
+            ),
+        )
+
     if action == NO_SIGNAL:
         return PaperIntentBuildResult(
             intent=None,
@@ -381,11 +401,13 @@ def publish_paper_order_intent(
         output_path,
     )
 
-    if result.risk_summary is not None:
-        if risk_report_path is None:
-            risk_report_path = get_output_paths(config)["risk_check_report"]
+    if risk_report_path is None:
+        risk_report_path = get_output_paths(config)["risk_check_report"]
 
+    if result.risk_summary is not None:
         write_risk_check_report(result.risk_summary, risk_report_path)
+    else:
+        write_empty_risk_check_report(risk_report_path)
 
     return result
 
