@@ -237,54 +237,6 @@ git status --short
 git ls-files | findstr /i "\.parquet \.pkl \.pickle \.joblib \.log \.env"
 ```
 
-## Chunk 0E — Final cleanup validation and review packet
-
-Run only these checks.
-
-```bash
-git diff --check
-git status --short
-git ls-files data reports docs | sort
-git ls-files | findstr /i "\.parquet \.pkl \.pickle \.joblib \.log \.env"
-```
-
-Optional final safety check:
-
-```bash
-pytest
-```
-
-Expected policy result:
-
-```text
-No .parquet files tracked
-No model binaries tracked
-No .log files tracked
-No .env tracked
-.env.example is allowed
-Only .gitkeep and README files tracked inside generated-output roots
-```
-
-Commit command:
-
-```bash
-git add README.md .gitignore docs/ configs/README.md data/README.md reports/README.md reports/figures/README.md reports/tables/README.md tests/README.md src/vrp/**/README.md src/vrp/README.md
-git commit -m "Clean repo governance docs before Phase 13"
-git push
-```
-
-Send back:
-
-```text
-1. git status --short
-2. git ls-files data reports docs | sort
-3. git ls-files | findstr /i "\.parquet \.pkl \.pickle \.joblib \.log \.env"
-4. README.md
-5. docs/phase_status.md
-6. docs/artifact_inventory.md
-7. .gitignore
-```
-
 ## Current Phase Status
 
 The source of truth for phase status is:

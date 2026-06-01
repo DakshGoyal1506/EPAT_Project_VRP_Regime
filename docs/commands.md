@@ -6,7 +6,7 @@ Run all commands from the repository root.
 
 ```bash
 pip install -e .
-pip install -e "[dev]"
+pip install -e ".[dev]"
 pytest
 ```
 
