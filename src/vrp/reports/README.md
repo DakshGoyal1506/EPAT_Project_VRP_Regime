@@ -1,115 +1,45 @@
 # Reports
 
-This package contains report assembly helpers used to build tables, figures, and summary outputs from reproducible inputs.
+This package provides reporting and diagnostic utilities that assemble reproducible tables and figures from canonical Phase 2/3/4 inputs. Keep reporting focused on presentation, audit checks, and stable output contracts; heavy validation belongs in `src/vrp/features/` and forecasting.
 
-It should stay focused on presentation logic, not on source-data ingestion or model training.
-# VRP Reports
+Responsibilities
 
-This package contains the reporting and diagnostic utilities used after feature construction. It does not build signals, regimes, forecasts, or backtests.
+- Summarise VRP and RV panels into stable tables for manuscripts and appendices.
+- Emit diagnostic audit tables that verify no-lookahead conditions and data availability.
+- Produce publication-ready figures and CSV tables under `reports/figures` and `reports/tables`.
 
-## Responsibilities
+Key modules
 
-- summarize RV and VRP panels
-- capture Phase 3 metadata
-- write stable tables and figures under `reports/`
-- keep reporting separate from feature validation and live feature construction
+- `rv_diagnostics.py` — realised-variance diagnostics and calendar mismatch reports.
+- `vrp_diagnostics.py` — VRP summaries, metadata writers, and plotting helpers.
 
-## Modules
+Common outputs
 
-### `rv_diagnostics.py`
+- Summary tables: `reports/tables/vrp_summary.csv`, `reports/tables/vrp_metadata.json`, `reports/tables/calendar_mismatches.csv`
+- HAR diagnostics (if HAR forecasts are available): `reports/tables/har_forecast_accuracy.csv`, `reports/tables/har_coefficients.csv`, `reports/tables/har_vrp_summary.csv`, `reports/tables/har_no_lookahead_audit.csv`
+- Figures: market-specific IV/RV/VRP plots in `reports/figures/`
 
-Diagnostics for realised variance panels.
+Audit contract
 
-### `vrp_diagnostics.py`
-
-Diagnostics for VRP panels.
-
-- builds descriptive summaries for primary and robustness columns
-- writes metadata JSON describing the construction rules
-- plots the primary IV / RV / VRP series for each market
-
-## Outputs
-
-The VRP reporting path writes:
-
-- `reports/tables/vrp_summary.csv`
-- `reports/tables/vrp_metadata.json`
-- `reports/tables/calendar_mismatches.csv`
-- `reports/figures/us_iv_rv_vrp.png`
-- `reports/figures/india_iv_rv_vrp.png`
-
-Phase 4 HAR diagnostics
-
-The reporting layer also supports Phase 4 HAR diagnostics and tables produced
-by the HAR forecasting engine. Key outputs:
-
-- `reports/tables/har_forecast_accuracy.csv`
-- `reports/tables/har_coefficients.csv`
-- `reports/tables/har_vrp_summary.csv`
-- `reports/tables/har_no_lookahead_audit.csv`
-
-These are written by the `write_har_diagnostics` helper and are intended for
-final inspection and inclusion in reports.
-
-Phase 4 HAR-RV Reports
-
-Phase 4 writes the following reproducible report artifacts:
-
-```text
-reports/tables/har_forecast_accuracy.csv
-reports/tables/har_coefficients.csv
-reports/tables/har_vrp_summary.csv
-reports/tables/har_metadata.json
-reports/tables/har_no_lookahead_audit.csv
-reports/figures/har_forecast_us.png
-reports/figures/har_forecast_india.png
-reports/figures/har_residuals_us.png
-reports/figures/har_residuals_india.png
-reports/figures/har_vrp_us.png
-reports/figures/har_vrp_india.png
-```
-
-Key audit condition:
+Every no-lookahead audit row must satisfy:
 
 ```text
 max_training_target_end_date < forecast_date
 ```
 
-This must hold for every available HAR forecast row.
+If this condition fails, the audit helper flags the offending rows and the reporting pipeline stops.
 
-## Behavior
-
-The summary layer is intentionally permissive:
-
-- missing columns are skipped
-- values are coerced to numeric for reporting
-- non-numeric values become `NaN` in the report layer only
-
-Validation should happen earlier in `src/vrp/features/`.
-
-## Metadata
-
-The metadata file records:
-
-- phase name
-- primary estimator
-- robustness estimator list
-- formulas and horizon settings
-- feature registry metadata
-
-## Plotting Contract
-
-The main VRP figure stays focused on the primary GK path:
-
-- `iv_ann`
-- `rv_gk_22d_ann_lag1`
-- `vrp_backward_gk`
-- `vrp_forward_expost_gk_label`
-
-Robustness estimators are summarized in tables rather than crowded into the figure.
-
-## Common Usage
+Examples (commands)
 
 ```bash
+# Build VRP tables from processed features
 python scripts/build_features.py --market ALL --feature vrp
+
+# Produce backtest diagnostics (requires processed backtest outputs)
+python scripts/generate_backtest_diagnostics.py --out reports/tables/backtest_diagnostics.csv
 ```
+
+Notes
+
+- Reporting functions are defensive: missing columns are skipped and non-numeric data is coerced to `NaN` for reporting only.
+- Metadata files describe phase, primary estimator, robustness estimator list, and horizon settings.

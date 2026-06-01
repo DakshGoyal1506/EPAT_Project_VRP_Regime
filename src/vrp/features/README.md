@@ -87,3 +87,13 @@ pytest tests/test_implied_variance.py tests/test_calendar_alignment.py tests/tes
 ## HAR / Phase 4 note
 
 The feature layer feeds the Phase 4 HAR engine. After building and validating VRP panels, the HAR forecasting module in `src/vrp/forecasting/` is used to construct prospective HAR forecasts and HAR-based VRP outputs that are consumed by reporting and downstream regime/backtest components.
+
+## Build Commands
+
+Run these commands from the repository root to rebuild Phase 2/3 feature artifacts (RV, IV, VRP):
+
+```bash
+python scripts/build_features.py --market ALL --feature rv --window 22
+python scripts/build_features.py --market ALL --feature iv
+python scripts/build_features.py --market ALL --feature vrp
+```

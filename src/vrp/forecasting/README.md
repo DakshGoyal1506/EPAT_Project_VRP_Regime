@@ -1,70 +1,39 @@
 # Forecasting
 
-This package contains forecasting modules, including the HAR-RV workflow used in Phase 4.
+This package implements the HAR-RV forecasting engine used to build prospective variance risk premium (VRP) forecasts (Phase 4). Forecasting logic is kept testable and reusable for downstream regime and backtest components.
 
-Forecasting code belongs here, not in notebooks or scripts, so it can be tested and reused by downstream regime and backtest layers.
-# HAR Forecasting (Phase 4)
+Responsibilities
 
-This package implements the Phase 4 HAR-RV forecasting engine and walk-forward
-orchestration used to build prospective variance risk premium (VRP) panels.
+- Build HAR predictors from Phase 2/3 feature panels using only information available at t-1.
+- Produce walk-forward forecasts and coefficient history with optional HAC checkpointing.
+- Emit no-lookahead audit tables that prove the forecast availability rule.
 
-Contents
-- `har_rv.py` — HAR feature construction, walk-forward forecasting, batched
-  closed-form OLS backends (NumPy, optional Torch GPU), audit and coefficient
-  history utilities, HAC checkpointing.
-- `har_registry.py` — strict registry of primary HAR predictors and targets.
+Key modules
 
-Phase 4 summary
-- Builds conservative lagged HAR predictors that use information only through
-  t-1.
-- Uses Phase 3 forward 22-day realised-variance label as the supervised target.
-- Enforces the no-lookahead rule: training row s is allowed only if
-  `target_end_date_s < forecast_date_t`.
-- Produces forecast panels, coefficient history (with `hac_available` flag),
-  and no-lookahead audit tables.
+- `har_rv.py` — HAR predictor construction, batched estimation backends, walk-forward orchestration.
+- `har_registry.py` — registry of primary predictors and supervised targets; enforces naming and no-lookahead constraints.
 
-Freeze checklist (commands)
+Quick commands
 
 ```bash
-# Full-market expanding run (GPU optional)
-python scripts/train_har.py --market ALL --mode expanding --force \
-  --backend torch_batched --torch-device cuda --torch-dtype float64 \
-  --coefficient-hac-frequency none
+# Train HAR across all markets (expanding window; GPU optional)
+python scripts/train_har.py --market ALL --mode expanding --force
 
-# Run tests
-pytest
+# Run HAR unit tests
+pytest tests/test_har_batched_backend.py tests/test_har_rv.py
 ```
 
-Audit validation (python snippet)
+No-lookahead audit (concept)
 
-```bash
-python - << 'PY'
-import pandas as pd
+Audit rows must satisfy `max_training_target_end_date < forecast_date` for every forecast that is marked available. See `reports/tables/har_no_lookahead_audit.csv` for the canonical audit output and the python snippet in the repository for a runnable check.
 
-audit = pd.read_csv("reports/tables/har_no_lookahead_audit.csv")
-available = audit[audit["forecast_available"].astype(bool)].copy()
+Primary outputs
 
-available["forecast_date"] = pd.to_datetime(available["forecast_date"])
-available["max_training_target_end_date"] = pd.to_datetime(
-    available["max_training_target_end_date"]
-)
-
-bad = available[available["max_training_target_end_date"] >= available["forecast_date"]]
-assert bad.empty
-assert available["rule_target_end_before_forecast_date"].astype(bool).all()
-print("HAR no-lookahead audit passed.")
-print("Available rows:", len(available))
-PY
-```
-
-Outputs
-- Forecast panels: `data/processed/us_har_forecast.parquet`, `data/processed/india_har_forecast.parquet`
-- HAR-VRP panels: `data/processed/us_vrp_har.parquet`, `data/processed/india_vrp_har.parquet`
-- Reports: `reports/tables/har_forecast_accuracy.csv`, `reports/tables/har_coefficients.csv`, `reports/tables/har_vrp_summary.csv`, `reports/tables/har_no_lookahead_audit.csv`
+- Forecast panels: `data/processed/*_har_forecast.parquet`
+- HAR-VRP panels: `data/processed/*_vrp_har.parquet`
+- Diagnostics: `reports/tables/har_forecast_accuracy.csv`, `reports/tables/har_coefficients.csv`, `reports/tables/har_vrp_summary.csv`, `reports/tables/har_no_lookahead_audit.csv`
 
 Notes
-- The batched solver supports `cpu_numpy_batched` and `torch_batched` backends.
-- HAC checkpointing uses the last available coefficient date per month/quarter
-  (not calendar month-end) and can be configured via `coefficient_hac_frequency`.
-- See `scripts/smoke_backend_parity.py` for a quick parity check between NumPy
-  and Torch backends.
+
+- Supported estimation backends: `cpu_numpy_batched` and `torch_batched` (optional GPU).
+- Configure HAC checkpointing and coefficient frequency via `configs/har_rv.yaml`.
