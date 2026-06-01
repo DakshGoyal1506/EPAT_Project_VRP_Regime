@@ -61,57 +61,11 @@ final report
 ## Repository Structure
 
 ```text
-epat-vrp-regime/
-├── configs/
-├── data/
-│   ├── raw/
-│   ├── interim/
-│   ├── processed/
-│   └── broker_cache/
-├── src/vrp/
-│   ├── data/
-│   ├── features/
-│   ├── forecasting/
-│   ├── regimes/
-│   ├── strategies/
-│   ├── backtest/
-│   ├── broker/
-│   └── reports/
-├── notebooks/
-├── scripts/
-├── tests/
-├── reports/
-├── pyproject.toml
-├── README.md
-└── .env.example
+docs/commands.md
+docs/phases/
+scripts/README.md
+src/vrp/*/README.md
 ```
-
-## Documentation Index
-
-```text
-docs/phase_status.md              Current status by phase
-docs/artifact_inventory.md        Local artifact manifest template and tracked/local policy
-docs/reproducibility.md           Environment setup and rerun protocol
-docs/generated_artifact_policy.md  Commit vs local-only artifact rules
-docs/commands.md                  Canonical commands by phase
-docs/known_limitations.md         Current limitations and non-goals
-```
-
-## Notebooks
-
-The `notebooks/` folder is for inspection and presentation only. Production logic should stay in `src/vrp/`.
-
-Current notebook index:
-
-- `01_data_audit.ipynb` - data-quality checks and audit exploration.
-- `02_build_features.ipynb` - realized-variance feature build walkthrough for the processed OHLC panels.
-- `03.ipynb` - implied variance and VRP inspection.
-- `03_har_rv.ipynb` - HAR-RV forecast and HAR-based VRP inspection.
-
-## Phase Roadmap
-
-The authoritative phase ledger is maintained in:
-
 ```text
 docs/phase_status.md
 ```
