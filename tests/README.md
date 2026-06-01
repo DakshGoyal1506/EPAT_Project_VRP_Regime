@@ -1,3 +1,17 @@
+# Tests
+
+This folder contains the automated checks for schema validation, data loading, feature construction, regime modelling, backtesting, and broker guardrails.
+
+Use the narrowest relevant test slice when working on a specific phase, then run the full suite before freezing a phase.
+
+Suggested commands:
+
+```bash
+pytest
+pytest tests/test_data_schema.py tests/test_data_loaders.py
+pytest tests/test_hmm_model.py tests/test_hmm_filtering.py
+pytest tests/test_backtest_accounting.py tests/test_backtest_metrics.py
+```
 # Test Suite
 
 This folder contains the unit and integration-style tests for the EPAT VRP project.

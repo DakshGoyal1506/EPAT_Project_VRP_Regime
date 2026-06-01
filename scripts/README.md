@@ -2,6 +2,8 @@
 
 This folder contains the command-line entry points for the project. The scripts are thin orchestration layers around the reusable code in `src/vrp/` and should be run from the repository root.
 
+Use `docs/commands.md` for the canonical command index.
+
 ## Entry Points
 
 - `build_features.py` - Phase 2 and 3 feature builds and diagnostics.
@@ -10,7 +12,7 @@ This folder contains the command-line entry points for the project. The scripts 
 - `run_ibkr_paper_signal.py` - optional paper-signal integration.
 - `run_robustness.py` - robustness evaluation workflows.
 - `train_regimes.py` - regime-model training workflows.
- - `train_har.py` - Phase 4 HAR-RV forecasting orchestration and HAR-based VRP outputs.
+- `train_har.py` - Phase 4 HAR-RV forecasting orchestration and HAR-based VRP outputs.
 
 ## Build Features
 

@@ -1,3 +1,8 @@
+# Reports
+
+This package contains report assembly helpers used to build tables, figures, and summary outputs from reproducible inputs.
+
+It should stay focused on presentation logic, not on source-data ingestion or model training.
 # VRP Reports
 
 This package contains the reporting and diagnostic utilities used after feature construction. It does not build signals, regimes, forecasts, or backtests.

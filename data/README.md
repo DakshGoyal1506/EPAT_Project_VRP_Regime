@@ -2,6 +2,8 @@
 
 This directory stores the phase inputs, intermediates, and canonical processed outputs for the project.
 
+The source of truth for phase status, artifact policy, and reproducibility is in `docs/`.
+
 ## Directory Contract
 
 - `data/raw/` - source-specific raw files produced by ingestion.
@@ -38,6 +40,8 @@ Later phases write these canonical outputs here:
 
 ## Related Docs
 
+- [docs/phase_status.md](../docs/phase_status.md)
+- [docs/artifact_inventory.md](../docs/artifact_inventory.md)
 - [scripts/README.md](../scripts/README.md)
 - [src/vrp/features/README.md](../src/vrp/features/README.md)
 - [notebooks/README.md](../notebooks/README.md)

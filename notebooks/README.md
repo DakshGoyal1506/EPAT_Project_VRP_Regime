@@ -2,12 +2,14 @@
 
 Notebooks are for inspection, diagnostics, and presentation only.
 
+Production logic belongs in `src/vrp/`, with policy and phase status tracked in `docs/`.
+
 ## Available Notebooks
 
 - `01_data_audit.ipynb` - audit and validation exploration for processed data.
 - `02_build_features.ipynb` - realised-variance feature build walkthrough.
 - `03.ipynb` - implied variance and VRP inspection, including robustness diagnostics.
- - `03_har_rv.ipynb` - HAR-RV forecast, baseline comparison, residual, coefficient, audit, and HAR-VRP inspection.
+- `03_har_rv.ipynb` - HAR-RV forecast, baseline comparison, residual, coefficient, audit, and HAR-VRP inspection.
 
 ## Phase 4 note
 

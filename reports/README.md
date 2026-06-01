@@ -2,6 +2,8 @@
 
 Generated report artifacts live here.
 
+Policy, inventory, and reproducibility notes live in `docs/`.
+
 Expected structure:
 
 ```text
@@ -17,4 +19,9 @@ Rules:
 2. Tables should be reproducible from processed data.
 3. Do not manually edit generated tables without documenting the change.
 4. Final report conclusions must trace back to reproducible outputs.
+
+Related folders:
+
+- [reports/figures/README.md](figures/README.md)
+- [reports/tables/README.md](tables/README.md)
 

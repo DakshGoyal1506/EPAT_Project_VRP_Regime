@@ -63,5 +63,47 @@ reports/tables/*
 !reports/figures/.gitkeep
 !reports/tables/.gitkeep
 
+# Model binaries and serialized estimators
+*.pkl
+*.pickle
+*.joblib
+*.sav
+*.onnx
+*.pt
+*.pth
+
+# Local analytical databases and large table formats
+*.duckdb
+*.sqlite
+*.sqlite3
+*.db
+*.feather
+*.h5
+*.hdf5
+
+# Keep parquet generated/local unless explicitly whitelisted later
+*.parquet
+
+# Notebook scratch/export artifacts
+notebooks/_scratch/
+notebooks/exports/
+*.nbconvert.ipynb
+
+# R / MSGARCH local runtime artifacts
+.Rhistory
+.RData
+.Ruserdata
+
+# Broker/private runtime artifacts
+*.pem
+*.key
+*.crt
+ibkr_logs/
+tws_logs/
+broker_logs/
+
+# Local artifact manifests generated from runs
+local_artifacts/
+
 # Local notebooks exports
 notebooks/.ipynb_checkpoints/

@@ -1,3 +1,8 @@
+# Forecasting
+
+This package contains forecasting modules, including the HAR-RV workflow used in Phase 4.
+
+Forecasting code belongs here, not in notebooks or scripts, so it can be tested and reused by downstream regime and backtest layers.
 # HAR Forecasting (Phase 4)
 
 This package implements the Phase 4 HAR-RV forecasting engine and walk-forward

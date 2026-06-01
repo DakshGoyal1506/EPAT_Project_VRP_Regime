@@ -3,6 +3,8 @@
 This folder contains data ingestion helpers, canonical schema definitions, cleaners,
 and source-specific loaders used by Phase 1 of the EPAT VRP project.
 
+Phase status, artifact policy, and reproducibility notes are tracked in `docs/`.
+
 Key scripts and modules used by this package live in the repository `scripts/` and
 `src/vrp/data/` respectively. The command-line entrypoint for Phase 1 ingestion is
 `scripts/download_data.py` (dry-run safe by default).

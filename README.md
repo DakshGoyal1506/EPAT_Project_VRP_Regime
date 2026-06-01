@@ -86,6 +86,17 @@ epat-vrp-regime/
 └── .env.example
 ```
 
+## Documentation Index
+
+```text
+docs/phase_status.md              Current status by phase
+docs/artifact_inventory.md        Local artifact manifest template and tracked/local policy
+docs/reproducibility.md           Environment setup and rerun protocol
+docs/generated_artifact_policy.md  Commit vs local-only artifact rules
+docs/commands.md                  Canonical commands by phase
+docs/known_limitations.md         Current limitations and non-goals
+```
+
 ## Notebooks
 
 The `notebooks/` folder is for inspection and presentation only. Production logic should stay in `src/vrp/`.
@@ -321,13 +332,14 @@ pytest
 
 ## Current Phase Status
 
+The source of truth for phase status is:
+
 ```text
-Phase: 2
-Status: realised variance complete
-Finance logic: realised variance implemented; implied variance and VRP remain next
-Broker logic: paper-signal placeholder only
-Tests: schema, validators, source loaders, and RV estimator coverage
+docs/phase_status.md
 ```
+
+This README gives the project overview only. Phase-specific completion status, generated artifacts, validation commands, and known limitations are tracked in `docs/`.
+
 
 ## Data Policy
 

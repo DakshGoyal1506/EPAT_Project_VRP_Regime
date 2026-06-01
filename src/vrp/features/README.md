@@ -2,6 +2,8 @@
 
 This package contains the reusable Phase 2 and Phase 3 feature-construction logic. It is the canonical home for feature engineering code used by scripts, tests, notebooks, and later research layers.
 
+Phase definitions and generated artifact rules live in `docs/`.
+
 ## Responsibilities
 
 - build realised variance estimators from OHLC data
@@ -81,10 +83,7 @@ Run the feature-focused test slice from the repository root:
 ```bash
 pytest tests/test_implied_variance.py tests/test_calendar_alignment.py tests/test_vrp_alignment.py tests/test_no_lookahead.py
 
-HAR / Phase 4 note
+## HAR / Phase 4 note
 
-The feature layer feeds the Phase 4 HAR engine. After building and validating
-VRP panels, the HAR forecasting module (`src/vrp/forecasting/har_rv.py`) is
-used to construct prospective HAR forecasts and HAR-based VRP outputs that are
-consumed by reporting and downstream regime/backtest components.
+The feature layer feeds the Phase 4 HAR engine. After building and validating VRP panels, the HAR forecasting module in `src/vrp/forecasting/` is used to construct prospective HAR forecasts and HAR-based VRP outputs that are consumed by reporting and downstream regime/backtest components.
 ```
