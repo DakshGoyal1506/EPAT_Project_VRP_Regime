@@ -110,204 +110,32 @@ Current notebook index:
 
 ## Phase Roadmap
 
-### Completed Phases
-
-#### Phase 0 - Repo Foundation
-
-Status: complete.
-
-What is implemented:
+The authoritative phase ledger is maintained in:
 
 ```text
-installable Python package
-project configuration and script entry points
-schema definitions and validators
-basic test harness
-reproducible workspace structure
+docs/phase_status.md
 ```
 
-Use this from the repository root:
+High-level project phases:
 
-```bash
-pip install -e .
-pip install -e ".[dev]"
-pytest
-```
+| Phase | Scope                                                         |
+| ----: | ------------------------------------------------------------- |
+|     0 | Repo scaffold, packaging, configuration, directory governance |
+|     1 | Public data ingestion                                         |
+|     2 | Realised variance estimators                                  |
+|     3 | Implied variance and VRP construction                         |
+|     4 | HAR-RV forecasting                                            |
+|     5 | Threshold regimes                                             |
+|     6 | Gaussian HMM regimes                                          |
+|     7 | AR-HMM / Markov autoregression                                |
+|     8 | Regime-conditioned strategy construction                      |
+|     9 | Robustness analysis                                           |
+|    10 | Cross-market diagnostics                                      |
+|    11 | Broker paper-signal layer                                     |
+|    12 | Final report assembly                                         |
+|    13 | Final repo freeze and release checklist                       |
 
-#### Phase 1 - Data Ingestion
-
-Status: complete.
-
-What is implemented:
-
-```text
-CBOE VIX loader
-FRED VIXCLS loader
-Yahoo Finance OHLC loaders for US and India markets
-NSE India VIX loader
-data schema validation and audit support
-```
-
-Key commands:
-
-```bash
-python scripts/download_data.py --dry-run
-pytest tests/test_data_loaders.py tests/test_data_schema.py
-```
-
-#### Phase 2 - Realised Variance
-
-Status: complete.
-
-What is implemented:
-
-```text
-close-to-close daily variance
-Parkinson daily variance
-Garman-Klass daily variance
-Rogers-Satchell daily variance
-Yang-Zhang rolling variance
-trailing rolling realised variance windows
-annualized RV panels
-RV validation and diagnostics
-```
-
-Key modules and functions:
-
-```text
-vrp.features.returns.compute_log_returns
-vrp.features.returns.compute_simple_returns
-vrp.features.returns.add_gap_return
-vrp.features.returns.add_intraday_return
-vrp.features.returns.add_all_returns
-vrp.features.realized_variance.validate_ohlc
-vrp.features.realized_variance.close_to_close_daily_var
-vrp.features.realized_variance.parkinson_daily_var
-vrp.features.realized_variance.garman_klass_daily_var
-vrp.features.realized_variance.rogers_satchell_daily_var
-vrp.features.realized_variance.rolling_realized_variance
-vrp.features.realized_variance.yang_zhang_rolling_var
-vrp.features.realized_variance.annualize_variance
-vrp.features.realized_variance.annualize_vol
-vrp.features.realized_variance.build_rv_panel
-```
-
-Build and test commands:
-
-```bash
-python scripts/build_features.py --market US --feature rv --window 22
-python scripts/build_features.py --market INDIA --feature rv --window 22
-python scripts/build_features.py --market ALL --feature rv --window 22
-pytest tests/test_rv_estimators.py
-```
-
-Expected outputs:
-
-```text
-data/processed/us_rv.parquet
-data/processed/india_rv.parquet
-reports/tables/
-reports/figures/
-```
-
-Notebook support for this phase lives in `notebooks/02_build_features.ipynb`.
-
-#### Phase 3 - Implied Variance and VRP
-
-Status: complete.
-
-What is implemented:
-
-```text
-VIX / India VIX implied variance construction
-exact-date IV/RV alignment
-backward-looking point-in-time VRP
-forward ex-post RV and VRP labels
-feature/label separation registry
-calendar mismatch diagnostics
-VRP metadata and plots
-```
-
-Key commands:
-
-```bash
-python scripts/build_features.py --market ALL --feature iv
-python scripts/build_features.py --market ALL --feature vrp
-pytest tests/test_vrp_alignment.py tests/test_no_lookahead.py tests/test_build_features_cli.py
-```
-
-Expected outputs:
-
-```text
-data/processed/us_iv.parquet
-data/processed/india_iv.parquet
-data/processed/us_vrp.parquet
-data/processed/india_vrp.parquet
-reports/tables/vrp_summary.csv
-reports/tables/vrp_metadata.json
-reports/tables/calendar_mismatches.csv
-reports/figures/us_iv_rv_vrp.png
-reports/figures/india_iv_rv_vrp.png
-```
-
-#### Phase 4 - HAR-RV Forecasting
-Build HAR-RV forecasts using only information available at time `t`.
-
-Status: complete and ready for freeze (Phase 4). The HAR-RV engine produces
-walk-forward expanding and rolling forecasts under strict no-lookahead rules,
-coefficient histories with optional HAC inference checkpoints, and HAR-based
-prospective VRP panels for both US and India markets.
-
-Freeze / Run commands (appendix):
-
-```bash
-python scripts/train_har.py --market ALL --mode expanding --force --backend torch_batched --torch-device cuda --torch-dtype float64 --coefficient-hac-frequency none
-pytest
-```
-
-Audit and validation snippets are preserved in the repository's Phase 4
-appendix (see `src/vrp/forecasting/README.md` and the `scripts/` folder).
-
-### Next Phases
-
-#### Phase 5 - Threshold Regimes
-
-Build simple interpretable regime filters using VIX, realised volatility, and VRP thresholds.
-
-#### Phase 6 - Gaussian HMM
-
-Train Gaussian HMM regime models using expanding or walk-forward logic.
-
-Critical rule:
-
-```text
-Backtests must use filtered probabilities available at time t.
-Do not use full-sample smoothed probabilities for strategy decisions.
-```
-
-#### Phase 7 - AR-HMM / Markov Autoregression
-
-Upgrade regime modelling to account for autocorrelation in volatility and VRP series.
-
-#### Phase 8 - Strategy and Backtest
-
-Test unconditional versus regime-conditioned short-volatility exposure.
-
-#### Phase 9 - Robustness
-
-Test sensitivity to estimator choice, regime model, state count, training window, transaction costs, and sample period.
-
-#### Phase 10 - Cross-Market Analysis
-
-Compare US and India VRP behaviour and regime transitions.
-
-#### Phase 11 - Broker Paper-Signal Layer
-
-Create an optional iBridgePy / IBKR paper-signal adapter.
-
-#### Phase 12 - Final Report
-
-Generate final tables, figures, diagnostics, and written conclusions.
+For phase status, validation commands, generated artifact policy, and known limitations, use the `docs/` folder.
 
 ## Installation
 
@@ -328,6 +156,133 @@ conda activate epat
 python scripts/download_data.py --dry-run
 python scripts/build_features.py --market ALL --feature rv --window 22
 pytest
+```
+
+## Common Commands
+
+Complete command documentation lives in:
+
+```text
+docs/commands.md
+```
+
+### Setup
+
+```bash
+pip install -e .
+pip install -e ".[dev]"
+pytest
+```
+
+### Phase 1 — Data Ingestion
+
+Dry run:
+
+```bash
+python scripts/download_data.py --market ALL --source all --dry-run
+```
+
+US data refresh:
+
+```bash
+python scripts/download_data.py --market US --source all --force
+```
+
+India Yahoo fallback refresh:
+
+```bash
+python scripts/download_data.py --market INDIA --source yahoo --force
+```
+
+### Phase 2 — Realised Variance
+
+```bash
+python scripts/build_features.py --market ALL --feature rv --window 22
+```
+
+### Phase 3 — Implied Variance and VRP
+
+```bash
+python scripts/build_features.py --market ALL --feature iv
+python scripts/build_features.py --market ALL --feature vrp
+```
+
+### Phase 4 — HAR-RV Forecasting
+
+```bash
+python scripts/train_har.py --market ALL --mode expanding --force --backend torch_batched --coefficient-hac-frequency none
+```
+
+CPU fallback:
+
+```bash
+python scripts/train_har.py --market ALL --mode expanding --force --backend numpy --coefficient-hac-frequency none
+```
+
+### Later Phase Entry Points
+
+```bash
+python scripts/train_regimes.py --help
+python scripts/train_markov_autoreg.py --help
+python scripts/run_backtest.py --help
+python scripts/run_robustness.py --help
+python scripts/run_ibkr_paper_signal.py --help
+```
+
+### Hygiene Checks Before Commit
+
+```bash
+git diff --check
+git status --short
+git ls-files | findstr /i "\.parquet \.pkl \.pickle \.joblib \.log \.env"
+```
+
+## Chunk 0E — Final cleanup validation and review packet
+
+Run only these checks.
+
+```bash
+git diff --check
+git status --short
+git ls-files data reports docs | sort
+git ls-files | findstr /i "\.parquet \.pkl \.pickle \.joblib \.log \.env"
+```
+
+Optional final safety check:
+
+```bash
+pytest
+```
+
+Expected policy result:
+
+```text
+No .parquet files tracked
+No model binaries tracked
+No .log files tracked
+No .env tracked
+.env.example is allowed
+Only .gitkeep and README files tracked inside generated-output roots
+```
+
+Commit command:
+
+```bash
+git add README.md .gitignore docs/ configs/README.md data/README.md reports/README.md reports/figures/README.md reports/tables/README.md tests/README.md src/vrp/**/README.md src/vrp/README.md
+git commit -m "Clean repo governance docs before Phase 13"
+git push
+```
+
+Send back:
+
+```text
+1. git status --short
+2. git ls-files data reports docs | sort
+3. git ls-files | findstr /i "\.parquet \.pkl \.pickle \.joblib \.log \.env"
+4. README.md
+5. docs/phase_status.md
+6. docs/artifact_inventory.md
+7. .gitignore
 ```
 
 ## Current Phase Status

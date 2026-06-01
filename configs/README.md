@@ -1,22 +1,38 @@
 # Configs
 
-Configuration files in this folder define the canonical runtime contract for the project.
+This folder contains YAML configuration files used by the research pipeline.
 
-Use these YAML files as the source of truth for data sources, markets, model settings, backtest parameters, and paper-signal defaults.
+## Rules
 
-Key files:
+1. Configs define source choices, model settings, safety flags, and output paths.
+2. Configs should not contain private credentials.
+3. Configs should not contain local machine-specific absolute paths.
+4. Configs should make source priority and anti-lookahead rules explicit.
+5. Broker configs must remain paper/signal-only unless the project is explicitly re-scoped.
 
-- `data_sources.yaml` - source priority, ingestion policy, and manual override rules.
-- `markets.yaml` - market metadata, calendars, and variance conventions.
-- `har_rv.yaml` - HAR-RV forecasting parameters.
-- `model_hmm.yaml` - Gaussian HMM regime settings.
-- `model_arhmm.yaml` - AR-HMM / Markov autoregression settings.
-- `model_markov_autoreg.yaml` - Markov autoregression settings.
-- `strategies.yaml` - strategy rules and thresholds.
-- `backtest.yaml` - backtest assumptions and accounting rules.
-- `ibkr_paper.yaml` - paper-signal adapter defaults and broker guardrails.
+## Key Files
 
-Related docs:
+| File | Purpose |
+|---|---|
+| `data_sources.yaml` | Public data source definitions, source priority, local CSV overrides, raw/processed paths |
+| `markets.yaml` | US and India market metadata, symbols, timezones, calendar notes |
+| `har_rv.yaml` | HAR-RV forecasting configuration |
+| `model_hmm.yaml` | Gaussian HMM regime configuration |
+| `model_arhmm.yaml` | AR-HMM / Markov autoregression placeholder or legacy config |
+| `model_markov_autoreg.yaml` | Markov autoregression regime configuration |
+| `strategies.yaml` | Strategy exposure-rule configuration |
+| `backtest.yaml` | Backtest input, output, cost, and proxy-return configuration |
+| `ibkr_paper.yaml` | Paper-signal broker configuration with live-order blocks |
 
-- [docs/phase_status.md](../docs/phase_status.md)
-- [docs/generated_artifact_policy.md](../docs/generated_artifact_policy.md)
+## Generated Outputs
+
+Configs may point to generated outputs under:
+
+```text
+data/processed/
+reports/tables/
+reports/figures/
+data/broker_cache/
+```
+
+Those generated files are local-only unless explicitly approved as small final-report artifacts.

@@ -14,53 +14,71 @@ Common commands (run from repository root):
 - Activate the development environment (Conda):
 
   ```powershell
-  conda activate epat
+  # `src/vrp/data`
+
+  Data ingestion, schema, cleaning, validation, and IO utilities.
+
+  ## Phase Ownership
+
+  Primary phase:
+
+  ```text
+  Phase 1 — Public data ingestion
   ```
 
-- Install package in editable/development mode (one-time):
+  ## Responsibilities
 
-  ```bash
-  pip install -e .
-  pip install -e ".[dev]"
+  This package handles:
+
+  ```text
+  canonical OHLCV schema
+  source-specific loaders
+  manual CSV ingestion
+  column standardisation
+  data validation
+  Parquet IO
+  data audit rows
   ```
 
-- Dry-run ingestion (no downloads, no writes):
+  ## Key Modules
 
-  ```bash
-  python scripts/download_data.py --dry-run
+  | Module            | Purpose                                                                  |
+  | ----------------- | ------------------------------------------------------------------------ |
+  | `schema.py`       | Canonical OHLCV and audit schemas                                        |
+  | `validators.py`   | Strict schema, missingness, duplicate-date, sorted-date, OHLC validation |
+  | `cleaners.py`     | Source-column normalisation into canonical OHLCV                         |
+  | `io.py`           | Parquet save/load helpers                                                |
+  | `base.py`         | Loader base types and ingestion result container                         |
+  | `yahoo_loader.py` | Yahoo Finance OHLCV ingestion                                            |
+  | `fred_loader.py`  | FRED close-series ingestion                                              |
+  | `cboe_loader.py`  | CBOE VIX ingestion; close-only VIX canonicalisation                      |
+  | `nse_loader.py`   | Manual/local NSE CSV ingestion                                           |
+
+  ## Canonical OHLCV Columns
+
+  ```text
+  date
+  open
+  high
+  low
+  close
+  adj_close
+  volume
+  source
+  market
+  symbol
   ```
 
-- Download only FRED sources for US and overwrite outputs:
+  ## Rules
 
-  ```bash
-  python scripts/download_data.py --market US --source fred --force
-  ```
-
-- Download only CBOE sources for US (use `--source-id` for a specific source):
-
-  ```bash
-  python scripts/download_data.py --market US --source cboe --force
-  python scripts/download_data.py --market US --source cboe --source-id cboe_vix --force
-  ```
-
-- Download Yahoo sources for US:
-
-  ```bash
-  python scripts/download_data.py --market US --source yahoo --force
-  ```
-
-- Use a local CSV override (manual CBOE/NSE downloads):
-
-  ```bash
-  python scripts/download_data.py --market US --source cboe --source-id cboe_vix --local-csv data/manual/cboe/VIX_History.csv --force
-  ```
-
-- Run tests relevant to data ingestion and validators:
-
-  ```bash
-  pytest tests/test_data_loaders.py tests/test_data_schema.py -q
-  ```
-
+  1. Do not forward-fill prices silently.
+  2. Do not silently merge sources.
+  3. Do not merge US and India calendars in this package.
+  4. Do not calculate realised variance here.
+  5. Do not calculate VRP here.
+  6. Do not train models here.
+  7. Loader tests must not depend on live internet.
+  8. Local/manual CSVs stay under `data/manual/` and are not committed.
 Outputs produced by the ingestion step:
 
 - Raw per-source Parquet files: `data/raw/*.parquet`
