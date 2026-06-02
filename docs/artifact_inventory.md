@@ -57,8 +57,13 @@ This file documents generated artifacts, whether they should be committed, and w
 | 5 | Threshold regime panels | `data/processed/us_threshold_regimes.parquet`, `data/processed/india_threshold_regimes.parquet` | `python scripts/train_regimes.py --model threshold --market ALL --force` | No | Generated regime panels | `threshold_regime_summary.csv`, schema/head preview |
 | 5 | Threshold diagnostics | `reports/tables/threshold_*.csv`, `reports/tables/threshold_regime_metadata.json` | Same | No by default | Generated diagnostics and metadata | CSV/JSON preview |
 | 5 | Threshold figures | `reports/figures/threshold_*.png` | Same | No by default | Generated diagnostic figures | Screenshot if needed |
-| 6 | HMM regime panels | `data/processed/*hmm*regimes*.parquet` | `python scripts/train_regimes.py ...` | No | Generated regime panels | HMM diagnostics |
-| 6 | HMM model binaries | `data/processed/models/hmm/*` | HMM training | No | Model artifacts | Config + diagnostics |
+| 5 | Detailed Phase 5 artifact documentation | `docs/artifacts/phase_05_artifacts.md` | Manual docs | Yes | Phase artifact documentation | File review |
+| 6 | HMM primary regime panels | `data/processed/us_hmm_regimes.parquet`, `data/processed/india_hmm_regimes.parquet` | `python scripts/train_regimes.py --market ALL --model gaussian_hmm --run-grid --force` | No | Generated regime/probability panels | `hmm_candidate_model_ranking.csv`, `hmm_no_lookahead_audit.csv`, schema/head preview |
+| 6 | HMM model-specific panels | `data/processed/*_hmm_*.parquet` | Same | No | Generated candidate panels | Candidate ranking table and selected model summary |
+| 6 | HMM primary model binaries | `models/us_gaussian_hmm.pkl`, `models/india_gaussian_hmm.pkl` | Same | No | Generated model/scaler/state-label bundles | Config, metadata, candidate ranking, no-lookahead audit |
+| 6 | HMM model-specific binaries | `models/*_hmm_*.pkl` | Same | No | Generated model binaries | Metadata and candidate ranking |
+| 6 | HMM diagnostics | `reports/tables/phase_6/{market}/*.csv`, `reports/tables/phase_6/{market}/*.json` | Same | No by default | Generated diagnostics and audit reports | Selected CSV previews; especially candidate ranking and no-lookahead audit |
+| 6 | HMM figures | `reports/figures/phase_6/*` | Phase 6 diagnostics if figures are later added | No by default | Generated figures | Screenshots or final-report-selected figures only |
 | 7 | Markov autoregression outputs | `data/processed/*markov_autoreg*.parquet` | `python scripts/train_markov_autoreg.py ...` | No | Generated regime panels | MAR diagnostics |
 | 8 | MSVOL / MSGARCH appendix outputs | `data/processed/*msvol*`, `data/processed/*msgarch*`, `reports/tables/phase_08/*`, `reports/figures/phase_08/*` | Phase 8 scripts | No by default | Generated diagnostic appendix artifacts | Selected diagnostics and no-lookahead audit |
 | 9 | Strategy signal panels | `data/processed/*strategy_signals*.parquet` | `python scripts/build_signals.py ...` | No | Generated signal panels | Strategy summary |
@@ -76,8 +81,6 @@ This file documents generated artifacts, whether they should be committed, and w
 ## Local Artifact Review Packet
 
 When asked for review, send these instead of committing heavy files:
-
-Detailed Phase 5 artifact documentation: `docs/artifacts/phase_05_artifacts.md`.
 
 ```text
 pytest output

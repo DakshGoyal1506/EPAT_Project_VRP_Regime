@@ -70,6 +70,14 @@ Phase 4 CPU fallback:
 python scripts/train_har.py --market ALL --mode expanding --force --backend cpu_numpy_batched --coefficient-hac-frequency none
 ```
 
+Phase 6 Gaussian HMM regeneration requires Phase 4 HAR-VRP panels and optional Phase 5 threshold panels:
+
+```bash
+python scripts/train_regimes.py --market ALL --model gaussian_hmm --run-grid --force
+```
+
+Generated HMM panels, model binaries, and reports remain local-only.
+
 ## Reproducibility Boundaries
 
 ### Reproducible from tracked repo

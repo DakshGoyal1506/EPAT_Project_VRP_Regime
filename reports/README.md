@@ -89,3 +89,29 @@ reports/figures/threshold_component_states_india.png
 
 These are generated diagnostics and stay local by default. Use previews, selected excerpts, or screenshots for review unless explicitly approved as final-report artifacts.
 
+## Phase 6 Gaussian HMM Outputs
+
+Phase 6 may generate:
+
+```text
+reports/tables/phase_6/us/hmm_candidate_model_ranking.csv
+reports/tables/phase_6/us/hmm_feature_availability.csv
+reports/tables/phase_6/us/hmm_state_summary.csv
+reports/tables/phase_6/us/hmm_transition_matrix.csv
+reports/tables/phase_6/us/hmm_state_duration_summary.csv
+reports/tables/phase_6/us/hmm_state_by_year.csv
+reports/tables/phase_6/us/hmm_threshold_agreement.csv
+reports/tables/phase_6/us/hmm_crisis_hit_table.csv
+reports/tables/phase_6/us/hmm_crisis_lead_lag_table.csv
+reports/tables/phase_6/us/hmm_forward_label_by_state.csv
+reports/tables/phase_6/us/hmm_probability_audit.csv
+reports/tables/phase_6/us/hmm_no_lookahead_audit.csv
+reports/tables/phase_6/us/hmm_metadata.json
+
+reports/tables/phase_6/india/*.csv
+reports/tables/phase_6/india/*.json
+reports/figures/phase_6/*
+```
+
+These are generated diagnostics and stay local by default. Use selected CSV/JSON previews for review unless explicitly approved as final-report artifacts.
+

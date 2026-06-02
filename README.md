@@ -72,7 +72,7 @@ final report
 | 3 | Complete / frozen | Implied variance, exact-date IV/RV alignment, VRP features, and no-lookahead labels |
 | 4 | Complete / frozen | HAR-RV forecasting and HAR-based prospective VRP |
 | 5 | Complete / frozen | Threshold baseline regime construction |
-| 6 | Complete / needs final review | Gaussian HMM regime model with filtered probabilities |
+| 6 | Complete / frozen | Gaussian HMM regime model with train-only scaling, train-only fitting, custom filtered probabilities, diagnostic-only smoothed probabilities, and no-lookahead audit |
 | 7 | Complete / needs final review | AR-HMM / Markov autoregression upgrade |
 | 8 | Complete / needs final review | MSVOL / MSGARCH robustness appendix |
 | 9 | Complete / needs final review | Strategy signal construction |

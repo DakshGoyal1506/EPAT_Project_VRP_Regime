@@ -33,6 +33,47 @@ Phase 5 state mapping:
 2 = stress
 ```
 
+### Phase 6 Ownership - Gaussian HMM
+
+Phase 6 owns:
+
+```text
+hmm_registry.py
+hmm_validation.py
+online_filter.py
+hmm_features.py
+hmm_scaling.py
+gaussian_hmm.py
+state_labeling.py HMM extension section
+```
+
+Phase 6 responsibilities:
+
+```text
+define approved HMM feature sets
+block forward/ex-post/threshold/crisis/HMM-derived leakage features
+construct eligible HMM feature panels
+fit scalers on the chronological train window only
+fit Gaussian HMM candidates on the train window only
+compute custom point-in-time filtered probabilities
+keep smoothed probabilities diagnostic-only
+map raw HMM states to calm/transition/stress using train-period economic properties
+validate candidates for occupancy, transition, covariance, probability, and economic interpretability
+write HMM diagnostics and no-lookahead audits
+```
+
+Phase 6 must not:
+
+```text
+construct strategy exposure
+run PnL backtests
+use threshold_state as an HMM feature or target
+use crisis windows as state labels
+use forward/ex-post labels as HMM features
+use full-sample smoothed probabilities as tradable signals
+place or preview broker orders
+```
+
 ### Shared/Later-Phase Ownership
 
 Later phases may extend regime modules with HMM or Markov-specific functions. Those later extensions must not change the canonical economic state IDs.
@@ -128,6 +169,20 @@ log_return
 simple_return
 ```
 
+Phase 6 expects Phase 4 HAR-VRP panels:
+
+```text
+data/processed/us_vrp_har.parquet
+data/processed/india_vrp_har.parquet
+```
+
+Phase 6 may also read Phase 5 threshold panels for diagnostic comparison only:
+
+```text
+data/processed/us_threshold_regimes.parquet
+data/processed/india_threshold_regimes.parquet
+```
+
 ## Expected Outputs
 
 Phase 5 generated outputs are local-only by default:
@@ -140,6 +195,20 @@ reports/tables/threshold_*.json
 reports/figures/threshold_*.png
 ```
 
+Phase 6 generated outputs are local-only by default:
+
+```text
+data/processed/us_hmm_regimes.parquet
+data/processed/india_hmm_regimes.parquet
+data/processed/*_hmm_*.parquet
+models/us_gaussian_hmm.pkl
+models/india_gaussian_hmm.pkl
+models/*_hmm_*.pkl
+reports/tables/phase_6/us/*
+reports/tables/phase_6/india/*
+reports/figures/phase_6/*
+```
+
 ## Commands
 
 Threshold regime CLI:
@@ -148,6 +217,14 @@ Threshold regime CLI:
 python scripts/train_regimes.py --model threshold --market US --force
 python scripts/train_regimes.py --model threshold --market INDIA --force
 python scripts/train_regimes.py --model threshold --market ALL --force
+```
+
+Gaussian HMM CLI:
+
+```bash
+python scripts/train_regimes.py --market US --model gaussian_hmm --primary --force
+python scripts/train_regimes.py --market INDIA --model gaussian_hmm --primary --force
+python scripts/train_regimes.py --market ALL --model gaussian_hmm --run-grid --force
 ```
 
 Help:
@@ -163,6 +240,16 @@ Phase 5 tests:
 ```bash
 pytest tests/test_threshold_regimes.py
 pytest tests/test_regime_no_lookahead.py
+pytest tests/test_no_lookahead.py
+```
+
+Phase 6 tests:
+
+```bash
+pytest tests/test_hmm_filtering.py
+pytest tests/test_hmm_scaling.py
+pytest tests/test_hmm_model.py
+pytest tests/test_hmm_no_lookahead.py
 pytest tests/test_no_lookahead.py
 ```
 

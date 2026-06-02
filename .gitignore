@@ -62,10 +62,18 @@ data/manual/*
 # Reports generated from runs
 reports/figures/*
 reports/tables/*
+reports/figures/**/*
+reports/tables/**/*
 !reports/figures/.gitkeep
 !reports/tables/.gitkeep
 !reports/figures/README.md
 !reports/tables/README.md
+!reports/figures/**/
+!reports/figures/**/README.md
+!reports/figures/**/.gitkeep
+!reports/tables/**/
+!reports/tables/**/README.md
+!reports/tables/**/.gitkeep
 
 # Model binaries and serialized estimators
 *.pkl

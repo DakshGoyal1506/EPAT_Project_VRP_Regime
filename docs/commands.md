@@ -177,9 +177,47 @@ reports/figures/threshold_*.png
 
 ## Phase 6 - Gaussian HMM Regimes
 
+CLI help:
+
 ```bash
 python scripts/train_regimes.py --help
-pytest tests/test_hmm_model.py tests/test_hmm_filtering.py
+```
+
+Run configured primary plus fallback:
+
+```bash
+python scripts/train_regimes.py --market US --model gaussian_hmm --primary --force
+python scripts/train_regimes.py --market INDIA --model gaussian_hmm --primary --force
+```
+
+Run full Phase 6 candidate grid:
+
+```bash
+python scripts/train_regimes.py --market ALL --model gaussian_hmm --run-grid --force
+```
+
+Tests:
+
+```bash
+pytest tests/test_hmm_filtering.py
+pytest tests/test_hmm_scaling.py
+pytest tests/test_hmm_model.py
+pytest tests/test_hmm_no_lookahead.py
+pytest tests/test_no_lookahead.py
+```
+
+Generated outputs are local-only by default:
+
+```text
+data/processed/us_hmm_regimes.parquet
+data/processed/india_hmm_regimes.parquet
+data/processed/*_hmm_*.parquet
+models/*_hmm_*.pkl
+models/us_gaussian_hmm.pkl
+models/india_gaussian_hmm.pkl
+reports/tables/phase_6/us/*
+reports/tables/phase_6/india/*
+reports/figures/phase_6/*
 ```
 
 ## Phase 7 — Markov Autoregression / AR-HMM

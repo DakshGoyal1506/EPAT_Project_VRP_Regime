@@ -62,6 +62,14 @@ tests/test_threshold_regimes.py
 tests/test_regime_no_lookahead.py
 ```
 
+Shared with earlier no-lookahead phases:
+
+```text
+tests/test_no_lookahead.py
+```
+
+Phase 5 extends this file with regime-registry and threshold no-lookahead checks.
+
 Shared with later regime phases:
 
 ```text
@@ -422,6 +430,7 @@ src/vrp/regimes/*.py
 src/vrp/reports/regime_diagnostics.py
 tests/test_threshold_regimes.py
 tests/test_regime_no_lookahead.py
+tests/test_no_lookahead.py
 docs/phases/phase_05_threshold_regimes.md
 docs/artifacts/phase_05_artifacts.md
 README files
@@ -493,6 +502,10 @@ pytest
 8. Do not create strategy signals in Phase 5.
 9. Do not run backtests in Phase 5.
 10. Do not tune thresholds using crisis windows.
+
+## Notebook
+
+No Phase 5 notebook is required for this cleanup. Any future Phase 5 notebook must be inspection-only and must not recompute regimes, tune thresholds, create strategy signals, or run backtests.
 
 ## Known Limitations
 

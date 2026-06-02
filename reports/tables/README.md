@@ -61,3 +61,22 @@ threshold_regime_metadata.json
 ```
 
 These are generated run outputs and stay local by default.
+
+## Phase 6 Examples
+
+Local Phase 6 tables may include:
+
+```text
+phase_6/us/hmm_candidate_model_ranking.csv
+phase_6/us/hmm_feature_availability.csv
+phase_6/us/hmm_probability_audit.csv
+phase_6/us/hmm_no_lookahead_audit.csv
+phase_6/us/hmm_metadata.json
+phase_6/india/hmm_candidate_model_ranking.csv
+phase_6/india/hmm_feature_availability.csv
+phase_6/india/hmm_probability_audit.csv
+phase_6/india/hmm_no_lookahead_audit.csv
+phase_6/india/hmm_metadata.json
+```
+
+These are generated run outputs and stay local by default.
