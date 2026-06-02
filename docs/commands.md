@@ -384,10 +384,46 @@ reports/figures/phase_10/*
 
 ## Phase 11 - IBKR Paper-Signal Readiness Layer
 
+Current readiness run:
+
 ```bash
-python scripts/run_ibkr_paper_signal.py --help
-python scripts/validate_phase11.py --help
-pytest tests/test_paper_trader.py tests/test_live_order_guard.py tests/test_risk_checks.py tests/test_validate_phase11_cli.py
+python scripts/run_ibkr_paper_signal.py --market US --strategy mar_prob_linear_carry --print-json
+```
+
+Historical deterministic run:
+
+```bash
+python scripts/run_ibkr_paper_signal.py --market US --strategy mar_prob_linear_carry --signal-path data/processed/us_strategy_signals.parquet --as-of-date 2026-04-15 --print-json
+```
+
+Historical deterministic run with manual VXX quote:
+
+```bash
+python scripts/run_ibkr_paper_signal.py --market US --strategy mar_prob_linear_carry --signal-path data/processed/us_strategy_signals.parquet --as-of-date 2026-04-15 --quote-symbol VXX --quote-bid 14.95 --quote-ask 15.05 --quote-age-seconds 30 --print-json
+```
+
+Final validator:
+
+```bash
+python scripts/validate_phase11.py --print-json
+```
+
+Source guard only:
+
+```bash
+python scripts/validate_phase11.py --skip-artifacts --print-json
+```
+
+Artifact integration only:
+
+```bash
+python scripts/validate_phase11.py --skip-source-guard --print-json
+```
+
+Tests:
+
+```bash
+pytest tests/test_broker_config.py tests/test_signal_schema.py tests/test_ibkr_contracts.py tests/test_ibridgepy_adapter.py tests/test_market_data.py tests/test_signal_publisher.py tests/test_paper_sizing.py tests/test_risk_checks.py tests/test_paper_trader.py tests/test_broker_diagnostics.py tests/test_run_ibkr_paper_signal_cli.py tests/test_live_order_guard.py tests/test_phase11_integration_checks.py tests/test_validate_phase11_cli.py
 ```
 
 ## Phase 12 - Optional Future IBKR Paper Execution Adapter

@@ -166,3 +166,20 @@ phase_10/phase10_final_audit.json
 ```
 
 These are generated run outputs and stay local by default. Small summaries may be selected later for final report review only if explicitly approved.
+
+## Phase 11 Examples
+
+Local Phase 11 tables may include:
+
+```text
+phase_11/daily_paper_signal.csv
+phase_11/paper_order_intents.csv
+phase_11/risk_check_report.csv
+phase_11/broker_metadata.json
+phase_11/run_metadata.json
+phase_11/ibkr_paper_config_snapshot.yaml
+phase_11/phase11_integration_report.json
+phase_11/live_order_guard_report.json
+```
+
+These are generated broker-readiness outputs and stay local by default. They must not indicate `live_order_sent=true`.

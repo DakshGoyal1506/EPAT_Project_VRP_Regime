@@ -84,8 +84,16 @@ This file documents generated artifacts, whether they should be committed, and w
 | 10 | Robustness outputs | `reports/tables/phase_10/robustness_*.csv`, `reports/tables/phase_10/robustness_*.json`, `reports/tables/phase_10/tradable_proxy_detection.json` | `python scripts/run_robustness.py --market ALL --test all --force` | No by default | Generated robustness diagnostics | CSV/JSON preview |
 | 10 | Backtest figures | `reports/figures/phase_10/*` | `python scripts/generate_backtest_diagnostics.py --market ALL` | No by default | Generated research proxy figures | Screenshots or final-report-selected figures only |
 | 10 | Detailed Phase 10 artifact documentation | `docs/artifacts/phase_10_artifacts.md` | Manual docs | Yes | Phase artifact documentation | File review |
-| 11 | Paper signal output | `reports/tables/phase_11/*` | `python scripts/run_ibkr_paper_signal.py ...` | No by default | Broker-sensitive runtime context | Redacted terminal output |
-| 11 | Broker cache | `data/broker_cache/*` | Broker/paper signal layer | No | Sensitive/local | Redacted status taxonomy only |
+| 11 | Daily paper signal | `reports/tables/phase_11/daily_paper_signal.csv` | `python scripts/run_ibkr_paper_signal.py --market US --strategy mar_prob_linear_carry --print-json` | No | Runtime paper-signal artifact | Redacted JSON summary and one-row preview |
+| 11 | Paper order intents | `reports/tables/phase_11/paper_order_intents.csv` | Same | No | Runtime paper-intent artifact, not executed orders | Redacted JSON summary and one-row preview |
+| 11 | Risk check report | `reports/tables/phase_11/risk_check_report.csv` | Same | No | Runtime safety/risk audit | CSV preview |
+| 11 | Broker metadata | `reports/tables/phase_11/broker_metadata.json` | Same | No | Broker status may be sensitive/local | Redacted JSON preview |
+| 11 | Run metadata | `reports/tables/phase_11/run_metadata.json` | Same | No | Runtime audit metadata | Redacted JSON preview |
+| 11 | Config snapshot | `reports/tables/phase_11/ibkr_paper_config_snapshot.yaml` | Same | No | Effective broker config snapshot | Redacted YAML preview |
+| 11 | Integration report | `reports/tables/phase_11/phase11_integration_report.json` | `python scripts/validate_phase11.py --print-json` | No | Runtime artifact consistency check | JSON preview |
+| 11 | Live-order guard report | `reports/tables/phase_11/live_order_guard_report.json` | `python scripts/validate_phase11.py --print-json` | No | Source safety scan output | JSON preview |
+| 11 | Broker cache | `data/broker_cache/*` | Broker/paper-signal layer | No | Sensitive/local | Redacted status taxonomy only |
+| 11 | Detailed Phase 11 artifact documentation | `docs/artifacts/phase_11_artifacts.md` | Manual docs | Yes | Phase artifact documentation | File review |
 | 12 | Optional paper execution outputs | `reports/tables/phase_12/*`, `broker_logs/*` | Future paper-execution scripts if explicitly scoped | No | Broker-sensitive/local runtime context | Redacted execution summary |
 | 13 | Cross-market panels | `data/processed/*cross_market*.parquet` | Phase 13 scripts | No | Generated panels | Phase 13 audit summary |
 | 13 | Cross-market summary | `reports/tables/phase_13/*.csv` | Phase 13 scripts | Optional | Small summary | Selected CSV |

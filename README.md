@@ -19,15 +19,6 @@ Markets covered:
 | US | SPX / SPY | VIX |
 | India | NIFTY 50 | India VIX |
 
-## Core Research Questions
-
-1. Is the variance risk premium structurally positive in both US and Indian markets?
-2. Does the premium behave differently across calm, transition, and stress regimes?
-3. Can regime filters reduce drawdowns relative to unconditional short-volatility exposure?
-4. Does a Gaussian HMM add value beyond simple threshold regimes?
-5. Does a Markov autoregression improve regime modelling when volatility and VRP are autocorrelated?
-6. Are US and Indian volatility regimes synchronized, lagged, or structurally different?
-
 ## Research Pipeline
 
 ```text
@@ -77,7 +68,7 @@ final report
 | 8 | Complete / frozen | Python-only MSVOL robustness appendix; diagnostic-only return-volatility regime comparison; true R MSGARCH optional/future only |
 | 9 | Complete / frozen | Strategy signal construction |
 | 10 | Complete / needs final review | Vectorised research backtest and robustness |
-| 11 | Complete / needs final review | IBKR paper-signal readiness layer |
+| 11 | Complete / frozen | IBKR paper-signal readiness layer |
 | 12 | Not started | Optional future IBKR paper execution adapter |
 | 13 | Not started | Cross-market US-India analysis |
 | 14 | Blocked | Final report / release package |
@@ -113,7 +104,8 @@ EPAT_Project_VRP_Regime/
 │   ├── generated_artifact_policy.md
 │   ├── commands.md
 │   ├── known_limitations.md
-│   └── phases/
+│   ├── phases/
+│   └── artifacts/
 ├── notebooks/
 │   ├── README.md
 │   ├── 01_data_audit.ipynb
@@ -166,6 +158,9 @@ EPAT_Project_VRP_Regime/
 | `docs/artifact_inventory.md` | Local artifact inventory and review substitutes |
 | `docs/generated_artifact_policy.md` | Commit vs local-only artifact rules |
 | `docs/known_limitations.md` | Current limitations and non-goals |
+| `docs/phases/phase_11_ibkr_readiness.md` | Phase 11 implementation boundary and validation |
+| `docs/artifacts/phase_11_artifacts.md` | Phase 11 local artifact schema and commit policy |
+| `docs/phase11_runbook.md` | Phase 11 operational runbook |
 | `scripts/README.md` | Script entry points and CLI usage |
 | `src/vrp/*/README.md` | Module-specific contracts and commands |
 

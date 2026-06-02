@@ -29,7 +29,7 @@ The top-level `README.md` gives the project overview. This file tracks phase sta
 | 8 | complete / frozen | Python-only MSVOL robustness appendix; diagnostic-only return-volatility regime comparison; true R MSGARCH kept optional/future only | `python scripts/run_msvol_no_lookahead_audit.py --help` and `pytest tests/test_msgarch_export.py tests/test_msvol_model.py tests/test_msvol_adapter.py tests/test_msvol_diagnostics.py tests/test_msvol_no_lookahead.py` |
 | 9 | complete / frozen | Strategy signal construction: fixed seven-strategy universe, long-format next-session exposure intentions, carry-aware HAR-VRP gate, signal diagnostics, and no-lookahead audit | `python scripts/build_signals.py --help` and `pytest tests/test_exposure_rules.py tests/test_signal_builder.py tests/test_strategy_no_lookahead.py tests/test_phase9_diagnostics.py` |
 | 10 | complete / needs final review | Vectorised research backtest and robustness | `python scripts/run_backtest.py --help` and `python scripts/run_robustness.py --help` |
-| 11 | complete / needs final review | IBKR paper-signal readiness layer; no live orders | `python scripts/run_ibkr_paper_signal.py --help` and `python scripts/validate_phase11.py --help` |
+| 11 | complete / frozen | IBKR paper-signal readiness layer; no live orders | `python scripts/run_ibkr_paper_signal.py --help` and `python scripts/validate_phase11.py --help` |
 | 12 | not started | Optional future IBKR paper execution adapter | Explicit re-scope required before implementation |
 | 13 | not started | Cross-market US-India analysis | Starts after Phase 0-12 cleanup baseline |
 | 14 | blocked | Final report / release package | Wait for frozen Phase 0-13 baseline |

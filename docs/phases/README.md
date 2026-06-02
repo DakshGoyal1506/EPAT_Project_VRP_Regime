@@ -21,7 +21,7 @@ This folder gives the detailed implementation record for each phase.
 | 8 | `phase_08_msvol_appendix.md` | Python-only MSVOL robustness appendix |
 | 9 | `phase_09_strategy_signals.md` | Strategy signal construction |
 | 10 | `phase_10_backtest.md` | Vectorised research backtest and robustness |
-| 11 | `phase_11_broker_paper_signal.md` | IBKR paper-signal readiness layer |
+| 11 | `phase_11_ibkr_readiness.md` | IBKR paper-signal readiness layer |
 | 12 | `phase_12_paper_execution_adapter.md` | Optional future IBKR paper execution adapter |
 | 13 | `phase_13_cross_market.md` | Cross-market US-India analysis |
 | 14 | `phase_14_final_report_release.md` | Final report / release package |

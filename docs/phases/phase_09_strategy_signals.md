@@ -412,7 +412,7 @@ Phase 9 is valid only if:
 
 ```text
 pytest passes
-scripts/build_signals.py --market ALL --strategy all --force succeeds
+python scripts/build_signals.py --market ALL --strategy all --force succeeds
 exactly seven strategies appear
 no rejected strategies appear
 target_exposure is always between -1.0 and 0.0 for available rows

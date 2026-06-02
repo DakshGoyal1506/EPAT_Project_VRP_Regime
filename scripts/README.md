@@ -22,6 +22,7 @@ Use `docs/commands.md` for the canonical command index.
 - `run_robustness.py` - robustness evaluation workflows.
 - `train_regimes.py` - regime-model training workflows.
 - `train_har.py` - Phase 4 HAR-RV forecasting orchestration and HAR-based VRP outputs.
+- `validate_phase11.py` - Phase 11 source guard and runtime artifact validator.
 
 ## Build Features
 
@@ -133,6 +134,25 @@ reports/figures/phase_10/*
 ```
 
 Generated Phase 10 outputs stay local by default. Phase 10 curves are research proxy curves, not executable account equity curves.
+
+### IBKR Paper-Signal Readiness (Phase 11)
+
+```bash
+python scripts/run_ibkr_paper_signal.py --market US --strategy mar_prob_linear_carry --print-json
+python scripts/validate_phase11.py --print-json
+```
+
+Expected local outputs:
+
+```text
+reports/tables/phase_11/daily_paper_signal.csv
+reports/tables/phase_11/paper_order_intents.csv
+reports/tables/phase_11/run_metadata.json
+reports/tables/phase_11/phase11_integration_report.json
+reports/tables/phase_11/live_order_guard_report.json
+```
+
+Generated Phase 11 outputs stay local by default. Phase 11 must keep `live_order_sent=false`.
 
 ### Expected VRP Outputs
 
