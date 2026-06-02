@@ -10,7 +10,7 @@ It covers:
 Phase 5  - deterministic threshold baseline regimes
 Phase 6  - Gaussian HMM regimes
 Phase 7  - Markov autoregression / AR-HMM-style regime upgrade
-Phase 8+ - robustness or diagnostic regime integrations where applicable
+Phase 8  - Python-only MSVOL robustness appendix
 ```
 
 ## Phase Ownership
@@ -134,6 +134,64 @@ place or preview broker orders
 ```
 
 Dynamax/JAX AR-HMM support is optional and stub-only unless explicitly enabled later.
+
+### Phase 8 Ownership - Python-only MSVOL Robustness Appendix
+
+Phase 8 owns:
+
+```text
+msvol_model.py
+msvol_adapter.py
+```
+
+Related Phase 8 report modules live in:
+
+```text
+src/vrp/reports/msvol_diagnostics.py
+src/vrp/reports/msvol_no_lookahead.py
+```
+
+Phase 8 responsibilities:
+
+```text
+export return-only inputs through the legacy msgarch-named export script
+fit a Python-only Markov-switching volatility model
+use AR(1)-prefiltered index returns
+extract filtered probabilities
+keep smoothed probabilities diagnostic-only
+map lower-variance state to calm
+map higher-variance state to stress
+write standardized processed MSVOL regime panels
+write probability audits and metadata
+write diagnostics comparing MSVOL stress regimes with threshold/HMM/MAR regimes
+write no-lookahead audits
+```
+
+Active model:
+
+```text
+implementation = statsmodels MarkovRegression
+k_regimes = 2
+switching_variance = true
+true_msgarch = false
+```
+
+Phase 8 must not:
+
+```text
+claim the Python model is true MSGARCH
+construct strategy exposure
+run backtests
+produce VaR / ES
+perform cross-market lead-lag analysis
+use HAR residuals as the active model input
+use VRP_HAR as the active model target
+use future/outcome/label columns as inputs
+use smoothed probabilities as tradable signals
+place or preview broker orders
+```
+
+True R MSGARCH remains optional/future only.
 
 ### Shared/Later-Phase Ownership
 
@@ -260,6 +318,20 @@ data/processed/us_hmm_regimes.parquet
 data/processed/india_hmm_regimes.parquet
 ```
 
+Phase 8 expects Phase 4 HAR-VRP panels for return export:
+
+```text
+data/processed/us_vrp_har.parquet
+data/processed/india_vrp_har.parquet
+```
+
+It writes legacy-named input CSVs:
+
+```text
+data/interim/msgarch/us_msgarch_input.csv
+data/interim/msgarch/india_msgarch_input.csv
+```
+
 ## Expected Outputs
 
 Phase 5 generated outputs are local-only by default:
@@ -300,6 +372,16 @@ reports/tables/phase_7/india/*
 reports/figures/phase_7/*
 ```
 
+Phase 8 generated outputs are local-only by default:
+
+```text
+data/interim/msvol/*
+data/processed/us_msvol_regimes.parquet
+data/processed/india_msvol_regimes.parquet
+reports/tables/phase_8/*
+reports/figures/phase_8/*
+```
+
 ## Commands
 
 Threshold regime CLI:
@@ -326,6 +408,16 @@ python scripts/train_markov_autoreg.py --market INDIA --target vrp_har --order 1
 python scripts/train_markov_autoreg.py --market ALL --target vrp_har --order 1 --states 2 --primary --force
 python scripts/train_markov_autoreg.py --market ALL --run-grid --force
 python scripts/train_markov_autoreg.py --help
+```
+
+MSVOL CLI:
+
+```bash
+python scripts/export_msgarch_inputs.py --market ALL
+python scripts/run_msvol_regimes.py --market ALL
+python scripts/import_msvol_outputs.py --market ALL
+python scripts/run_msvol_diagnostics.py --market ALL
+python scripts/run_msvol_no_lookahead_audit.py --market ALL
 ```
 
 Help:
@@ -361,6 +453,16 @@ pytest tests/test_markov_autoreg.py
 pytest tests/test_markov_autoreg_no_lookahead.py
 ```
 
+Phase 8 tests:
+
+```bash
+pytest tests/test_msgarch_export.py
+pytest tests/test_msvol_model.py
+pytest tests/test_msvol_adapter.py
+pytest tests/test_msvol_diagnostics.py
+pytest tests/test_msvol_no_lookahead.py
+```
+
 ## Safety and No-Lookahead Boundaries
 
 1. Do not use future realised variance as a construction feature.
@@ -372,6 +474,9 @@ pytest tests/test_markov_autoreg_no_lookahead.py
 7. Crisis windows are diagnostics-only.
 8. Full-sample smoothed HMM probabilities are diagnostic-only and must not become tradable signals.
 9. Tradable HMM/Markov decisions must use filtered probabilities available at time `t`.
+10. MSVOL is diagnostic-only and not true MSGARCH.
+11. MSVOL smoothed probabilities are diagnostic-only.
+12. MSVOL outputs must not feed Phase 9 strategy construction or backtests.
 
 ## What This Module Must Not Do
 

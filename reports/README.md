@@ -141,3 +141,25 @@ These are generated diagnostics and stay local by default. Use selected CSV/JSON
 
 Filtered probabilities are backtest-facing. Smoothed probabilities are diagnostic-only.
 
+## Phase 8 MSVOL Robustness Appendix Outputs
+
+Phase 8 may generate:
+
+```text
+reports/tables/phase_8/us/msvol_metadata.json
+reports/tables/phase_8/india/msvol_metadata.json
+reports/tables/phase_8/us/msvol_probability_audit.csv
+reports/tables/phase_8/india/msvol_probability_audit.csv
+reports/tables/phase_8/us/msvol_comparison_summary.csv
+reports/tables/phase_8/india/msvol_comparison_summary.csv
+reports/tables/phase_8/us/msvol_state_duration_summary.csv
+reports/tables/phase_8/india/msvol_state_duration_summary.csv
+reports/tables/phase_8/us/msvol_no_lookahead_audit.csv
+reports/tables/phase_8/india/msvol_no_lookahead_audit.csv
+reports/tables/phase_8/msvol_model_comparison_appendix.csv
+reports/tables/phase_8/msvol_no_lookahead_audit.csv
+reports/figures/phase_8/*
+```
+
+These are generated diagnostics and stay local by default. Phase 8 is Python-only MSVOL, not true MSGARCH. It is diagnostic-only and is not used for strategy construction or backtesting.
+

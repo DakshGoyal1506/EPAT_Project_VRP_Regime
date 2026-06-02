@@ -81,3 +81,13 @@ reports/figures/phase_7/
 ```
 
 They are generated diagnostics and stay local unless explicitly approved as final-report artifacts.
+
+## Phase 8 Examples
+
+If generated later, local Phase 8 figures should live under:
+
+```text
+reports/figures/phase_8/
+```
+
+They are generated diagnostics and stay local unless explicitly approved as final-report artifacts.

@@ -86,6 +86,18 @@ python scripts/train_markov_autoreg.py --market ALL --target vrp_har --order 1 -
 
 Generated MAR panels, model binaries, and reports remain local-only.
 
+Phase 8 MSVOL robustness appendix requires Phase 4 HAR-VRP panels and writes generated diagnostics locally:
+
+```bash
+python scripts/export_msgarch_inputs.py --market ALL
+python scripts/run_msvol_regimes.py --market ALL
+python scripts/import_msvol_outputs.py --market ALL
+python scripts/run_msvol_diagnostics.py --market ALL
+python scripts/run_msvol_no_lookahead_audit.py --market ALL
+```
+
+Phase 8 is Python-only MSVOL, not true MSGARCH. True R MSGARCH remains optional/future and is not required for reproducibility.
+
 ## Reproducibility Boundaries
 
 ### Reproducible from tracked repo

@@ -18,7 +18,7 @@ This folder gives the detailed implementation record for each phase.
 | 5 | `phase_05_threshold_regimes.md` | Threshold regimes |
 | 6 | `phase_06_gaussian_hmm.md` | Gaussian HMM |
 | 7 | `phase_07_markov_autoreg.md` | Markov autoregression |
-| 8 | `phase_08_msvol_msgarch.md` | MSVOL / MSGARCH robustness appendix |
+| 8 | `phase_08_msvol_appendix.md` | Python-only MSVOL robustness appendix |
 | 9 | `phase_09_strategy_signals.md` | Strategy signal construction |
 | 10 | `phase_10_backtest_robustness.md` | Vectorised research backtest and robustness |
 | 11 | `phase_11_broker_paper_signal.md` | IBKR paper-signal readiness layer |

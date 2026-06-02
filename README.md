@@ -74,7 +74,7 @@ final report
 | 5 | Complete / frozen | Threshold baseline regime construction |
 | 6 | Complete / frozen | Gaussian HMM regime model with train-only scaling, train-only fitting, custom filtered probabilities, diagnostic-only smoothed probabilities, and no-lookahead audit |
 | 7 | Complete / frozen | Markov autoregression regime model with train-only fitting, filtered probabilities, diagnostic-only smoothing, and no-lookahead audit |
-| 8 | Complete / needs final review | MSVOL / MSGARCH robustness appendix |
+| 8 | Complete / frozen | Python-only MSVOL robustness appendix; diagnostic-only return-volatility regime comparison; true R MSGARCH optional/future only |
 | 9 | Complete / needs final review | Strategy signal construction |
 | 10 | Complete / needs final review | Vectorised research backtest and robustness |
 | 11 | Complete / needs final review | IBKR paper-signal readiness layer |
@@ -111,6 +111,8 @@ EPAT_Project_VRP_Regime/
 │   ├── model_hmm.yaml
 │   ├── model_arhmm.yaml
 │   ├── model_markov_autoreg.yaml
+│   ├── model_msvol.yaml
+│   ├── model_msgarch.yaml
 │   ├── strategies.yaml
 │   ├── backtest.yaml
 │   └── ibkr_paper.yaml
@@ -174,6 +176,7 @@ EPAT_Project_VRP_Regime/
 |---|---|
 | `docs/phase_status.md` | Authoritative phase ledger |
 | `docs/phases/` | Detailed per-phase documentation |
+| `docs/artifacts/` | Detailed per-phase generated-artifact documentation |
 | `docs/commands.md` | Global command index |
 | `docs/reproducibility.md` | Environment setup and rerun protocol |
 | `docs/artifact_inventory.md` | Local artifact inventory and review substitutes |

@@ -57,6 +57,11 @@ This document lists current limitations, non-goals, and assumptions. It should b
 11. Phase 7 MAR stress states are economic interpretations based on volatility, IV/RV, target variance, and return behavior; they need not imply lower prospective HAR-based VRP mean in every market/sample.
 12. HMM/threshold agreement with MAR is diagnostic only and must not be used as a model-selection objective.
 13. Dynamax/JAX AR-HMM support is optional and must remain stub-only unless explicitly re-scoped.
+14. Phase 8 MSVOL is a Python-only Markov-switching variance robustness proxy, not true MSGARCH.
+15. True MSGARCH remains optional/future because it requires the R `MSGARCH` package.
+16. MSVOL models return-volatility regimes only and is diagnostic-only.
+17. MSVOL outputs must not be used for Phase 9 strategy construction, backtesting, VaR/ES, or cross-market analysis.
+18. MSVOL smoothed probabilities, if present, are diagnostic-only; only filtered probabilities may be considered time-safe.
 
 ## Backtest Limitations
 

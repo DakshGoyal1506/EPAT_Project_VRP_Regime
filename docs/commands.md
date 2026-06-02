@@ -262,7 +262,11 @@ reports/tables/phase_7/india/*
 reports/figures/phase_7/*
 ```
 
-## Phase 8 - MSVOL / MSGARCH Robustness Appendix
+## Phase 8 - Python-only MSVOL Robustness Appendix
+
+Phase 8 is diagnostic-only. It is not true MSGARCH and is not used for strategy construction.
+
+Help commands:
 
 ```bash
 python scripts/export_msgarch_inputs.py --help
@@ -270,7 +274,36 @@ python scripts/run_msvol_regimes.py --help
 python scripts/import_msvol_outputs.py --help
 python scripts/run_msvol_diagnostics.py --help
 python scripts/run_msvol_no_lookahead_audit.py --help
+```
+
+Local regeneration sequence:
+
+```bash
+python scripts/export_msgarch_inputs.py --market ALL
+python scripts/run_msvol_regimes.py --market ALL
+python scripts/import_msvol_outputs.py --market ALL
+python scripts/run_msvol_diagnostics.py --market ALL
+python scripts/run_msvol_no_lookahead_audit.py --market ALL
+```
+
+Tests:
+
+```bash
 pytest tests/test_msgarch_export.py
+pytest tests/test_msvol_model.py
+pytest tests/test_msvol_adapter.py
+pytest tests/test_msvol_diagnostics.py
+pytest tests/test_msvol_no_lookahead.py
+```
+
+Generated outputs are local-only by default:
+
+```text
+data/interim/msgarch/*_msgarch_input.csv
+data/interim/msvol/*
+data/processed/*_msvol_regimes.parquet
+reports/tables/phase_8/*
+reports/figures/phase_8/*
 ```
 
 ## Phase 9 - Strategy Signal Construction
