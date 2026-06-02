@@ -43,3 +43,23 @@ reports/figures/*.pdf
 4. Final report conclusions must trace back to reproducible outputs.
 5. Broker-sensitive outputs must remain local or be redacted before review.
 
+## Phase 4 HAR-RV Outputs
+
+Phase 4 may generate:
+
+```text
+reports/tables/har_forecast_accuracy.csv
+reports/tables/har_coefficients.csv
+reports/tables/har_vrp_summary.csv
+reports/tables/har_metadata.json
+reports/tables/har_no_lookahead_audit.csv
+reports/figures/har_forecast_us.png
+reports/figures/har_forecast_india.png
+reports/figures/har_residuals_us.png
+reports/figures/har_residuals_india.png
+reports/figures/har_vrp_us.png
+reports/figures/har_vrp_india.png
+```
+
+These are local-only by default. Use previews, selected excerpts, or screenshots for review unless explicitly approved as final-report artifacts.
+

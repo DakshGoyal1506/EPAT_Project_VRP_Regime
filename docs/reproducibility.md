@@ -8,15 +8,23 @@ Run from the repository root.
 
 ```bash
 pip install -e .
-pip install -e "[dev]"
+pip install -e ".[dev]"
 ```
+
+Optional GPU support for Phase 4:
+
+```bash
+pip install -e ".[gpu]"
+```
+
+PyTorch CUDA installation may require using the official PyTorch wheel selector for the local CUDA/runtime environment.
 
 If using conda:
 
 ```bash
 conda activate epat
 pip install -e .
-pip install -e "[dev]"
+pip install -e ".[dev]"
 ```
 
 ## Required Runtime Assumptions
@@ -51,10 +59,16 @@ python scripts/download_data.py --market INDIA --source yahoo --force
 python scripts/build_features.py --market ALL --feature rv --window 22
 python scripts/build_features.py --market ALL --feature iv
 python scripts/build_features.py --market ALL --feature vrp
-python scripts/train_har.py --market ALL --mode expanding --force --backend torch_batched --coefficient-hac-frequency none
+python scripts/train_har.py --market ALL --mode expanding --force --backend torch_batched --torch-device cuda --torch-dtype float64 --coefficient-hac-frequency none
 ```
 
 Later-phase commands should be run only after confirming their inputs exist locally.
+
+Phase 4 CPU fallback:
+
+```bash
+python scripts/train_har.py --market ALL --mode expanding --force --backend cpu_numpy_batched --coefficient-hac-frequency none
+```
 
 ## Reproducibility Boundaries
 

@@ -122,15 +122,23 @@ reports/figures/india_iv_rv_vrp.png
 
 ## Phase 4 — HAR-RV Forecasting
 
+Primary GPU-capable run:
+
 ```bash
-python scripts/train_har.py --market ALL --mode expanding --force --backend torch_batched --coefficient-hac-frequency none
-pytest tests/test_har_rv.py
+python scripts/train_har.py --market ALL --mode expanding --force --backend torch_batched --torch-device cuda --torch-dtype float64 --coefficient-hac-frequency none
+pytest tests/test_har_rv.py tests/test_har_batched_backend.py tests/test_forecast_evaluation.py
 ```
 
 CPU fallback:
 
 ```bash
-python scripts/train_har.py --market ALL --mode expanding --force --backend numpy --coefficient-hac-frequency none
+python scripts/train_har.py --market ALL --mode expanding --force --backend cpu_numpy_batched --coefficient-hac-frequency none
+```
+
+Backend parity smoke check:
+
+```bash
+python scripts/smoke_backend_parity.py
 ```
 
 ## Phase 5–6 — Threshold and Gaussian HMM Regimes
@@ -147,33 +155,62 @@ python scripts/train_markov_autoreg.py --help
 pytest tests/test_markov_autoreg.py tests/test_markov_autoreg_no_lookahead.py
 ```
 
-## Phase 8 — Strategy and Backtest
+## Phase 8 - MSVOL / MSGARCH Robustness Appendix
+
+```bash
+python scripts/export_msgarch_inputs.py --help
+python scripts/run_msvol_regimes.py --help
+python scripts/import_msvol_outputs.py --help
+python scripts/run_msvol_diagnostics.py --help
+python scripts/run_msvol_no_lookahead_audit.py --help
+pytest tests/test_msgarch_export.py
+```
+
+## Phase 9 - Strategy Signal Construction
+
+```bash
+python scripts/build_signals.py --help
+pytest tests/test_signal_builder.py tests/test_strategy_no_lookahead.py tests/test_phase9_diagnostics.py
+```
+
+## Phase 10 - Vectorised Research Backtest and Robustness
 
 ```bash
 python scripts/run_backtest.py --help
-pytest tests/test_backtest_accounting.py tests/test_backtest_metrics.py
-```
-
-## Phase 9 — Robustness
-
-```bash
 python scripts/run_robustness.py --help
-pytest tests/test_robustness.py
-```
-
-## Phase 10 — Cross-Market Analysis
-
-```bash
 python scripts/audit_phase10_inputs.py --help
 python scripts/audit_phase10_final.py --help
+pytest tests/test_backtest_accounting.py tests/test_backtest_metrics.py
+pytest tests/test_vectorized_engine.py tests/test_robustness.py tests/test_phase10_integration.py tests/test_phase10_input_schema.py
 ```
 
-## Phase 11 — Broker Paper-Signal Layer
+## Phase 11 - IBKR Paper-Signal Readiness Layer
 
 ```bash
 python scripts/run_ibkr_paper_signal.py --help
 python scripts/validate_phase11.py --help
-pytest tests/test_paper_trader.py tests/test_live_order_guard.py tests/test_risk_checks.py
+pytest tests/test_paper_trader.py tests/test_live_order_guard.py tests/test_risk_checks.py tests/test_validate_phase11_cli.py
+```
+
+## Phase 12 - Optional Future IBKR Paper Execution Adapter
+
+Phase 12 is intentionally not implemented. It requires explicit re-scoping before any broker execution adapter is added.
+
+## Phase 13 - Cross-Market US-India Analysis
+
+```bash
+python scripts/audit_phase13_inputs.py --help
+```
+
+If Phase 13 scripts are not present yet, keep this phase in design/review status and do not reuse Phase 10 backtest commands as cross-market validation.
+
+## Phase 14 - Final Report and Release Package
+
+```bash
+pytest
+git status --short
+git ls-files data reports docs | sort
+git ls-files | findstr /i "\.parquet \.pkl \.pickle \.joblib \.pt \.pth \.log \.env"
 ```
 
 ## Full Test Suite

@@ -40,6 +40,7 @@ This document lists current limitations, non-goals, and assumptions. It should b
 2. Forecasts are point estimates, not executable trade guarantees.
 3. Expanding/rolling windows must be audited for no-lookahead leakage.
 4. GPU acceleration is optional and not required for reproducibility.
+5. HAC coefficient inference can be disabled for faster production forecast runs.
 
 ## Regime Model Limitations
 

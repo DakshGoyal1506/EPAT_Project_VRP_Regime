@@ -68,7 +68,19 @@ final report
 |---:|---|---|
 | 0 | Complete / frozen | Repo scaffold, package layout, environment setup, documentation governance, generated artifact policy |
 | 1 | Complete / frozen | Public daily data ingestion for US and India; canonical OHLCV schema; audit table; loader tests |
-| 2+ | Implemented or in progress | See `docs/phase_status.md` for authoritative ledger |
+| 2 | Complete / frozen | Realised variance estimators and RV panels; primary `rv_gk_22d_ann` |
+| 3 | Complete / frozen | Implied variance, exact-date IV/RV alignment, VRP features, and no-lookahead labels |
+| 4 | Complete / frozen | HAR-RV forecasting and HAR-based prospective VRP |
+| 5 | Complete / needs final review | Threshold regime construction |
+| 6 | Complete / needs final review | Gaussian HMM regime model with filtered probabilities |
+| 7 | Complete / needs final review | AR-HMM / Markov autoregression upgrade |
+| 8 | Complete / needs final review | MSVOL / MSGARCH robustness appendix |
+| 9 | Complete / needs final review | Strategy signal construction |
+| 10 | Complete / needs final review | Vectorised research backtest and robustness |
+| 11 | Complete / needs final review | IBKR paper-signal readiness layer |
+| 12 | Not started | Optional future IBKR paper execution adapter |
+| 13 | Not started | Cross-market US-India analysis |
+| 14 | Blocked | Final report / release package |
 
 ## Phase 0 Summary — Scaffold and Governance
 
@@ -146,7 +158,7 @@ EPAT_Project_VRP_Regime/
 │       ├── regimes/
 │       ├── strategies/
 │       ├── backtest/
-│       ├── broker/f
+│       ├── broker/
 │       └── reports/
 ├── tests/
 │   └── README.md

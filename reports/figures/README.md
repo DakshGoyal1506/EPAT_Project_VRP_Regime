@@ -29,3 +29,18 @@ Do not commit by default:
 1. Figures must be reproducible from scripts or `src/vrp/reports/`.
 2. Do not manually edit generated figures.
 3. Keep exploratory plots local unless selected for the final report.
+
+## Phase 4 Examples
+
+Local Phase 4 figures may include:
+
+```text
+har_forecast_us.png
+har_forecast_india.png
+har_residuals_us.png
+har_residuals_india.png
+har_vrp_us.png
+har_vrp_india.png
+```
+
+These are generated diagnostics and stay local unless explicitly approved as final-report artifacts.

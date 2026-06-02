@@ -46,19 +46,30 @@ This file documents generated artifacts, whether they should be committed, and w
 | 3 | VRP metadata | `reports/tables/vrp_metadata.json` | `python scripts/build_features.py --market ALL --feature vrp` | No by default | Generated run metadata | JSON preview |
 | 3 | Calendar mismatch report | `reports/tables/calendar_mismatches.csv` | `python scripts/build_features.py --market ALL --feature vrp` | No by default | Generated alignment diagnostic | CSV preview |
 | 3 | VRP figures | `reports/figures/us_iv_rv_vrp.png`, `reports/figures/india_iv_rv_vrp.png` | `python scripts/build_features.py --market ALL --feature vrp` | No by default | Generated diagnostic figures | Screenshot if needed |
-| 4 | HAR coefficients | `reports/tables/har_coefficients.csv` | HAR training | Optional | Small diagnostic | Summary excerpt |
+| 4 | HAR forecast panels | `data/processed/us_har_forecast.parquet`, `data/processed/india_har_forecast.parquet` | `python scripts/train_har.py --market ALL --mode expanding --force ...` | No | Generated processed panels | Schema/head/tail preview |
+| 4 | HAR-VRP panels | `data/processed/us_vrp_har.parquet`, `data/processed/india_vrp_har.parquet` | Same | No | Generated processed panels | HAR-VRP unavailable-row validation |
+| 4 | HAR forecast accuracy | `reports/tables/har_forecast_accuracy.csv` | Same | No by default | Generated diagnostic table | CSV preview |
+| 4 | HAR coefficients | `reports/tables/har_coefficients.csv` | Same | No by default | Generated diagnostic table | CSV preview |
+| 4 | HAR-VRP summary | `reports/tables/har_vrp_summary.csv` | Same | No by default | Generated diagnostic table | CSV preview |
+| 4 | HAR metadata | `reports/tables/har_metadata.json` | Same | No by default | Generated metadata | JSON preview |
+| 4 | HAR no-lookahead audit | `reports/tables/har_no_lookahead_audit.csv` | Same | No by default | Critical timing audit | Audit validation output |
+| 4 | HAR figures | `reports/figures/har_*.png` | Same | No by default | Generated diagnostic figures | Screenshots if needed |
 | 5 | Threshold regime panels | `data/processed/*threshold*regimes*.parquet` | Regime training command | No | Generated regime panels | Regime summary table |
 | 6 | HMM regime panels | `data/processed/*hmm*regimes*.parquet` | `python scripts/train_regimes.py ...` | No | Generated regime panels | HMM diagnostics |
 | 6 | HMM model binaries | `data/processed/models/hmm/*` | HMM training | No | Model artifacts | Config + diagnostics |
 | 7 | Markov autoregression outputs | `data/processed/*markov_autoreg*.parquet` | `python scripts/train_markov_autoreg.py ...` | No | Generated regime panels | MAR diagnostics |
-| 8 | Strategy signal panels | `data/processed/*strategy_signals*.parquet` | Strategy/backtest scripts | No | Generated signal panels | Strategy summary |
-| 9 | Robustness outputs | `reports/tables/*robustness*.csv` | `python scripts/run_robustness.py ...` | Optional | Small summaries only | CSV/summary excerpt |
-| 10 | Cross-market panels | `data/processed/*cross_market*.parquet` | Phase 10 scripts | No | Generated panels | Phase 10 audit summary |
-| 10 | Cross-market summary | `reports/tables/phase_10/*.csv` | Phase 10 scripts | Optional | Small summary | Selected CSV |
+| 8 | MSVOL / MSGARCH appendix outputs | `data/processed/*msvol*`, `data/processed/*msgarch*`, `reports/tables/phase_08/*`, `reports/figures/phase_08/*` | Phase 8 scripts | No by default | Generated diagnostic appendix artifacts | Selected diagnostics and no-lookahead audit |
+| 9 | Strategy signal panels | `data/processed/*strategy_signals*.parquet` | `python scripts/build_signals.py ...` | No | Generated signal panels | Strategy summary |
+| 9 | Strategy diagnostics | `reports/tables/phase_09/*`, `reports/figures/phase_09/*` | Phase 9 scripts | No by default | Generated diagnostics | Selected CSV/figure preview |
+| 10 | Backtest outputs | `reports/tables/phase_10/*`, `reports/figures/phase_10/*` | `python scripts/run_backtest.py ...` | No by default | Generated backtest diagnostics | Selected summaries and audit JSON |
+| 10 | Robustness outputs | `reports/tables/phase_10/*robustness*.csv`, `reports/figures/phase_10/*robustness*` | `python scripts/run_robustness.py ...` | Optional | Small summaries only | CSV/summary excerpt |
 | 11 | Paper signal output | `reports/tables/phase_11/*` | `python scripts/run_ibkr_paper_signal.py ...` | No by default | Broker-sensitive runtime context | Redacted terminal output |
 | 11 | Broker cache | `data/broker_cache/*` | Broker/paper signal layer | No | Sensitive/local | Redacted status taxonomy only |
-| 12 | Final report | `reports/final_report.md` or final report export | Final report generation | Yes when ready | Deliverable | Full review |
-| 13 | Release checklist | `docs/release_checklist.md` if created | Manual cleanup | Yes | Freeze governance | File review |
+| 12 | Optional paper execution outputs | `reports/tables/phase_12/*`, `broker_logs/*` | Future paper-execution scripts if explicitly scoped | No | Broker-sensitive/local runtime context | Redacted execution summary |
+| 13 | Cross-market panels | `data/processed/*cross_market*.parquet` | Phase 13 scripts | No | Generated panels | Phase 13 audit summary |
+| 13 | Cross-market summary | `reports/tables/phase_13/*.csv` | Phase 13 scripts | Optional | Small summary | Selected CSV |
+| 14 | Final report | `reports/final_report.md` or final report export | Final report generation | Yes when ready | Deliverable | Full review |
+| 14 | Release checklist | `docs/release_checklist.md` if created | Manual cleanup | Yes | Freeze governance | File review |
 
 ## Local Artifact Review Packet
 

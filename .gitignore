@@ -84,13 +84,20 @@ reports/tables/*
 *.feather
 *.h5
 *.hdf5
+*.xlsx
+*.xls
+*.csv.tmp
+*.html
+*.pdf
 
 # Keep parquet generated/local unless explicitly whitelisted later
 *.parquet
 
 # Notebook scratch/export artifacts
 notebooks/_scratch/
+notebooks/scratch/
 notebooks/exports/
+notebooks/_exports/
 *.nbconvert.ipynb
 
 # R / MSGARCH local runtime artifacts

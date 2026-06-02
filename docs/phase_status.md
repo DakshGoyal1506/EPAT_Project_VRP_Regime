@@ -22,16 +22,17 @@ The top-level `README.md` gives the project overview. This file tracks phase sta
 | 1 | complete / frozen | Public daily data ingestion: CBOE VIX, FRED VIXCLS, Yahoo OHLCV, NSE/manual override support, canonical OHLCV schema, data audit | `python scripts/download_data.py --dry-run` and `pytest tests/test_data_loaders.py tests/test_data_schema.py` |
 | 2 | complete / frozen | Realised variance estimators and RV panels | `python scripts/build_features.py --market ALL --feature rv --window 22` and `pytest tests/test_rv_estimators.py` |
 | 3 | complete / frozen | Implied variance, IV/RV alignment, VRP construction, no-lookahead labels | `python scripts/build_features.py --market ALL --feature iv` and `python scripts/build_features.py --market ALL --feature vrp` |
-| 4 | complete / frozen | HAR-RV forecasting and HAR-based prospective VRP | `python scripts/train_har.py --market ALL --mode expanding --force --backend torch_batched --coefficient-hac-frequency none` |
+| 4 | complete / frozen | HAR-RV forecasting and HAR-based prospective VRP | `python scripts/train_har.py --market ALL --mode expanding --force --backend torch_batched --torch-device cuda --torch-dtype float64 --coefficient-hac-frequency none` |
 | 5 | complete / needs final review | Threshold regimes | `python scripts/train_regimes.py --help` |
 | 6 | complete / needs final review | Gaussian HMM regime model with filtered probabilities only | `pytest tests/test_hmm_model.py tests/test_hmm_filtering.py` |
 | 7 | complete / needs final review | AR-HMM / Markov autoregression upgrade | `python scripts/train_markov_autoreg.py --help` |
-| 8 | complete / needs final review | Regime-conditioned strategy construction | `python scripts/run_backtest.py --help` |
-| 9 | complete / needs final review | Robustness analysis | `python scripts/run_robustness.py --help` |
-| 10 | complete / needs final review | Cross-market analysis and diagnostics | `python scripts/audit_phase10_inputs.py --help` and `python scripts/audit_phase10_final.py --help` |
-| 11 | complete / needs final review | iBridgePy / IBKR paper-signal layer; no live orders | `python scripts/run_ibkr_paper_signal.py --help` |
-| 12 | blocked | Final report assembly and publication package | Wait for frozen Phase 0–11 cleanup baseline |
-| 13 | not started | Final repo freeze / final report packaging / release checklist | Starts after this cleanup sweep |
+| 8 | complete / needs final review | MSVOL / MSGARCH robustness appendix; diagnostic-only volatility-regime comparison | `python scripts/export_msgarch_inputs.py --help` and `python scripts/run_msvol_regimes.py --help` |
+| 9 | complete / needs final review | Strategy signal construction | `python scripts/build_signals.py --help` |
+| 10 | complete / needs final review | Vectorised research backtest and robustness | `python scripts/run_backtest.py --help` and `python scripts/run_robustness.py --help` |
+| 11 | complete / needs final review | IBKR paper-signal readiness layer; no live orders | `python scripts/run_ibkr_paper_signal.py --help` and `python scripts/validate_phase11.py --help` |
+| 12 | not started | Optional future IBKR paper execution adapter | Explicit re-scope required before implementation |
+| 13 | not started | Cross-market US-India analysis | Starts after Phase 0-12 cleanup baseline |
+| 14 | blocked | Final report / release package | Wait for frozen Phase 0-13 baseline |
 
 ## Frozen Phase Rules
 

@@ -31,6 +31,10 @@ Local generated tables may include:
 data_audit.csv
 vrp_summary.csv
 har_forecast_accuracy.csv
+har_coefficients.csv
+har_vrp_summary.csv
+har_metadata.json
+har_no_lookahead_audit.csv
 backtest_summary.csv
 phase_10/*.csv
 phase_11/*.csv
