@@ -35,12 +35,17 @@ This file documents generated artifacts, whether they should be committed, and w
 | 1 | Official NSE manual files | `data/manual/nse/*` | Manual download | No | Source files; local/manual | Document source/date in notes |
 | 1 | Processed VIX/underlying panels | `data/processed/us_vix.parquet`, `data/processed/us_underlying.parquet`, `data/processed/india_vix.parquet`, `data/processed/india_underlying.parquet` | `python scripts/download_data.py ...` | No | Generated panels | Audit table and head/tail printout |
 | 1 | Data audit | `reports/tables/data_audit.csv` | `python scripts/download_data.py ...` | Optional | Small summary | CSV or terminal preview |
-| 2 | Realised variance panels | `data/processed/us_rv.parquet`, `data/processed/india_rv.parquet` | `python scripts/build_features.py --market ALL --feature rv --window 22` | No | Generated panels | RV summary table, tests |
-| 2 | RV figures | `reports/figures/rv_*.png` | RV diagnostics | Optional final only | Generated figures | Small selected final figure |
-| 3 | Implied variance panels | `data/processed/us_iv.parquet`, `data/processed/india_iv.parquet` | `python scripts/build_features.py --market ALL --feature iv` | No | Generated panels | IV summary |
-| 3 | VRP panels | `data/processed/us_vrp.parquet`, `data/processed/india_vrp.parquet` | `python scripts/build_features.py --market ALL --feature vrp` | No | Generated panels | VRP summary, metadata |
-| 3 | VRP metadata | `reports/tables/vrp_metadata.json` | VRP build | Optional | Small metadata | JSON review |
-| 4 | HAR forecast panels | `data/processed/us_har_forecast.parquet`, `data/processed/india_har_forecast.parquet` | `python scripts/train_har.py ...` | No | Generated panels | Forecast accuracy table |
+| 2 | Realised variance panels | `data/processed/us_rv.parquet`, `data/processed/india_rv.parquet` | `python scripts/build_features.py --market ALL --feature rv --window 22` | No | Generated processed panels | `rv_summary.csv`, tests, small preview |
+| 2 | RV summary | `reports/tables/rv_summary.csv` | `python scripts/build_features.py --market ALL --feature rv --window 22` | No by default | Generated diagnostic table | CSV preview |
+| 2 | RV estimator correlations | `reports/tables/rv_estimator_correlations.csv` | `python scripts/build_features.py --market ALL --feature rv --window 22` | No by default | Generated diagnostic table | CSV preview |
+| 2 | RV metadata | `reports/tables/rv_metadata.json` | `python scripts/build_features.py --market ALL --feature rv --window 22` | No by default | Generated run metadata | JSON preview |
+| 2 | RV figures | `reports/figures/rv_estimators_us.png`, `reports/figures/rv_estimators_india.png` | `python scripts/build_features.py --market ALL --feature rv --window 22` | No by default | Generated diagnostic figures | Screenshot if needed |
+| 3 | Implied variance panels | `data/processed/us_iv.parquet`, `data/processed/india_iv.parquet` | `python scripts/build_features.py --market ALL --feature iv` | No | Generated processed panels | IV head/tail and formula check |
+| 3 | VRP panels | `data/processed/us_vrp.parquet`, `data/processed/india_vrp.parquet` | `python scripts/build_features.py --market ALL --feature vrp` | No | Generated processed panels | `vrp_summary.csv`, metadata, tests |
+| 3 | VRP summary | `reports/tables/vrp_summary.csv` | `python scripts/build_features.py --market ALL --feature vrp` | No by default | Generated diagnostic table | CSV preview |
+| 3 | VRP metadata | `reports/tables/vrp_metadata.json` | `python scripts/build_features.py --market ALL --feature vrp` | No by default | Generated run metadata | JSON preview |
+| 3 | Calendar mismatch report | `reports/tables/calendar_mismatches.csv` | `python scripts/build_features.py --market ALL --feature vrp` | No by default | Generated alignment diagnostic | CSV preview |
+| 3 | VRP figures | `reports/figures/us_iv_rv_vrp.png`, `reports/figures/india_iv_rv_vrp.png` | `python scripts/build_features.py --market ALL --feature vrp` | No by default | Generated diagnostic figures | Screenshot if needed |
 | 4 | HAR coefficients | `reports/tables/har_coefficients.csv` | HAR training | Optional | Small diagnostic | Summary excerpt |
 | 5 | Threshold regime panels | `data/processed/*threshold*regimes*.parquet` | Regime training command | No | Generated regime panels | Regime summary table |
 | 6 | HMM regime panels | `data/processed/*hmm*regimes*.parquet` | `python scripts/train_regimes.py ...` | No | Generated regime panels | HMM diagnostics |

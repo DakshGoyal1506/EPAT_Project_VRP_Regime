@@ -62,17 +62,62 @@ pytest tests/test_data_loaders.py tests/test_data_schema.py
 
 ## Phase 2 — Realised Variance
 
+Build realised variance panels and diagnostics:
+
 ```bash
 python scripts/build_features.py --market ALL --feature rv --window 22
+```
+
+Run Phase 2 tests:
+
+```bash
 pytest tests/test_rv_estimators.py
+```
+
+Generated outputs are local-only by default:
+
+```text
+data/processed/us_rv.parquet
+data/processed/india_rv.parquet
+reports/tables/rv_summary.csv
+reports/tables/rv_estimator_correlations.csv
+reports/tables/rv_metadata.json
+reports/figures/rv_estimators_us.png
+reports/figures/rv_estimators_india.png
 ```
 
 ## Phase 3 — Implied Variance and VRP
 
+Build implied variance panels only:
+
 ```bash
 python scripts/build_features.py --market ALL --feature iv
+```
+
+Build implied variance, VRP panels, and VRP diagnostics:
+
+```bash
 python scripts/build_features.py --market ALL --feature vrp
-pytest tests/test_vrp_alignment.py tests/test_no_lookahead.py tests/test_build_features_cli.py
+```
+
+Run Phase 3 tests:
+
+```bash
+pytest tests/test_implied_variance.py tests/test_calendar_alignment.py tests/test_vrp_alignment.py tests/test_no_lookahead.py tests/test_build_features_cli.py
+```
+
+Generated outputs are local-only by default:
+
+```text
+data/processed/us_iv.parquet
+data/processed/india_iv.parquet
+data/processed/us_vrp.parquet
+data/processed/india_vrp.parquet
+reports/tables/vrp_summary.csv
+reports/tables/vrp_metadata.json
+reports/tables/calendar_mismatches.csv
+reports/figures/us_iv_rv_vrp.png
+reports/figures/india_iv_rv_vrp.png
 ```
 
 ## Phase 4 — HAR-RV Forecasting

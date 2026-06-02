@@ -146,7 +146,7 @@ EPAT_Project_VRP_Regime/
 │       ├── regimes/
 │       ├── strategies/
 │       ├── backtest/
-│       ├── broker/
+│       ├── broker/f
 │       └── reports/
 ├── tests/
 │   └── README.md
@@ -166,6 +166,9 @@ EPAT_Project_VRP_Regime/
 | `docs/reproducibility.md` | Environment setup and rerun protocol |
 | `docs/artifact_inventory.md` | Local artifact inventory and review substitutes |
 | `docs/generated_artifact_policy.md` | Commit vs local-only artifact rules |
+| `docs/known_limitations.md` | Current limitations and non-goals |
+| `scripts/README.md` | Script entry points and CLI usage |
+| `src/vrp/*/README.md` | Module-specific contracts and commands |
 
 ## Installation
 

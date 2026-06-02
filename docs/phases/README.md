@@ -12,8 +12,8 @@ This folder gives the detailed implementation record for each phase.
 |---:|---|---|
 | 0 | `phase_00_scaffold_governance.md` | Repo scaffold, environment, governance |
 | 1 | `phase_01_data_ingestion.md` | Public data ingestion |
-| 2 | `phase_02_realised_variance.md` | Realised variance estimators |
-| 3 | `phase_03_iv_vrp.md` | Implied variance and VRP |
+| 2 | `phase_02_realised_variance.md` | Realised variance |
+| 3 | `phase_03_implied_variance_vrp.md` | Implied variance and VRP |
 | 4 | `phase_04_har_rv.md` | HAR-RV forecasting |
 | 5 | `phase_05_threshold_regimes.md` | Threshold regimes |
 | 6 | `phase_06_gaussian_hmm.md` | Gaussian HMM |
