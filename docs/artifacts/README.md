@@ -18,3 +18,4 @@ Generated artifacts are local-only by default. Commit source code, configs, scri
 | 7 | `phase_07_artifacts.md` | Markov autoregression artifacts |
 | 8 | `phase_08_artifacts.md` | Python-only MSVOL robustness appendix artifacts |
 | 9 | `phase_09_artifacts.md` | Strategy signal construction artifacts |
+| 10 | `phase_10_artifacts.md` | Vectorised research backtest and robustness artifacts |

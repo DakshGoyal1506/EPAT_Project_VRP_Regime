@@ -143,3 +143,26 @@ phase_9/strategy_metadata.json
 These are generated signal diagnostics and stay local by default.
 
 They must not contain PnL, returns, costs, Sharpe, drawdown, or performance rankings.
+
+## Phase 10 Examples
+
+Local Phase 10 tables may include:
+
+```text
+phase_10/backtest_summary.csv
+phase_10/backtest_common_start_summary.csv
+phase_10/backtest_tail_summary.csv
+phase_10/backtest_by_strategy_year.csv
+phase_10/crisis_window_performance.csv
+phase_10/backtest_availability_summary.csv
+phase_10/backtest_no_lookahead_audit.csv
+phase_10/backtest_metadata.json
+phase_10/robustness_cost_sensitivity.csv
+phase_10/robustness_subperiods.csv
+phase_10/robustness_weekly_rebalance_skipped.json
+phase_10/tradable_proxy_detection.json
+phase_10/robustness_metadata.json
+phase_10/phase10_final_audit.json
+```
+
+These are generated run outputs and stay local by default. Small summaries may be selected later for final report review only if explicitly approved.

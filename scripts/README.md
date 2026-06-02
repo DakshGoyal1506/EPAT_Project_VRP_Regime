@@ -9,7 +9,10 @@ Use `docs/commands.md` for the canonical command index.
 - `build_features.py` - Phase 2 and 3 feature builds and diagnostics.
 - `build_signals.py` - Phase 9 strategy signal construction.
 - `download_data.py` - source-data ingestion and refresh.
+- `audit_phase10_final.py` - Phase 10 final artifact audit.
+- `audit_phase10_inputs.py` - Phase 10 input schema and readiness audit.
 - `export_msgarch_inputs.py` - Phase 8 legacy-named return-only input export for MSVOL.
+- `generate_backtest_diagnostics.py` - Phase 10 backtest diagnostics and figures.
 - `import_msvol_outputs.py` - Phase 8 MSVOL output standardization.
 - `run_backtest.py` - vectorised strategy backtests.
 - `run_ibkr_paper_signal.py` - optional paper-signal integration.
@@ -108,6 +111,28 @@ reports/tables/phase_9/strategy_metadata.json
 ```
 
 Generated Phase 9 outputs stay local by default.
+
+### Vectorised Backtest and Robustness (Phase 10)
+
+```bash
+python scripts/audit_phase10_inputs.py --market ALL
+python scripts/run_backtest.py --market ALL --strategy all --cost-bps 5 --force
+python scripts/generate_backtest_diagnostics.py --market ALL
+python scripts/run_robustness.py --market ALL --test all --force
+python scripts/audit_phase10_final.py --market ALL
+```
+
+Expected local outputs:
+
+```text
+data/processed/us_backtest_panel.parquet
+data/processed/india_backtest_panel.parquet
+reports/tables/phase_10/backtest_summary.csv
+reports/tables/phase_10/phase10_final_audit.json
+reports/figures/phase_10/*
+```
+
+Generated Phase 10 outputs stay local by default. Phase 10 curves are research proxy curves, not executable account equity curves.
 
 ### Expected VRP Outputs
 

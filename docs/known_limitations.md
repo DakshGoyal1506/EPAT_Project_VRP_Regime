@@ -70,6 +70,8 @@ This document lists current limitations, non-goals, and assumptions. It should b
 3. Transaction costs are approximations unless tied to instrument-level execution data.
 4. Overlapping horizons can inflate dependence in returns and metrics.
 5. Results must be interpreted as empirical evidence, not live-trading proof.
+6. Phase 10 cumulative curves are additive research proxy sums, not executable account equity curves.
+7. Phase 10 does not define initial capital, margin, or percentage return on invested capital.
 
 ## Broker / Paper-Signal Limitations
 

@@ -179,3 +179,30 @@ reports/figures/phase_9/*
 
 These are generated signal diagnostics and stay local by default. They do not contain PnL, returns, costs, Sharpe, drawdown, or performance rankings. Use selected CSV/JSON previews for review unless explicitly approved as final-report artifacts.
 
+## Phase 10 Vectorised Backtest Outputs
+
+Phase 10 may generate:
+
+```text
+reports/tables/phase_10/backtest_summary.csv
+reports/tables/phase_10/backtest_common_start_summary.csv
+reports/tables/phase_10/backtest_tail_summary.csv
+reports/tables/phase_10/backtest_by_strategy_year.csv
+reports/tables/phase_10/crisis_window_performance.csv
+reports/tables/phase_10/backtest_availability_summary.csv
+reports/tables/phase_10/backtest_no_lookahead_audit.csv
+reports/tables/phase_10/backtest_metadata.json
+reports/tables/phase_10/robustness_cost_sensitivity.csv
+reports/tables/phase_10/robustness_subperiods.csv
+reports/tables/phase_10/robustness_weekly_rebalance_skipped.json
+reports/tables/phase_10/tradable_proxy_detection.json
+reports/tables/phase_10/robustness_metadata.json
+reports/tables/phase_10/phase10_final_audit.json
+reports/figures/phase_10/equity_curves_*.png
+reports/figures/phase_10/equity_curves_common_start_*.png
+reports/figures/phase_10/drawdowns_*.png
+reports/figures/phase_10/return_distribution_*.png
+```
+
+These are generated diagnostics and stay local by default. The cumulative curves are additive research proxy sums over overlapping forward labels, not executable account equity curves.
+

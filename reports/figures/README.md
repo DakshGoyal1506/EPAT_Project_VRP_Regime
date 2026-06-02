@@ -82,6 +82,16 @@ reports/figures/phase_7/
 
 They are generated diagnostics and stay local unless explicitly approved as final-report artifacts.
 
+## Phase 8 Examples
+
+If generated later, local Phase 8 figures should live under:
+
+```text
+reports/figures/phase_8/
+```
+
+They are generated diagnostics and stay local unless explicitly approved as final-report artifacts.
+
 ## Phase 9 Examples
 
 If generated later, local Phase 9 figures should live under:
@@ -94,12 +104,19 @@ They are generated diagnostics and stay local unless explicitly approved as fina
 
 Phase 9 figures, if any, should describe signal availability or exposure distribution only. They must not present backtest performance.
 
-## Phase 8 Examples
+## Phase 10 Examples
 
-If generated later, local Phase 8 figures should live under:
+Local Phase 10 figures may include:
 
 ```text
-reports/figures/phase_8/
+phase_10/equity_curves_us.png
+phase_10/equity_curves_india.png
+phase_10/equity_curves_common_start_us.png
+phase_10/equity_curves_common_start_india.png
+phase_10/drawdowns_us.png
+phase_10/drawdowns_india.png
+phase_10/return_distribution_us.png
+phase_10/return_distribution_india.png
 ```
 
-They are generated diagnostics and stay local unless explicitly approved as final-report artifacts.
+These are generated diagnostics and stay local unless explicitly approved as final-report artifacts. Phase 10 equity curves are additive research proxy curves, not executable account equity curves.

@@ -340,13 +340,46 @@ reports/figures/phase_9/*
 
 ## Phase 10 - Vectorised Research Backtest and Robustness
 
+CLI help:
+
 ```bash
-python scripts/run_backtest.py --help
-python scripts/run_robustness.py --help
 python scripts/audit_phase10_inputs.py --help
+python scripts/run_backtest.py --help
+python scripts/generate_backtest_diagnostics.py --help
+python scripts/run_robustness.py --help
 python scripts/audit_phase10_final.py --help
-pytest tests/test_backtest_accounting.py tests/test_backtest_metrics.py
-pytest tests/test_vectorized_engine.py tests/test_robustness.py tests/test_phase10_integration.py tests/test_phase10_input_schema.py
+```
+
+Regenerate local Phase 10 outputs:
+
+```bash
+python scripts/audit_phase10_inputs.py --market ALL
+python scripts/run_backtest.py --market ALL --strategy all --cost-bps 5 --force
+python scripts/generate_backtest_diagnostics.py --market ALL
+python scripts/run_robustness.py --market ALL --test all --force
+python scripts/audit_phase10_final.py --market ALL
+```
+
+Single-strategy inspection must use dry run:
+
+```bash
+python scripts/run_backtest.py --market US --strategy unconditional_full --cost-bps 5 --dry-run
+```
+
+Tests:
+
+```bash
+pytest tests/test_phase10_input_schema.py tests/test_backtest_config_registry.py tests/test_backtest_accounting.py tests/test_backtest_no_lookahead.py
+pytest tests/test_backtest_metrics.py tests/test_vectorized_engine.py tests/test_backtest_diagnostics.py tests/test_robustness.py tests/test_phase10_integration.py
+```
+
+Generated outputs are local-only by default:
+
+```text
+data/processed/*_backtest_panel.parquet
+data/processed/*_backtest_panel_metadata.json
+reports/tables/phase_10/*
+reports/figures/phase_10/*
 ```
 
 ## Phase 11 - IBKR Paper-Signal Readiness Layer
