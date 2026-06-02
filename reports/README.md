@@ -63,3 +63,29 @@ reports/figures/har_vrp_india.png
 
 These are local-only by default. Use previews, selected excerpts, or screenshots for review unless explicitly approved as final-report artifacts.
 
+## Phase 5 Threshold-Regime Outputs
+
+Phase 5 may generate:
+
+```text
+reports/tables/threshold_regime_summary.csv
+reports/tables/threshold_component_summary.csv
+reports/tables/threshold_transition_matrix.csv
+reports/tables/threshold_state_duration_summary.csv
+reports/tables/threshold_state_by_year.csv
+reports/tables/threshold_crisis_hit_table.csv
+reports/tables/threshold_crisis_lead_lag_table.csv
+reports/tables/threshold_vrp_by_state.csv
+reports/tables/threshold_forward_label_by_state.csv
+reports/tables/threshold_no_lookahead_audit.csv
+reports/tables/threshold_regime_metadata.json
+reports/figures/threshold_regimes_us.png
+reports/figures/threshold_regimes_india.png
+reports/figures/threshold_regime_vrp_boxplots_us.png
+reports/figures/threshold_regime_vrp_boxplots_india.png
+reports/figures/threshold_component_states_us.png
+reports/figures/threshold_component_states_india.png
+```
+
+These are generated diagnostics and stay local by default. Use previews, selected excerpts, or screenshots for review unless explicitly approved as final-report artifacts.
+

@@ -339,7 +339,7 @@ git status --short
 git ls-files | findstr /i "\.parquet \.pkl \.pickle \.joblib \.pt \.pth \.log \.env"
 ```
 
-Expected tracked generated-artifact result:
+Expected allowed match:
 
 ```text
 .env.example

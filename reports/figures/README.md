@@ -44,3 +44,18 @@ har_vrp_india.png
 ```
 
 These are generated diagnostics and stay local unless explicitly approved as final-report artifacts.
+
+## Phase 5 Examples
+
+Local Phase 5 figures may include:
+
+```text
+threshold_regimes_us.png
+threshold_regimes_india.png
+threshold_regime_vrp_boxplots_us.png
+threshold_regime_vrp_boxplots_india.png
+threshold_component_states_us.png
+threshold_component_states_india.png
+```
+
+These are generated diagnostics and stay local unless explicitly approved as final-report artifacts.

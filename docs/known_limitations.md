@@ -50,6 +50,9 @@ This document lists current limitations, non-goals, and assumptions. It should b
 4. Backtests must use filtered probabilities available at time `t`.
 5. State-count selection can be sample-sensitive.
 6. Crisis-window interpretation must not be used as a hidden training label unless explicitly documented.
+7. Phase 5 threshold regimes are deterministic baseline labels, not observed truth.
+8. Phase 5 calm states may be sparse because calm requires several conservative conditions to pass simultaneously.
+9. Phase 5 crisis-window diagnostics are reporting-only and must not be used for threshold calibration.
 
 ## Backtest Limitations
 

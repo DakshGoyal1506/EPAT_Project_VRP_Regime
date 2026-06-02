@@ -71,7 +71,7 @@ final report
 | 2 | Complete / frozen | Realised variance estimators and RV panels; primary `rv_gk_22d_ann` |
 | 3 | Complete / frozen | Implied variance, exact-date IV/RV alignment, VRP features, and no-lookahead labels |
 | 4 | Complete / frozen | HAR-RV forecasting and HAR-based prospective VRP |
-| 5 | Complete / needs final review | Threshold regime construction |
+| 5 | Complete / frozen | Threshold baseline regime construction |
 | 6 | Complete / needs final review | Gaussian HMM regime model with filtered probabilities |
 | 7 | Complete / needs final review | AR-HMM / Markov autoregression upgrade |
 | 8 | Complete / needs final review | MSVOL / MSGARCH robustness appendix |

@@ -15,7 +15,7 @@ pytest
 ```bash
 git status --short
 git ls-files data reports docs | sort
-git ls-files | findstr /i "\.parquet \.pkl \.pickle \.joblib \.log \.env"
+git ls-files | findstr /i "\.parquet \.pkl \.pickle \.joblib \.pt \.pth \.log \.env"
 ```
 
 Expected: no generated parquet/model/log/env files tracked.
@@ -126,7 +126,7 @@ Primary GPU-capable run:
 
 ```bash
 python scripts/train_har.py --market ALL --mode expanding --force --backend torch_batched --torch-device cuda --torch-dtype float64 --coefficient-hac-frequency none
-pytest tests/test_har_rv.py tests/test_har_batched_backend.py tests/test_forecast_evaluation.py
+pytest tests/test_har_rv.py tests/test_har_batched_backend.py tests/test_forecast_evaluation.py tests/test_no_lookahead.py
 ```
 
 CPU fallback:
@@ -141,7 +141,41 @@ Backend parity smoke check:
 python scripts/smoke_backend_parity.py
 ```
 
-## Phase 5–6 — Threshold and Gaussian HMM Regimes
+## Phase 5 - Threshold Baseline Regimes
+
+CLI help:
+
+```bash
+python scripts/train_regimes.py --help
+```
+
+Build threshold regimes:
+
+```bash
+python scripts/train_regimes.py --model threshold --market US --force
+python scripts/train_regimes.py --model threshold --market INDIA --force
+python scripts/train_regimes.py --model threshold --market ALL --force
+```
+
+Tests:
+
+```bash
+pytest tests/test_threshold_regimes.py
+pytest tests/test_regime_no_lookahead.py
+pytest tests/test_no_lookahead.py
+```
+
+Generated outputs are local-only by default:
+
+```text
+data/processed/us_threshold_regimes.parquet
+data/processed/india_threshold_regimes.parquet
+reports/tables/threshold_*.csv
+reports/tables/threshold_*.json
+reports/figures/threshold_*.png
+```
+
+## Phase 6 - Gaussian HMM Regimes
 
 ```bash
 python scripts/train_regimes.py --help

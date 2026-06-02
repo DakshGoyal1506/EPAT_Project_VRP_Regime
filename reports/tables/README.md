@@ -41,3 +41,23 @@ phase_11/*.csv
 ```
 
 Use `docs/artifact_inventory.md` to document which local table should be sent as a review substitute.
+
+## Phase 5 Examples
+
+Local Phase 5 tables may include:
+
+```text
+threshold_regime_summary.csv
+threshold_component_summary.csv
+threshold_transition_matrix.csv
+threshold_state_duration_summary.csv
+threshold_state_by_year.csv
+threshold_crisis_hit_table.csv
+threshold_crisis_lead_lag_table.csv
+threshold_vrp_by_state.csv
+threshold_forward_label_by_state.csv
+threshold_no_lookahead_audit.csv
+threshold_regime_metadata.json
+```
+
+These are generated run outputs and stay local by default.
