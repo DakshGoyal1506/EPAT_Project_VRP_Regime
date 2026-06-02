@@ -308,9 +308,34 @@ reports/figures/phase_8/*
 
 ## Phase 9 - Strategy Signal Construction
 
+CLI help:
+
 ```bash
 python scripts/build_signals.py --help
-pytest tests/test_signal_builder.py tests/test_strategy_no_lookahead.py tests/test_phase9_diagnostics.py
+```
+
+Build Phase 9 signals:
+
+```bash
+python scripts/build_signals.py --market US --strategy all --force
+python scripts/build_signals.py --market INDIA --strategy all --force
+python scripts/build_signals.py --market ALL --strategy all --force
+```
+
+Tests:
+
+```bash
+pytest tests/test_exposure_rules.py tests/test_signal_builder.py tests/test_strategy_no_lookahead.py tests/test_phase9_diagnostics.py
+```
+
+Generated outputs are local-only by default:
+
+```text
+data/processed/us_strategy_signals.parquet
+data/processed/india_strategy_signals.parquet
+reports/tables/phase_9/strategy_*.csv
+reports/tables/phase_9/strategy_metadata.json
+reports/figures/phase_9/*
 ```
 
 ## Phase 10 - Vectorised Research Backtest and Robustness

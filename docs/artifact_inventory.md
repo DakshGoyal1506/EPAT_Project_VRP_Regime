@@ -76,8 +76,9 @@ This file documents generated artifacts, whether they should be committed, and w
 | 8 | MSVOL diagnostics | `reports/tables/phase_8/**/*` | `python scripts/run_msvol_diagnostics.py --market ALL` and `python scripts/run_msvol_no_lookahead_audit.py --market ALL` | No by default | Generated appendix diagnostics and audits | selected CSV/JSON previews, especially no-lookahead audit |
 | 8 | MSVOL figures | `reports/figures/phase_8/**/*` | Future Phase 8 diagnostic plotting if added | No by default | Generated figures | screenshots or final-report-selected figures only |
 | 8 | Detailed Phase 8 artifact documentation | `docs/artifacts/phase_08_artifacts.md` | Manual docs | Yes | Phase artifact documentation | File review |
-| 9 | Strategy signal panels | `data/processed/*strategy_signals*.parquet` | `python scripts/build_signals.py ...` | No | Generated signal panels | Strategy summary |
-| 9 | Strategy diagnostics | `reports/tables/phase_09/*`, `reports/figures/phase_09/*` | Phase 9 scripts | No by default | Generated diagnostics | Selected CSV/figure preview |
+| 9 | Strategy signal panels | `data/processed/*strategy_signals*.parquet` | `python scripts/build_signals.py --market ALL --strategy all --force` | No | Generated signal panels | `strategy_signal_summary.csv`, schema/head preview |
+| 9 | Strategy diagnostics | `reports/tables/phase_9/*`, `reports/figures/phase_9/*` | `python scripts/build_signals.py --market ALL --strategy all --force` | No by default | Generated signal diagnostics | Selected CSV/JSON preview |
+| 9 | Detailed Phase 9 artifact documentation | `docs/artifacts/phase_09_artifacts.md` | Manual docs | Yes | Phase artifact documentation | File review |
 | 10 | Backtest outputs | `reports/tables/phase_10/*`, `reports/figures/phase_10/*` | `python scripts/run_backtest.py ...` | No by default | Generated backtest diagnostics | Selected summaries and audit JSON |
 | 10 | Robustness outputs | `reports/tables/phase_10/*robustness*.csv`, `reports/figures/phase_10/*robustness*` | `python scripts/run_robustness.py ...` | Optional | Small summaries only | CSV/summary excerpt |
 | 11 | Paper signal output | `reports/tables/phase_11/*` | `python scripts/run_ibkr_paper_signal.py ...` | No by default | Broker-sensitive runtime context | Redacted terminal output |

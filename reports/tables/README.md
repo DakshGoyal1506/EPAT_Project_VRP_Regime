@@ -126,3 +126,20 @@ phase_8/msvol_no_lookahead_audit.csv
 ```
 
 These are generated run outputs and stay local by default. Do not commit full generated MSVOL diagnostics unless explicitly selected as final-report artifacts.
+
+## Phase 9 Examples
+
+Local Phase 9 tables may include:
+
+```text
+phase_9/strategy_signal_summary.csv
+phase_9/strategy_exposure_by_year.csv
+phase_9/strategy_exposure_change_summary.csv
+phase_9/strategy_blocked_reason_summary.csv
+phase_9/strategy_no_lookahead_audit.csv
+phase_9/strategy_metadata.json
+```
+
+These are generated signal diagnostics and stay local by default.
+
+They must not contain PnL, returns, costs, Sharpe, drawdown, or performance rankings.

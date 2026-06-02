@@ -82,6 +82,18 @@ reports/figures/phase_7/
 
 They are generated diagnostics and stay local unless explicitly approved as final-report artifacts.
 
+## Phase 9 Examples
+
+If generated later, local Phase 9 figures should live under:
+
+```text
+reports/figures/phase_9/
+```
+
+They are generated diagnostics and stay local unless explicitly approved as final-report artifacts.
+
+Phase 9 figures, if any, should describe signal availability or exposure distribution only. They must not present backtest performance.
+
 ## Phase 8 Examples
 
 If generated later, local Phase 8 figures should live under:

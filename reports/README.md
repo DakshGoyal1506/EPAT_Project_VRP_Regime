@@ -163,3 +163,19 @@ reports/figures/phase_8/*
 
 These are generated diagnostics and stay local by default. Phase 8 is Python-only MSVOL, not true MSGARCH. It is diagnostic-only and is not used for strategy construction or backtesting.
 
+## Phase 9 Strategy Signal Outputs
+
+Phase 9 may generate:
+
+```text
+reports/tables/phase_9/strategy_signal_summary.csv
+reports/tables/phase_9/strategy_exposure_by_year.csv
+reports/tables/phase_9/strategy_exposure_change_summary.csv
+reports/tables/phase_9/strategy_blocked_reason_summary.csv
+reports/tables/phase_9/strategy_no_lookahead_audit.csv
+reports/tables/phase_9/strategy_metadata.json
+reports/figures/phase_9/*
+```
+
+These are generated signal diagnostics and stay local by default. They do not contain PnL, returns, costs, Sharpe, drawdown, or performance rankings. Use selected CSV/JSON previews for review unless explicitly approved as final-report artifacts.
+

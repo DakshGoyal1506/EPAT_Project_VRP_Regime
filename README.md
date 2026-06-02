@@ -75,29 +75,12 @@ final report
 | 6 | Complete / frozen | Gaussian HMM regime model with train-only scaling, train-only fitting, custom filtered probabilities, diagnostic-only smoothed probabilities, and no-lookahead audit |
 | 7 | Complete / frozen | Markov autoregression regime model with train-only fitting, filtered probabilities, diagnostic-only smoothing, and no-lookahead audit |
 | 8 | Complete / frozen | Python-only MSVOL robustness appendix; diagnostic-only return-volatility regime comparison; true R MSGARCH optional/future only |
-| 9 | Complete / needs final review | Strategy signal construction |
+| 9 | Complete / frozen | Strategy signal construction |
 | 10 | Complete / needs final review | Vectorised research backtest and robustness |
 | 11 | Complete / needs final review | IBKR paper-signal readiness layer |
 | 12 | Not started | Optional future IBKR paper execution adapter |
 | 13 | Not started | Cross-market US-India analysis |
 | 14 | Blocked | Final report / release package |
-
-## Phase 0 Summary — Scaffold and Governance
-
-Phase 0 created the repository foundation: installable package, source layout under `src/vrp/`, configs, scripts, tests, docs, artifact policy, and governance. See:
-
-```text
-docs/phases/phase_00_scaffold_governance.md
-```
-
-## Phase 1 Summary — Public Data Ingestion
-
-Phase 1 implements public market data ingestion (CBOE, FRED, Yahoo, NSE/manual), canonical OHLCV schema, and data audit outputs. See:
-
-```text
-docs/phases/phase_01_data_ingestion.md
-src/vrp/data/README.md
-```
 
 ## Repository Structure
 
@@ -148,6 +131,7 @@ EPAT_Project_VRP_Regime/
 │   ├── train_har.py
 │   ├── train_regimes.py
 │   ├── train_markov_autoreg.py
+│   ├── build_signals.py
 │   ├── run_backtest.py
 │   ├── run_robustness.py
 │   └── run_ibkr_paper_signal.py
