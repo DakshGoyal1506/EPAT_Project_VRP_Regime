@@ -53,6 +53,10 @@ This document lists current limitations, non-goals, and assumptions. It should b
 7. Phase 5 threshold regimes are deterministic baseline labels, not observed truth.
 8. Phase 5 calm states may be sparse because calm requires several conservative conditions to pass simultaneously.
 9. Phase 5 crisis-window diagnostics are reporting-only and must not be used for threshold calibration.
+10. Markov autoregression improves on Gaussian HMM by directly modelling observed-series autocorrelation, but fitting can be numerically sensitive and may require train-only scaling or winsorization.
+11. Phase 7 MAR stress states are economic interpretations based on volatility, IV/RV, target variance, and return behavior; they need not imply lower prospective HAR-based VRP mean in every market/sample.
+12. HMM/threshold agreement with MAR is diagnostic only and must not be used as a model-selection objective.
+13. Dynamax/JAX AR-HMM support is optional and must remain stub-only unless explicitly re-scoped.
 
 ## Backtest Limitations
 

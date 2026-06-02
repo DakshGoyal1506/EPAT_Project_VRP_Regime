@@ -74,6 +74,67 @@ use full-sample smoothed probabilities as tradable signals
 place or preview broker orders
 ```
 
+### Phase 7 Ownership - Markov Autoregression
+
+Phase 7 owns:
+
+```text
+markov_autoreg_registry.py
+markov_autoreg.py
+```
+
+Phase 7 report diagnostics live in:
+
+```text
+src/vrp/reports/markov_autoreg_diagnostics.py
+```
+
+Phase 7 responsibilities:
+
+```text
+define Markov autoregression model specs
+resolve MAR target columns
+block forbidden HMM/threshold/crisis/future/forward/ex-post/label inputs
+prepare the primary vrp_har_gk target
+estimate target transform parameters on train only
+fit statsmodels MarkovAutoregression on train only
+apply full-series Hamilton filtering using train-fitted parameters only
+keep smoothed probabilities diagnostic-only
+align AR(1) probabilities back to dates
+blank AR warmup rows
+map raw MAR states into calm/transition/stress using train-period economic properties
+write MAR diagnostics and no-lookahead audits
+```
+
+Primary model:
+
+```text
+target = vrp_har
+target_col = vrp_har_gk
+order = 1
+n_states = 2
+switching_ar = true
+switching_trend = true
+switching_variance = true
+```
+
+K=2 is primary. K=3 is robustness only unless explicitly promoted in a later documented review.
+
+Phase 7 must not:
+
+```text
+construct strategy exposure
+run backtests
+use HMM states as model inputs
+use threshold states as model inputs
+use crisis windows as labels
+use forward/ex-post/future/label columns as model inputs
+use full-sample smoothed probabilities as tradable signals
+place or preview broker orders
+```
+
+Dynamax/JAX AR-HMM support is optional and stub-only unless explicitly enabled later.
+
 ### Shared/Later-Phase Ownership
 
 Later phases may extend regime modules with HMM or Markov-specific functions. Those later extensions must not change the canonical economic state IDs.
@@ -183,6 +244,22 @@ data/processed/us_threshold_regimes.parquet
 data/processed/india_threshold_regimes.parquet
 ```
 
+Phase 7 expects Phase 4 HAR-VRP panels:
+
+```text
+data/processed/us_vrp_har.parquet
+data/processed/india_vrp_har.parquet
+```
+
+Phase 7 may read Phase 5 and Phase 6 outputs for diagnostic comparison only:
+
+```text
+data/processed/us_threshold_regimes.parquet
+data/processed/india_threshold_regimes.parquet
+data/processed/us_hmm_regimes.parquet
+data/processed/india_hmm_regimes.parquet
+```
+
 ## Expected Outputs
 
 Phase 5 generated outputs are local-only by default:
@@ -209,6 +286,20 @@ reports/tables/phase_6/india/*
 reports/figures/phase_6/*
 ```
 
+Phase 7 generated outputs are local-only by default:
+
+```text
+data/processed/us_markov_autoreg_regimes.parquet
+data/processed/india_markov_autoreg_regimes.parquet
+data/processed/markov_autoreg/*.parquet
+models/us_markov_autoreg.pkl
+models/india_markov_autoreg.pkl
+models/markov_autoreg/*.pkl
+reports/tables/phase_7/us/*
+reports/tables/phase_7/india/*
+reports/figures/phase_7/*
+```
+
 ## Commands
 
 Threshold regime CLI:
@@ -225,6 +316,16 @@ Gaussian HMM CLI:
 python scripts/train_regimes.py --market US --model gaussian_hmm --primary --force
 python scripts/train_regimes.py --market INDIA --model gaussian_hmm --primary --force
 python scripts/train_regimes.py --market ALL --model gaussian_hmm --run-grid --force
+```
+
+Markov autoregression CLI:
+
+```bash
+python scripts/train_markov_autoreg.py --market US --target vrp_har --order 1 --states 2 --primary --force
+python scripts/train_markov_autoreg.py --market INDIA --target vrp_har --order 1 --states 2 --primary --force
+python scripts/train_markov_autoreg.py --market ALL --target vrp_har --order 1 --states 2 --primary --force
+python scripts/train_markov_autoreg.py --market ALL --run-grid --force
+python scripts/train_markov_autoreg.py --help
 ```
 
 Help:
@@ -251,6 +352,13 @@ pytest tests/test_hmm_scaling.py
 pytest tests/test_hmm_model.py
 pytest tests/test_hmm_no_lookahead.py
 pytest tests/test_no_lookahead.py
+```
+
+Phase 7 tests:
+
+```bash
+pytest tests/test_markov_autoreg.py
+pytest tests/test_markov_autoreg_no_lookahead.py
 ```
 
 ## Safety and No-Lookahead Boundaries

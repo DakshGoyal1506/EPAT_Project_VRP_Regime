@@ -220,11 +220,46 @@ reports/tables/phase_6/india/*
 reports/figures/phase_6/*
 ```
 
-## Phase 7 — Markov Autoregression / AR-HMM
+## Phase 7 - Markov Autoregression / AR-Aware Regimes
+
+CLI help:
 
 ```bash
 python scripts/train_markov_autoreg.py --help
+```
+
+Primary K=2 model:
+
+```bash
+python scripts/train_markov_autoreg.py --market US --target vrp_har --order 1 --states 2 --primary --force
+python scripts/train_markov_autoreg.py --market INDIA --target vrp_har --order 1 --states 2 --primary --force
+python scripts/train_markov_autoreg.py --market ALL --target vrp_har --order 1 --states 2 --primary --force
+```
+
+Approved candidate grid:
+
+```bash
+python scripts/train_markov_autoreg.py --market ALL --run-grid --force
+```
+
+Tests:
+
+```bash
 pytest tests/test_markov_autoreg.py tests/test_markov_autoreg_no_lookahead.py
+```
+
+Generated outputs are local-only by default:
+
+```text
+data/processed/us_markov_autoreg_regimes.parquet
+data/processed/india_markov_autoreg_regimes.parquet
+data/processed/markov_autoreg/*.parquet
+models/us_markov_autoreg.pkl
+models/india_markov_autoreg.pkl
+models/markov_autoreg/*.pkl
+reports/tables/phase_7/us/*
+reports/tables/phase_7/india/*
+reports/figures/phase_7/*
 ```
 
 ## Phase 8 - MSVOL / MSGARCH Robustness Appendix

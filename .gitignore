@@ -76,6 +76,9 @@ reports/tables/**/*
 !reports/tables/**/.gitkeep
 
 # Model binaries and serialized estimators
+models/*
+!models/.gitkeep
+!models/README.md
 *.pkl
 *.pickle
 *.joblib
@@ -118,11 +121,25 @@ notebooks/_exports/
 *.key
 *.crt
 ibkr_logs/
+ibkr_logs/*
 tws_logs/
+tws_logs/*
 broker_logs/
+broker_logs/*
+paper_order_logs/
+paper_order_logs/*
+order_preview_logs/
+order_preview_logs/*
 
 # Local artifact manifests generated from runs
 local_artifacts/
+local_artifacts/*
+review_packets/
+review_packets/*
 
 # Local notebooks exports
 notebooks/.ipynb_checkpoints/
+notebooks/*.html
+notebooks/*.pdf
+notebooks/*.py
+notebooks/*.slides.html

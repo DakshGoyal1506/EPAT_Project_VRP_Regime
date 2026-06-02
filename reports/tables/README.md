@@ -62,6 +62,31 @@ threshold_regime_metadata.json
 
 These are generated run outputs and stay local by default.
 
+## Phase 7 Examples
+
+Local Phase 7 tables may include:
+
+```text
+phase_7/us/mar_metadata.json
+phase_7/us/mar_candidate_model_ranking.csv
+phase_7/us/mar_state_summary.csv
+phase_7/us/mar_transition_matrix.csv
+phase_7/us/mar_ar_stability.csv
+phase_7/us/mar_probability_audit.csv
+phase_7/us/mar_no_lookahead_audit.csv
+phase_7/us/mar_duration_summary.csv
+phase_7/us/mar_state_by_year.csv
+phase_7/us/mar_hmm_agreement.csv
+phase_7/us/mar_threshold_agreement.csv
+phase_7/india/*.csv
+phase_7/india/*.json
+regime_model_comparison.csv
+```
+
+These are generated run outputs and stay local by default.
+
+Do not commit full generated MAR diagnostic tables unless explicitly selected as final-report artifacts.
+
 ## Phase 6 Examples
 
 Local Phase 6 tables may include:

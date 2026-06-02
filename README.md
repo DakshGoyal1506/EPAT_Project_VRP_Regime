@@ -73,7 +73,7 @@ final report
 | 4 | Complete / frozen | HAR-RV forecasting and HAR-based prospective VRP |
 | 5 | Complete / frozen | Threshold baseline regime construction |
 | 6 | Complete / frozen | Gaussian HMM regime model with train-only scaling, train-only fitting, custom filtered probabilities, diagnostic-only smoothed probabilities, and no-lookahead audit |
-| 7 | Complete / needs final review | AR-HMM / Markov autoregression upgrade |
+| 7 | Complete / frozen | Markov autoregression regime model with train-only fitting, filtered probabilities, diagnostic-only smoothing, and no-lookahead audit |
 | 8 | Complete / needs final review | MSVOL / MSGARCH robustness appendix |
 | 9 | Complete / needs final review | Strategy signal construction |
 | 10 | Complete / needs final review | Vectorised research backtest and robustness |

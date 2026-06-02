@@ -78,6 +78,14 @@ python scripts/train_regimes.py --market ALL --model gaussian_hmm --run-grid --f
 
 Generated HMM panels, model binaries, and reports remain local-only.
 
+Phase 7 Markov autoregression regeneration requires Phase 4 HAR-VRP panels and may optionally read Phase 5/6 regime outputs for diagnostics:
+
+```bash
+python scripts/train_markov_autoreg.py --market ALL --target vrp_har --order 1 --states 2 --primary --force
+```
+
+Generated MAR panels, model binaries, and reports remain local-only.
+
 ## Reproducibility Boundaries
 
 ### Reproducible from tracked repo

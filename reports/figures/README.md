@@ -45,18 +45,6 @@ har_vrp_india.png
 
 These are generated diagnostics and stay local unless explicitly approved as final-report artifacts.
 
-## Phase 6 Examples
-
-Phase 6 currently does not require committed figures.
-
-If Phase 6 diagnostic figures are generated later, they should live under:
-
-```text
-reports/figures/phase_6/
-```
-
-They are generated diagnostics and stay local unless explicitly approved as final-report artifacts.
-
 ## Phase 5 Examples
 
 Local Phase 5 figures may include:
@@ -71,3 +59,25 @@ threshold_component_states_india.png
 ```
 
 These are generated diagnostics and stay local unless explicitly approved as final-report artifacts.
+
+## Phase 6 Examples
+
+Phase 6 currently does not require committed figures.
+
+If Phase 6 diagnostic figures are generated later, they should live under:
+
+```text
+reports/figures/phase_6/
+```
+
+They are generated diagnostics and stay local unless explicitly approved as final-report artifacts.
+
+## Phase 7 Examples
+
+If generated later, local Phase 7 figures should live under:
+
+```text
+reports/figures/phase_7/
+```
+
+They are generated diagnostics and stay local unless explicitly approved as final-report artifacts.

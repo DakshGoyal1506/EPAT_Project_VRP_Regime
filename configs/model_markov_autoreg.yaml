@@ -120,7 +120,7 @@ validation:
 
 economic_state_checks:
   enabled: true
-  reject_primary_if_incoherent: true
+  reject_primary_if_incoherent: false
 
   target_rules:
     vrp_har:

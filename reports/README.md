@@ -115,3 +115,29 @@ reports/figures/phase_6/*
 
 These are generated diagnostics and stay local by default. Use selected CSV/JSON previews for review unless explicitly approved as final-report artifacts.
 
+## Phase 7 Markov Autoregression Outputs
+
+Phase 7 may generate:
+
+```text
+reports/tables/phase_7/us/mar_metadata.json
+reports/tables/phase_7/us/mar_candidate_model_ranking.csv
+reports/tables/phase_7/us/mar_state_summary.csv
+reports/tables/phase_7/us/mar_transition_matrix.csv
+reports/tables/phase_7/us/mar_ar_stability.csv
+reports/tables/phase_7/us/mar_probability_audit.csv
+reports/tables/phase_7/us/mar_no_lookahead_audit.csv
+reports/tables/phase_7/us/mar_duration_summary.csv
+reports/tables/phase_7/us/mar_state_by_year.csv
+reports/tables/phase_7/us/mar_hmm_agreement.csv
+reports/tables/phase_7/us/mar_threshold_agreement.csv
+reports/tables/phase_7/india/*.csv
+reports/tables/phase_7/india/*.json
+reports/tables/regime_model_comparison.csv
+reports/figures/phase_7/*
+```
+
+These are generated diagnostics and stay local by default. Use selected CSV/JSON previews, terminal output, or screenshots for review unless explicitly approved as final-report artifacts.
+
+Filtered probabilities are backtest-facing. Smoothed probabilities are diagnostic-only.
+
