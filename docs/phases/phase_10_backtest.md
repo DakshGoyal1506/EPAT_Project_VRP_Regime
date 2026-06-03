@@ -2,7 +2,7 @@
 
 ## 1. Status
 
-Complete / needs final review.
+Complete / frozen.
 
 Phase 10 is implemented, tested, and audited. This document records the phase boundary, owned files, commands, outputs, validation checks, and limitations before Phase 13 work begins.
 

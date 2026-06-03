@@ -147,7 +147,10 @@ Expected local outputs:
 ```text
 reports/tables/phase_11/daily_paper_signal.csv
 reports/tables/phase_11/paper_order_intents.csv
+reports/tables/phase_11/risk_check_report.csv
+reports/tables/phase_11/broker_metadata.json
 reports/tables/phase_11/run_metadata.json
+reports/tables/phase_11/ibkr_paper_config_snapshot.yaml
 reports/tables/phase_11/phase11_integration_report.json
 reports/tables/phase_11/live_order_guard_report.json
 ```

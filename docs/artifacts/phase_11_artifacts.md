@@ -15,6 +15,8 @@ All Phase 11 runtime artifacts are local-only by default.
 | Integration report | `reports/tables/phase_11/phase11_integration_report.json` | `python scripts/validate_phase11.py --print-json` | No | Artifact consistency report | `passed`, `violations`, `artifacts_checked` | JSON preview | Expected `passed=true`, `violations=[]` |
 | Live-order guard report | `reports/tables/phase_11/live_order_guard_report.json` | `python scripts/validate_phase11.py --print-json` | No | Source safety scan output | `passed`, `violations`, `scanned_paths` | JSON preview | Expected `violations=[]` |
 | Paper position state | `reports/tables/phase_11/paper_position_state.csv` | Optional state flow only | No | Local state file | `market`, `strategy_name`, `symbol`, `target_exposure`, `paper_quantity`, `status` | Redacted preview only | Local state; do not commit |
+| Broker cache | `data/broker_cache/*` | Broker/paper-signal layer | No | Sensitive local broker cache | Local cache files, if any | Redacted status only | Do not commit broker cache or account/runtime context |
+| Runtime logs | `logs/*` | Phase 11 scripts if logging is enabled | No | Local runtime logs | Log text | Redacted excerpt only | Do not commit broker/runtime logs |
 
 ## Commit Policy
 

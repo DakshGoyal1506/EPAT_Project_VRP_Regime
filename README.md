@@ -46,9 +46,9 @@ vectorised backtest
   ↓
 robustness tests
   ↓
-cross-market lead-lag analysis
+iBridgePy / IBKR paper-signal readiness layer
   ↓
-iBridgePy / IBKR paper-signal layer
+cross-market lead-lag analysis
   ↓
 final report
 ```
@@ -67,7 +67,7 @@ final report
 | 7 | Complete / frozen | Markov autoregression regime model with train-only fitting, filtered probabilities, diagnostic-only smoothing, and no-lookahead audit |
 | 8 | Complete / frozen | Python-only MSVOL robustness appendix; diagnostic-only return-volatility regime comparison; true R MSGARCH optional/future only |
 | 9 | Complete / frozen | Strategy signal construction |
-| 10 | Complete / needs final review | Vectorised research backtest and robustness |
+| 10 | Complete / frozen | Vectorised research backtest and robustness |
 | 11 | Complete / frozen | IBKR paper-signal readiness layer |
 | 12 | Not started | Optional future IBKR paper execution adapter |
 | 13 | Not started | Cross-market US-India analysis |
@@ -126,7 +126,8 @@ EPAT_Project_VRP_Regime/
 │   ├── build_signals.py
 │   ├── run_backtest.py
 │   ├── run_robustness.py
-│   └── run_ibkr_paper_signal.py
+│   ├── run_ibkr_paper_signal.py
+│   └── validate_phase11.py
 ├── src/
 │   └── vrp/
 │       ├── README.md
@@ -256,9 +257,12 @@ This repository is for academic research and paper-signal generation.
 Default broker policy:
 
 ```text
-paper_signal_only: true
-live_trading_enabled: false
+mode: paper_signal_only
+paper_only: true
+kill_switch: true
+live_orders_enabled: false
 allow_order_placement: false
+live_order_sent: false
 ```
 
 The broker layer is optional and must not be used as the primary historical research data source.

@@ -370,7 +370,7 @@ Tests:
 
 ```bash
 pytest tests/test_phase10_input_schema.py tests/test_backtest_config_registry.py tests/test_backtest_accounting.py tests/test_backtest_no_lookahead.py
-pytest tests/test_backtest_metrics.py tests/test_vectorized_engine.py tests/test_backtest_diagnostics.py tests/test_robustness.py tests/test_phase10_integration.py
+pytest tests/test_backtest_metrics.py tests/test_vectorized_engine.py tests/test_backtest_diagnostics.py tests/test_robustness.py tests/test_phase10_integration.py tests/test_no_lookahead.py
 ```
 
 Generated outputs are local-only by default:
