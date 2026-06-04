@@ -1,0 +1,304 @@
+phase: phase_13
+name: cross_market_us_india_analysis
+
+description: >
+  Cross-market US-India variance risk premium and regime analysis.
+  This phase tests whether US volatility, VRP, and regime information
+  has descriptive or predictive value for Indian VRP regimes.
+  Phase 13 is research-only and analysis-only. It must not use broker,
+  paper-trading, iBridgePy, or Phase 11 artifacts.
+
+timezone_policy:
+  india_closes_before_us: true
+  forbid_same_date_us_to_india: true
+  predictive_us_alignment: previous_us_trading_date_strictly_before_india_date
+  default_lag_trading_days: 1
+
+alignment:
+  method: asof_backward_strict
+  allow_exact_matches: false
+  require_us_lagged_date_lt_india_date: true
+  max_lag_calendar_days: 7
+  fail_on_same_date_violation: true
+  stale_lag_warning_calendar_days: 3
+  stale_lag_fail_calendar_days: null
+
+input_files:
+  US:
+    vrp_har: data/processed/us_vrp_har.parquet
+    threshold: data/processed/us_threshold_regimes.parquet
+    gaussian_hmm: data/processed/us_hmm_regimes.parquet
+    markov_autoreg: data/processed/us_markov_autoreg_regimes.parquet
+    strategy_signals: data/processed/us_strategy_signals.parquet
+    backtest: data/processed/us_backtest_panel.parquet
+
+  INDIA:
+    vrp_har: data/processed/india_vrp_har.parquet
+    threshold: data/processed/india_threshold_regimes.parquet
+    gaussian_hmm: data/processed/india_hmm_regimes.parquet
+    markov_autoreg: data/processed/india_markov_autoreg_regimes.parquet
+    strategy_signals: data/processed/india_strategy_signals.parquet
+    backtest: data/processed/india_backtest_panel.parquet
+
+locked_artifacts:
+  phase9:
+    - data/processed/us_strategy_signals.parquet
+    - data/processed/india_strategy_signals.parquet
+
+  phase10:
+    - data/processed/us_backtest_panel.parquet
+    - data/processed/india_backtest_panel.parquet
+    - reports/tables/phase_10/backtest_summary.csv
+    - reports/tables/phase_10/backtest_metadata.json
+
+forbidden_inputs:
+  phase11:
+    - reports/tables/phase_11/daily_paper_signal.csv
+    - reports/tables/phase_11/paper_order_intents.csv
+    - reports/tables/phase_11/risk_check_report.csv
+
+forbidden_keywords:
+  - iBridgePy
+  - paper_order_intents
+  - daily_paper_signal
+  - risk_check_report
+  - broker
+  - paper_signal
+  - paper-trading
+  - paper trading
+
+models:
+  - gaussian_hmm
+  - markov_autoreg
+
+primary_models:
+  - gaussian_hmm
+  - markov_autoreg
+
+descriptive_diagnostics:
+  include_threshold: true
+  include_msvol_if_available: false
+  same_date_correlation_allowed: true
+  same_date_predictive_use_allowed: false
+
+msvol_policy:
+  active_overlay_model: false
+  strategy_overlay_allowed: false
+  appendix_diagnostic_only: true
+
+model_column_sources:
+  gaussian_hmm:
+    stress_probability: hmm_filtered_prob_stress_for_next_session
+    state_name: hmm_state_name_for_next_session
+
+  markov_autoreg:
+    stress_probability: mar_filtered_prob_stress_for_next_session
+    state_name: mar_state_name_for_next_session
+
+normalized_columns:
+  US:
+    date: us_date
+    vrp: us_vrp_har_gk
+    implied_vol: us_iv_ann
+    realized_vol: us_rv_gk_22d_ann_lag1
+    stress_probability: us_stress_prob
+    state_name: us_state_name
+
+  INDIA:
+    date: india_date
+    vrp: india_vrp_har_gk
+    implied_vol: india_iv_ann
+    realized_vol: india_rv_gk_22d_ann_lag1
+    stress_probability: india_stress_prob
+    state_name: india_state_name
+
+predictive_features:
+  local_india_lags:
+    - india_vrp_har_gk_lag1
+    - india_iv_ann_lag1
+    - india_rv_gk_22d_ann_lag1
+    - india_stress_prob_lag1
+
+  lagged_us_features:
+    - us_stress_prob_lag1
+    - us_vrp_har_gk_lag1
+    - us_iv_ann_lag1
+    - us_rv_gk_22d_ann_lag1
+
+stress_definition:
+  probability_threshold: 0.50
+  fallback_to_state_name: true
+  stress_state_name_patterns:
+    - stress
+    - high_vol
+    - high vol
+    - crisis
+    - volatile
+
+correlations:
+  enabled: true
+  methods:
+    - pearson
+    - spearman
+  min_observations: 100
+
+lead_lag:
+  enabled: true
+  max_lag: 5
+  lag_direction: us_leads_india
+  descriptive_only: true
+
+linear_regression:
+  enabled: true
+  robust_standard_errors: HAC
+  hac_maxlags: 5
+  min_observations: 250
+  descriptive_only: true
+
+granger_diagnostics:
+  enabled: true
+  max_lag: 5
+  descriptive_only: true
+  reject_causal_language: true
+  continuous_series_only: true
+  allowed_series:
+    - india_stress_prob
+    - us_stress_prob_lag1
+    - india_vrp_har_gk
+    - us_vrp_har_gk_lag1
+
+logistic_regression:
+  enabled: true
+  dependent_variable: india_stress_indicator
+  local_only_model: true
+  local_plus_us_model: true
+  robust_standard_errors: HC1
+  min_observations: 250
+  handle_perfect_separation: skip_with_reason
+  comparison_metrics:
+    - pseudo_r2
+    - aic
+    - bic
+    - log_likelihood
+    - likelihood_ratio_test
+    - auc
+    - brier_score
+
+predictive_validation:
+  enabled: true
+  split_method: chronological
+  train_fraction: 0.70
+  min_train_observations: 250
+  min_test_observations: 100
+  no_cutoff_tuning: true
+
+overlay:
+  enabled: true
+  analysis_only: true
+  not_part_of_phase9_strategy_universe: true
+  primary_india_strategy: mar_prob_linear_carry
+  secondary_india_strategy: hmm_prob_linear_carry
+  us_stress_cutoffs:
+    - 0.50
+    - 0.60
+    - 0.70
+  default_us_stress_cutoff: 0.60
+  payoff_proxy: phase10_forward_vrp_research_proxy
+  cost_bps: 5
+  no_phase9_mutation: true
+  no_phase10_mutation: true
+  no_phase11_usage: true
+  rule: >
+    If lagged_US_stress_prob > cutoff, set overlay_exposure to 0.0.
+    Otherwise preserve the Phase 9 base exposure.
+
+required_overlay_summary_columns:
+  - model
+  - strategy
+  - cutoff
+  - n_obs
+  - base_mean_return
+  - overlay_mean_return
+  - base_vol
+  - overlay_vol
+  - base_sharpe
+  - overlay_sharpe
+  - base_sortino
+  - overlay_sortino
+  - base_max_drawdown
+  - overlay_max_drawdown
+  - base_turnover
+  - overlay_turnover
+  - base_exposure_mean
+  - overlay_exposure_mean
+  - blocked_days
+  - blocked_day_fraction
+  - analysis_only
+
+outputs:
+  descriptive_same_date_panel: data/processed/cross_market_same_date_descriptive_panel.parquet
+  predictive_panel: data/processed/cross_market_predictive_panel.parquet
+  cross_market_panel: data/processed/cross_market_panel.parquet
+  india_overlay_panel: data/processed/india_cross_market_overlay_panel.parquet
+
+  tables_dir: reports/tables/phase_13
+  figures_dir: reports/figures/phase_13
+
+  alignment_audit: reports/tables/phase_13/alignment_audit.csv
+  no_lookahead_audit: reports/tables/phase_13/no_lookahead_audit.csv
+  phase13_metadata: reports/tables/phase_13/phase13_metadata.json
+
+  vrp_level_correlations: reports/tables/phase_13/vrp_level_correlations.csv
+  vrp_change_correlations: reports/tables/phase_13/vrp_change_correlations.csv
+  regime_probability_correlations: reports/tables/phase_13/regime_probability_correlations.csv
+  state_label_agreement: reports/tables/phase_13/state_label_agreement.csv
+  lead_lag_table: reports/tables/phase_13/lead_lag_table.csv
+  granger_diagnostics: reports/tables/phase_13/granger_diagnostics.csv
+
+  logistic_model_summary: reports/tables/phase_13/logistic_model_summary.csv
+  logistic_model_comparison: reports/tables/phase_13/logistic_model_comparison.csv
+  logistic_oos_diagnostics: reports/tables/phase_13/logistic_oos_diagnostics.csv
+
+  overlay_summary: reports/tables/phase_13/india_overlay_summary.csv
+  phase13_summary_index: reports/tables/phase_13/phase13_summary_index.csv
+
+figures:
+  us_india_vrp: reports/figures/phase_13/us_india_vrp.png
+  us_india_stress_prob: reports/figures/phase_13/us_india_stress_prob.png
+  lagged_us_vs_india_stress: reports/figures/phase_13/lagged_us_vs_india_stress.png
+  india_overlay_equity_curves: reports/figures/phase_13/india_overlay_equity_curves.png
+  india_overlay_exposure: reports/figures/phase_13/india_overlay_exposure.png
+
+alignment_audit_required_columns:
+  - model
+  - n_india_dates
+  - n_matched_us_lagged_dates
+  - n_missing_us_lagged_dates
+  - min_lag_calendar_days
+  - median_lag_calendar_days
+  - max_lag_calendar_days
+  - n_lag_gt_3_calendar_days
+  - n_lag_gt_7_calendar_days
+  - n_same_date_violations
+
+no_leakage_acceptance_rules:
+  - Every predictive row must have india_date.
+  - Every predictive row with US lagged features must have us_lagged_date < india_date.
+  - Same-date US features may exist only in the descriptive same-date panel.
+  - Predictive models must not use US same-date close, same-date VIX, same-date VRP, or same-date stress probability.
+  - Overlay must use lagged US stress probability only.
+  - Phase 9 strategy signals must not be modified.
+  - Phase 10 backtest outputs must not be modified.
+  - Phase 11 broker or paper-signal files must not be read.
+  - If n_same_date_violations > 0, the phase fails.
+  - If any locked Phase 9 or Phase 10 artifact hash changes, the phase fails.
+
+rejected_items:
+  - ambiguous_single_cross_market_panel_only
+  - same_date_us_feature_in_india_predictive_model
+  - causal_wording_for_granger_diagnostics
+  - overlay_as_official_phase9_strategy
+  - new_complex_ml_classifier
+  - cross_market_hmm
+  - new_downloaded_data
+  - broker_or_paper_trading_artifact_usage
