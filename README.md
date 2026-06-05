@@ -6,11 +6,11 @@
 
 ## Executive Summary
 
-This repository implements a reproducible research pipeline for measuring the variance risk premium (VRP), decomposing it across volatility regimes, and evaluating whether regime-conditioned short-volatility exposure improves risk-adjusted performance relative to unconditional short-volatility harvesting. The project compares US SPX/VIX with Indian NIFTY/India VIX using public daily data, point-in-time feature construction, forecasting, regime detection, vectorised backtesting, robustness checks, cross-market diagnostics, and an optional paper-signal broker layer.
+This repository implements a reproducible research pipeline for measuring the variance risk premium (VRP), decomposing it across volatility regimes, and evaluating whether regime-conditioned short-volatility exposure improves research-proxy behaviour relative to unconditional short-volatility harvesting. The project compares US SPX/VIX with Indian NIFTY/India VIX using public daily data, point-in-time feature construction, forecasting, regime detection, vectorised backtesting, robustness checks, cross-market diagnostics, and a paper-signal readiness layer.
 
 ## Research Objective
 
-The project studies whether the variance risk premium is persistent across markets, whether it changes meaningfully across volatility regimes, and whether regime-aware exposure rules improve drawdown control and risk-adjusted returns.
+The project studies whether the variance risk premium is persistent across markets, whether it changes meaningfully across volatility regimes, and whether regime-aware exposure rules improve drawdown control and risk-adjusted research-proxy behaviour.
 
 Markets covered:
 
@@ -23,34 +23,20 @@ Markets covered:
 
 ```text
 public daily data
-  ↓
-clean OHLC / VIX / India VIX series
-  ↓
-realised variance estimators
-  ↓
-implied variance construction
-  ↓
-variance risk premium construction
-  ↓
-HAR-RV forecast
-  ↓
-threshold regimes
-  ↓
-Gaussian HMM regimes
-  ↓
-AR-HMM / Markov autoregression
-  ↓
-regime-conditioned strategy
-  ↓
-vectorised backtest
-  ↓
-robustness tests
-  ↓
-iBridgePy / IBKR paper-signal readiness layer
-  ↓
-cross-market lead-lag analysis
-  ↓
-final report
+  -> clean OHLC / VIX / India VIX series
+  -> realised variance estimators
+  -> implied variance construction
+  -> variance risk premium construction
+  -> HAR-RV forecast
+  -> threshold regimes
+  -> Gaussian HMM regimes
+  -> AR-HMM / Markov autoregression
+  -> regime-conditioned strategy
+  -> vectorised research backtest
+  -> robustness tests
+  -> iBridgePy / IBKR paper-signal readiness layer
+  -> cross-market lead-lag analysis
+  -> final report and release package
 ```
 
 ## Current Implementation Status
@@ -69,35 +55,16 @@ final report
 | 9 | Complete / frozen | Strategy signal construction |
 | 10 | Complete / frozen | Vectorised research backtest and robustness |
 | 11 | Complete / frozen | IBKR paper-signal readiness layer |
-| 12 | Not started | Optional future IBKR paper execution adapter |
+| 12 | Skipped / future optional | IBKR paper execution adapter intentionally left out of current submission scope |
 | 13 | Complete / frozen | Cross-market US-India analysis with strict previous-US-date alignment, descriptive same-date diagnostics, lagged-US predictive diagnostics, and analysis-only India overlay |
-| 14 | Next | Final report / release package |
+| 14 | In progress | Final report, PDF export, presentation package, claims audit, release checklist, and submission package |
 
 ## Repository Structure
 
 ```text
 EPAT_Project_VRP_Regime/
 ├── configs/
-│   ├── README.md
-│   ├── data_sources.yaml
-│   ├── markets.yaml
-│   ├── har_rv.yaml
-│   ├── model_hmm.yaml
-│   ├── model_arhmm.yaml
-│   ├── model_markov_autoreg.yaml
-│   ├── model_msvol.yaml
-│   ├── model_msgarch.yaml
-│   ├── strategies.yaml
-│   ├── backtest.yaml
-│   ├── ibkr_paper.yaml
-│   └── cross_market.yaml
 ├── data/
-│   ├── README.md
-│   ├── raw/
-│   ├── interim/
-│   ├── processed/
-│   ├── manual/
-│   └── broker_cache/
 ├── docs/
 │   ├── phase_status.md
 │   ├── artifact_inventory.md
@@ -108,41 +75,26 @@ EPAT_Project_VRP_Regime/
 │   ├── phases/
 │   └── artifacts/
 ├── notebooks/
-│   ├── README.md
-│   ├── 01_data_audit.ipynb
-│   ├── 02_build_features.ipynb
-│   ├── 03.ipynb
-│   └── 03_har_rv.ipynb
 ├── reports/
 │   ├── README.md
+│   ├── final/
+│   │   ├── README.md
+│   │   ├── final_report.md
+│   │   ├── final_report.pdf
+│   │   ├── executive_summary.md
+│   │   ├── presentation_outline.md
+│   │   ├── selected_artifacts.md
+│   │   ├── limitations.md
+│   │   ├── reproducibility_note.md
+│   │   ├── future_work.md
+│   │   ├── result_claims_audit.md
+│   │   ├── table_inventory.md
+│   │   └── figure_inventory.md
 │   ├── figures/
 │   └── tables/
 ├── scripts/
-│   ├── README.md
-│   ├── download_data.py
-│   ├── build_features.py
-│   ├── train_har.py
-│   ├── train_regimes.py
-│   ├── train_markov_autoreg.py
-│   ├── build_signals.py
-│   ├── run_backtest.py
-│   ├── run_robustness.py
-│   ├── run_ibkr_paper_signal.py
-│   ├── validate_phase11.py
-│   └── run_cross_market_analysis.py
 ├── src/
-│   └── vrp/
-│       ├── README.md
-│       ├── data/
-│       ├── features/
-│       ├── forecasting/
-│       ├── regimes/
-│       ├── strategies/
-│       ├── backtest/
-│       ├── broker/
-│       └── reports/
 ├── tests/
-│   └── README.md
 ├── .env.example
 ├── .gitignore
 ├── pyproject.toml
@@ -161,11 +113,19 @@ EPAT_Project_VRP_Regime/
 | `docs/artifact_inventory.md` | Local artifact inventory and review substitutes |
 | `docs/generated_artifact_policy.md` | Commit vs local-only artifact rules |
 | `docs/known_limitations.md` | Current limitations and non-goals |
+| `docs/release_checklist.md` | Final release checklist |
+| `docs/final_report_checklist.md` | Final report and PDF QA checklist |
+| `docs/submission_package.md` | Reviewer route map for final submission |
 | `docs/phases/phase_11_ibkr_readiness.md` | Phase 11 implementation boundary and validation |
 | `docs/artifacts/phase_11_artifacts.md` | Phase 11 local artifact schema and commit policy |
 | `docs/phase11_runbook.md` | Phase 11 operational runbook |
 | `docs/phases/phase_13_cross_market.md` | Phase 13 cross-market analysis boundary, commands, validation, and safety rules |
 | `docs/artifacts/phase_13_artifacts.md` | Phase 13 generated artifact documentation |
+| `reports/final/final_report.md` | Final report Markdown source |
+| `reports/final/final_report.pdf` | Final report PDF export |
+| `reports/final/executive_summary.md` | Final executive summary |
+| `reports/final/presentation_outline.md` | Evidence-first presentation outline |
+| `reports/final/result_claims_audit.md` | Claim-to-evidence audit |
 | `scripts/README.md` | Script entry points and CLI usage |
 | `src/vrp/*/README.md` | Module-specific contracts and commands |
 
@@ -196,9 +156,31 @@ src/vrp/*/README.md
 docs/phases/
 ```
 
+## Final Report Package
+
+Final submission files live under:
+
+```text
+reports/final/
+```
+
+Key entry points:
+
+```text
+reports/final/final_report.md
+reports/final/final_report.pdf
+reports/final/executive_summary.md
+reports/final/presentation_outline.md
+docs/submission_package.md
+docs/release_checklist.md
+```
+
+`reports/final/final_report.md` is the source of truth.
+`reports/final/final_report.pdf` is the export deliverable.
+
 ## Generated Artifact Policy
 
-Generated data, model outputs, broker cache, logs, large panels, and diagnostic figures are local-only by default.
+Generated data, model outputs, broker cache, logs, large panels, report tables, and diagnostic figures are local-only by default.
 
 Tracked:
 
@@ -213,6 +195,8 @@ README files
 .env.example
 pyproject.toml
 .gitignore
+reports/final/*.md
+reports/final/final_report.pdf
 ```
 
 Local-only:
@@ -239,7 +223,16 @@ Detailed policy:
 ```text
 docs/generated_artifact_policy.md
 docs/artifact_inventory.md
+reports/final/selected_artifacts.md
 ```
+
+## Research-Proxy and No-Account-Return Warning
+
+Phase 10 backtest outputs are research-layer VRP proxy results. They are not executable option-chain PnL, account returns, or live trading results.
+
+Cumulative curves are additive research-proxy curves, not account equity curves.
+
+Strategy outputs are exposure intentions, not broker orders.
 
 ## No-Lookahead Policy
 
@@ -256,7 +249,7 @@ Notebooks are for inspection, diagnostics, and presentation only. Production log
 
 ## No-Live-Trading Warning
 
-This repository is for academic research and paper-signal generation.
+This repository is for academic research, research-proxy evaluation, and paper-signal readiness. It does not claim live-trading profitability, true option-chain PnL, executable account returns, or broker execution.
 
 Default broker policy:
 

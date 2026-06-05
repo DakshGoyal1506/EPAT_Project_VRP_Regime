@@ -134,3 +134,21 @@ phase_13/india_overlay_exposure.png
 ```
 
 These are generated diagnostics and stay local unless explicitly approved as final-report artifacts. Overlay figures are analysis-only and must not be presented as live-trading or new-strategy evidence.
+
+## Phase 14 Final Report Figure Governance
+
+Final report figure governance lives in:
+
+```text
+reports/final/figure_inventory.md
+reports/final/selected_artifacts.md
+reports/final/result_claims_audit.md
+```
+
+Generated figures under `reports/figures/` remain local-only by default.
+
+Do not commit generated figures unless explicitly approved as selected final-report figures.
+
+Phase 10 figures must be labelled as research-proxy diagnostics, not account equity or live-trading results.
+
+Phase 13 figures must be labelled as descriptive or predictive diagnostics, not causal proof.

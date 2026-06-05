@@ -94,7 +94,7 @@ This file documents generated artifacts, whether they should be committed, and w
 | 11 | Live-order guard report | `reports/tables/phase_11/live_order_guard_report.json` | `python scripts/validate_phase11.py --print-json` | No | Source safety scan output | JSON preview |
 | 11 | Broker cache | `data/broker_cache/*` | Broker/paper-signal layer | No | Sensitive/local | Redacted status taxonomy only |
 | 11 | Detailed Phase 11 artifact documentation | `docs/artifacts/phase_11_artifacts.md` | Manual docs | Yes | Phase artifact documentation | File review |
-| 12 | Optional paper execution outputs | `reports/tables/phase_12/*`, `broker_logs/*` | Future paper-execution scripts if explicitly scoped | No | Broker-sensitive/local runtime context | Redacted execution summary |
+| 12 | Optional paper execution outputs | `reports/tables/phase_12/*`, `broker_logs/*` | Future paper-execution scripts if explicitly scoped | No | Phase 12 skipped / future optional; broker-sensitive/local runtime context | Redacted execution summary if ever implemented |
 | 13 | Cross-market descriptive panel | `data/processed/cross_market_same_date_descriptive_panel.parquet` | `python scripts/run_cross_market_analysis.py --model ALL --force` | No | Generated processed panel | `alignment_audit.csv`, schema/head preview |
 | 13 | Cross-market predictive panel | `data/processed/cross_market_predictive_panel.parquet` | Same | No | Generated lagged predictive panel | `no_lookahead_audit.csv`, schema/head preview |
 | 13 | Cross-market combined panel | `data/processed/cross_market_panel.parquet` | Same | No | Generated convenience panel | Separate descriptive/predictive panel previews |
@@ -102,8 +102,25 @@ This file documents generated artifacts, whether they should be committed, and w
 | 13 | Cross-market diagnostics | `reports/tables/phase_13/*.csv`, `reports/tables/phase_13/*.json` | Same | No by default | Generated diagnostics and metadata | Selected CSV/JSON previews |
 | 13 | Cross-market figures | `reports/figures/phase_13/*.png` | Same | No by default | Generated diagnostic figures | Screenshots or final-report-selected figures |
 | 13 | Detailed Phase 13 artifact documentation | `docs/artifacts/phase_13_artifacts.md` | Manual docs | Yes | Phase artifact documentation | File review |
-| 14 | Final report | `reports/final_report.md` or final report export | Final report generation | Yes when ready | Deliverable | Full review |
-| 14 | Release checklist | `docs/release_checklist.md` if created | Manual cleanup | Yes | Freeze governance | File review |
+| 14 | Final package README | `reports/final/README.md` | Manual Phase 14 | Yes | Final package index | File review |
+| 14 | Final report source | `reports/final/final_report.md` | Manual Phase 14 | Yes | Markdown source of truth | File review |
+| 14 | Final report PDF | `reports/final/final_report.pdf` | Export from final report source | Yes | Submission deliverable | Visual PDF review |
+| 14 | Executive summary | `reports/final/executive_summary.md` | Manual Phase 14 | Yes | Reviewer-facing summary | File review |
+| 14 | Presentation outline | `reports/final/presentation_outline.md` | Manual Phase 14 | Yes | Evidence-first presentation package | File review |
+| 14 | Selected artifacts inventory | `reports/final/selected_artifacts.md` | Manual Phase 14 | Yes | Final evidence governance | File review |
+| 14 | Final limitations | `reports/final/limitations.md` | Curated from `docs/known_limitations.md` | Yes | Final report caveats | File review |
+| 14 | Final reproducibility note | `reports/final/reproducibility_note.md` | Curated from `docs/reproducibility.md` | Yes | Final reviewer workflow | File review |
+| 14 | Future work | `reports/final/future_work.md` | Manual Phase 14 | Yes | Explicit non-scope and extensions | File review |
+| 14 | Result claims audit | `reports/final/result_claims_audit.md` | Manual Phase 14 | Yes | Prevents overclaiming | File review |
+| 14 | Table inventory | `reports/final/table_inventory.md` | Manual Phase 14 | Yes | Final table governance | File review |
+| 14 | Figure inventory | `reports/final/figure_inventory.md` | Manual Phase 14 | Yes | Final figure governance | File review |
+| 14 | Phase 14 phase doc | `docs/phases/phase_14_final_report_release.md` | Manual Phase 14 | Yes | Phase scope and validation | File review |
+| 14 | Phase 14 artifact doc | `docs/artifacts/phase_14_artifacts.md` | Manual Phase 14 | Yes | Artifact policy for final package | File review |
+| 14 | Release checklist | `docs/release_checklist.md` | Manual Phase 14 | Yes | Release freeze governance | File review |
+| 14 | Final report checklist | `docs/final_report_checklist.md` | Manual Phase 14 | Yes | Report and PDF QA | File review |
+| 14 | Submission package map | `docs/submission_package.md` | Manual Phase 14 | Yes | Reviewer route map | File review |
+| 14 | Selected small final tables | `reports/final/tables/*` or approved table path | Optional copy from generated summaries | Optional | Only if approved, stable, non-sensitive, and reproducible | Table inventory and selected artifact record |
+| 14 | Selected final figures | `reports/final/figures/*` or approved figure path | Optional copy from generated figures | Optional | Only if approved and used in final report | Figure inventory and selected artifact record |
 
 ## Local Artifact Review Packet
 

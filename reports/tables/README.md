@@ -208,3 +208,19 @@ phase_13/phase13_run_status.json
 ```
 
 These are generated run outputs and stay local by default. `alignment_audit.csv`, `no_lookahead_audit.csv`, `logistic_model_comparison.csv`, and `india_overlay_summary.csv` are the preferred review substitutes.
+
+## Phase 14 Final Report Table Governance
+
+Final report table governance lives in:
+
+```text
+reports/final/table_inventory.md
+reports/final/selected_artifacts.md
+reports/final/result_claims_audit.md
+```
+
+Generated tables under `reports/tables/` remain local-only by default.
+
+Do not commit generated CSV/JSON tables unless explicitly approved as small, stable, non-sensitive final-report artifacts.
+
+Phase 10, Phase 11, and Phase 13 generated tables should normally remain local and be referenced through the final inventories.

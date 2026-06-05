@@ -21,3 +21,4 @@ Generated artifacts are local-only by default. Commit source code, configs, scri
 | 10 | `phase_10_artifacts.md` | Vectorised research backtest and robustness artifacts |
 | 11 | `phase_11_artifacts.md` | IBKR paper-signal readiness artifacts |
 | 13 | `phase_13_artifacts.md` | Cross-market US-India analysis artifacts |
+| 14 | `phase_14_artifacts.md` | Final report, PDF export, presentation package, claims audit, and release artifacts |

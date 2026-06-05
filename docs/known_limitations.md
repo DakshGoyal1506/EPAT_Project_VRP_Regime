@@ -92,8 +92,37 @@ This document lists current limitations, non-goals, and assumptions. It should b
 5. Instrument availability and permissions must be verified outside the research pipeline.
 6. The project does not infer live option contract sizing from research proxy backtests.
 
+## Phase 12 Limitation
+
+1. Phase 12 was intentionally skipped.
+2. Phase 12 remains future optional work only.
+3. The IBKR paper execution adapter was not implemented in the current submission scope.
+4. Do not describe Phase 12 as not started, partially implemented, implemented, or validated.
+
+Required wording:
+
+```text
+Phase 12 = skipped / future optional — IBKR paper execution adapter intentionally left out of current submission scope.
+```
+
 ## Documentation Limitations
 
 1. Phase status can drift if `docs/phase_status.md` is not updated after changes.
 2. Artifact inventory is a governance document, not an automated manifest.
 3. Local generated artifacts may exist outside Git and must be reviewed through summaries or command output.
+
+## Final Report Limitations
+
+1. Final report numeric findings must be inserted only after inspecting local result tables.
+
+2. Every major report claim must map to `reports/final/result_claims_audit.md`.
+
+3. Every final report table must map to `reports/final/table_inventory.md`.
+
+4. Every final report figure must map to `reports/final/figure_inventory.md`.
+
+5. `reports/final/final_report.md` is the source of truth.
+
+6. `reports/final/final_report.pdf` is an export deliverable.
+
+7. The PDF must not contain unaudited numeric claims, broker-sensitive artifacts, or full generated panels.

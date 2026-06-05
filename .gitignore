@@ -101,6 +101,11 @@ models/*
 *.html
 *.pdf
 
+# Final report PDF deliverable
+!reports/final/
+!reports/final/*.md
+!reports/final/final_report.pdf
+
 # Keep parquet generated/local unless explicitly whitelisted later
 *.parquet
 

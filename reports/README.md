@@ -1,16 +1,16 @@
 # Reports
 
-This directory stores generated report artifacts.
+This directory stores final report deliverables and locally generated report artifacts.
 
-Most report outputs are generated locally and are intentionally not tracked by Git.
+Most report outputs are generated locally and are intentionally not tracked by Git. The Phase 14 final report package is the explicit release exception.
 
 ## Directory Contract
 
-| Path | Purpose | Commit? |
-|---|---|---:|
-| `reports/tables/` | Generated CSV/JSON/Markdown diagnostic tables | No by default |
-| `reports/figures/` | Generated figures | No by default |
-| `reports/final_report.md` | Final report draft/output when ready | Yes when final |
+| Path               | Purpose                                                                                                                                                               |       Commit? |
+| ------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------: |
+| `reports/final/`   | Final report package: Markdown source, PDF export, executive summary, presentation outline, claims audit, inventories, limitations, reproducibility note, future work |           Yes |
+| `reports/tables/`  | Generated CSV/JSON/Markdown diagnostic tables                                                                                                                         | No by default |
+| `reports/figures/` | Generated figures                                                                                                                                                     | No by default |
 
 ## Commit Policy
 
@@ -22,6 +22,8 @@ reports/tables/README.md
 reports/tables/.gitkeep
 reports/figures/README.md
 reports/figures/.gitkeep
+reports/final/*.md
+reports/final/final_report.pdf
 selected final-report-ready artifacts only if explicitly approved
 ```
 
@@ -33,6 +35,28 @@ reports/tables/*.json
 reports/figures/*.png
 reports/figures/*.svg
 reports/figures/*.pdf
+```
+
+## Final Report Package
+
+The final report source is:
+
+```text
+reports/final/final_report.md
+```
+
+The PDF deliverable is:
+
+```text
+reports/final/final_report.pdf
+```
+
+The PDF must be generated from the Markdown source after claims audit completion. Do not manually diverge the PDF from the Markdown source.
+
+Every major report claim must appear in:
+
+```text
+reports/final/result_claims_audit.md
 ```
 
 ## Rules
@@ -248,4 +272,3 @@ reports/figures/phase_13/*.png
 ```
 
 These are generated diagnostics and stay local by default. Same-date cross-market diagnostics are descriptive only. Predictive diagnostics must use lagged US information only. The overlay is analysis-only and is not a new Phase 9 strategy.
-

@@ -13,6 +13,7 @@ The top-level `README.md` gives the project overview. This file tracks phase sta
 | `in progress` | Under active development or cleanup. |
 | `blocked` | Waiting on prior phases, data, review, or design decision. |
 | `not started` | Planned but not implemented. |
+| `skipped / future optional` | Intentionally left outside the current submission scope; may be implemented only after explicit re-scope. |
 
 ## Phase Ledger
 
@@ -30,9 +31,21 @@ The top-level `README.md` gives the project overview. This file tracks phase sta
 | 9 | complete / frozen | Strategy signal construction: fixed seven-strategy universe, long-format next-session exposure intentions, carry-aware HAR-VRP gate, signal diagnostics, and no-lookahead audit | `python scripts/build_signals.py --help` and `pytest tests/test_exposure_rules.py tests/test_signal_builder.py tests/test_strategy_no_lookahead.py tests/test_phase9_diagnostics.py` |
 | 10 | complete / frozen | Vectorised research backtest and robustness | `python scripts/run_backtest.py --help` and `python scripts/run_robustness.py --help` |
 | 11 | complete / frozen | IBKR paper-signal readiness layer; no live orders | `python scripts/run_ibkr_paper_signal.py --help` and `python scripts/validate_phase11.py --help` |
-| 12 | not started | Optional future IBKR paper execution adapter | Explicit re-scope required before implementation |
+| 12 | skipped / future optional | IBKR paper execution adapter intentionally left out of current submission scope | Explicit re-scope required before implementation |
 | 13 | complete / frozen | Cross-market US-India analysis with strict lagged-US predictive alignment, descriptive same-date diagnostics, logistic incremental-signal tests, Granger-style descriptive diagnostics, and analysis-only India overlay | `python scripts/run_cross_market_analysis.py --validate-inputs-only` and `pytest tests/test_cross_market_alignment.py tests/test_cross_market_no_lookahead.py tests/test_cross_market_stats.py tests/test_cross_market_overlay.py tests/test_phase13_artifact_mutation.py tests/test_phase13_datetime_dtype.py` |
-| 14 | not started | Final report / release package | Wait for frozen Phase 0-13 baseline |
+| 14 | in progress | Final report, PDF export, presentation package, claims audit, selected artifact inventory, release checklist, and submission package | `git diff --check`, `pytest`, `python scripts/validate_phase11.py --print-json`, and Phase 13 validation commands |
+
+## Phase 12 Boundary
+
+Phase 12 was intentionally skipped.
+
+Required wording:
+
+```text
+Phase 12 = skipped / future optional — IBKR paper execution adapter intentionally left out of current submission scope.
+```
+
+Do not describe Phase 12 as not started, partially implemented, or implemented.
 
 ## Frozen Phase Rules
 
@@ -42,11 +55,11 @@ Once a phase is marked `complete / frozen`:
 2. Do not move phase boundaries.
 3. Do not add new research logic to that phase.
 4. Allow only:
-	- correctness bug fixes,
-	- safety/no-lookahead fixes,
-	- reproducibility fixes,
-	- documentation updates,
-	- tests for existing behaviour.
+   - correctness bug fixes,
+   - safety/no-lookahead fixes,
+   - reproducibility fixes,
+   - documentation updates,
+   - tests for existing behaviour.
 
 ## Global Non-Negotiables
 
@@ -57,3 +70,6 @@ Once a phase is marked `complete / frozen`:
 5. Backtests must not use future realised variance as a tradable signal.
 6. HMM/AR-HMM backtests must use filtered probabilities available at time `t`, not full-sample smoothed probabilities.
 7. Broker layer remains paper/signal-only unless explicitly re-scoped later.
+8. Phase 10 backtest outputs are research-proxy results, not account returns.
+9. Phase 13 cross-market diagnostics are statistical/predictive diagnostics, not causal proof.
+10. Phase 14 report claims must map to `reports/final/result_claims_audit.md`.

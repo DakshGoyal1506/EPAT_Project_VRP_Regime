@@ -471,11 +471,61 @@ reports/figures/phase_13/*
 
 ## Phase 14 - Final Report and Release Package
 
+Phase 14 is documentation, reporting, PDF export, and release cleanup only.
+
+No data generation is required for a docs-only review.
+
+Final report package paths:
+
+```text
+reports/final/final_report.md
+reports/final/final_report.pdf
+reports/final/executive_summary.md
+reports/final/presentation_outline.md
+reports/final/result_claims_audit.md
+reports/final/table_inventory.md
+reports/final/figure_inventory.md
+reports/final/selected_artifacts.md
+reports/final/limitations.md
+reports/final/reproducibility_note.md
+reports/final/future_work.md
+docs/release_checklist.md
+docs/final_report_checklist.md
+docs/submission_package.md
+```
+
+Final package hygiene:
+
+```bash
+git diff --check
+git status --short
+git ls-files | findstr /i "\.parquet \.pkl \.pickle \.joblib \.pt \.pth \.log \.env"
+git ls-files | findstr /i "broker_cache data/raw data/interim data/processed"
+```
+
+Core validation:
+
 ```bash
 pytest
-git status --short
-git ls-files data reports docs | sort
-git ls-files | findstr /i "\.parquet \.pkl \.pickle \.joblib \.pt \.pth \.log \.env"
+```
+
+Phase 11 live-order guard validation:
+
+```bash
+python scripts/validate_phase11.py --print-json
+```
+
+Phase 13 validation:
+
+```bash
+python scripts/run_cross_market_analysis.py --validate-inputs-only
+pytest tests/test_cross_market_alignment.py tests/test_cross_market_no_lookahead.py tests/test_cross_market_stats.py tests/test_cross_market_overlay.py tests/test_phase13_artifact_mutation.py tests/test_phase13_datetime_dtype.py
+```
+
+PDF export rule:
+
+```text
+Generate reports/final/final_report.pdf from reports/final/final_report.md only after the claims audit, table inventory, figure inventory, selected artifact inventory, limitations, future work, and final report checklist are complete.
 ```
 
 ## Full Test Suite
