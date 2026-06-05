@@ -20,6 +20,16 @@ This directory contains the final EPAT submission package for:
 | `table_inventory.md` | Table inventory for final report and PDF | Created in Phase 14 |
 | `figure_inventory.md` | Figure inventory for final report and PDF | Created in Phase 14 |
 
+## Selected Final Figures
+
+Selected final-report figure copies live under:
+
+```text
+reports/final/figures/
+```
+
+These are copied from local generated figure outputs after Phase 14 evidence review. Only the selected copies are final-package artifacts. Original generated figure directories remain local-only by default.
+
 ## Source of Truth
 
 The Markdown report is the source of truth:
@@ -102,6 +112,7 @@ Commit by default:
 ```text
 reports/final/*.md
 reports/final/final_report.pdf
+reports/final/figures/*.png
 ```
 
 Do not commit by default:

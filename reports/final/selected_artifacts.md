@@ -49,25 +49,25 @@ Only compact excerpts should be inserted into `final_report.md`.
 
 | Candidate final report table | Source artifact | Inclusion status | Notes |
 |---|---|---|---|
-| Data coverage summary | `reports/tables/data_audit.csv` | Pending inspection | Use market/source/date-range rows only |
-| VRP construction summary | `reports/tables/vrp_summary.csv` | Pending inspection | No causal/trading claim |
-| HAR forecast summary | `reports/tables/har_forecast_accuracy.csv` | Pending inspection | Model-dependent forecast evidence |
-| Regime model ladder summary | Phase 5/6/7 summary tables | Pending inspection | Interpretability comparison only |
-| Phase 10 strategy summary | `reports/tables/phase_10/backtest_summary.csv` | Available local; pending metric inspection | Research-proxy only |
-| Phase 10 robustness summary | `reports/tables/phase_10/robustness_cost_sensitivity.csv` | Available local; pending metric inspection | Cost-assumption sensitivity only |
-| Phase 11 guard summary | `reports/tables/phase_11/live_order_guard_report.json` | Available local; pending inspection | No broker orders |
-| Phase 13 cross-market summary | `reports/tables/phase_13/logistic_model_comparison.csv`; `lead_lag_table.csv` | Available local; pending inspection | Predictive/statistical diagnostic only |
+| Data coverage summary | `reports/tables/data_audit.csv` | Available local; inspected in `local_artifacts/phase14_evidence_review.md` | Use market/source/date-range rows only |
+| VRP construction summary | `reports/tables/vrp_summary.csv` | Available local; inspected in `local_artifacts/phase14_evidence_review.md` | No causal/trading claim |
+| HAR forecast summary | `reports/tables/har_forecast_accuracy.csv` | Available local; inspected in `local_artifacts/phase14_evidence_review.md` | Model-dependent forecast evidence |
+| Regime model ladder summary | Phase 5/6/7 summary tables | Available local; inspected in `local_artifacts/phase14_evidence_review.md` | Interpretability comparison only |
+| Phase 10 strategy summary | `reports/tables/phase_10/backtest_summary.csv` | Available local; inspected in `local_artifacts/phase14_evidence_review.md` | Research-proxy only |
+| Phase 10 robustness summary | `reports/tables/phase_10/robustness_cost_sensitivity.csv` | Available local; inspected in `local_artifacts/phase14_evidence_review.md` | Cost-assumption sensitivity only |
+| Phase 11 guard summary | `reports/tables/phase_11/live_order_guard_report.json` | Available local; inspected in `local_artifacts/phase14_evidence_review.md` | No broker orders |
+| Phase 13 cross-market summary | `reports/tables/phase_13/logistic_model_comparison.csv`; `lead_lag_table.csv` | Available local; inspected in `local_artifacts/phase14_evidence_review.md` | Predictive/statistical diagnostic only |
 
 ## Selected Candidate Figures for Report Inclusion
 
 | Candidate final report figure | Source artifact | Inclusion status | Notes |
 |---|---|---|---|
-| US/India VRP construction figure | `reports/figures/us_iv_rv_vrp.png`; `reports/figures/india_iv_rv_vrp.png` | Pending availability check | Use if readable |
-| US/India common-start proxy curves | `reports/figures/phase_10/equity_curves_common_start_us.png`; `reports/figures/phase_10/equity_curves_common_start_india.png` | Available local; pending visual inspection | Must label as research-proxy cumulative curves |
-| US/India proxy drawdowns | `reports/figures/phase_10/drawdowns_us.png`; `reports/figures/phase_10/drawdowns_india.png` | Available local; pending visual inspection | Must label as proxy drawdowns |
-| US-India VRP comparison | `reports/figures/phase_13/us_india_vrp.png` | Available local; pending visual inspection | Descriptive only |
-| US-India stress probability comparison | `reports/figures/phase_13/us_india_stress_prob.png` | Available local; pending visual inspection | Descriptive co-movement only |
-| Lagged-US vs India stress diagnostic | `reports/figures/phase_13/lagged_us_vs_india_stress.png` | Available local; pending visual inspection | Predictive diagnostic, not causal proof |
+| US/India VRP construction figure | `reports/figures/us_iv_rv_vrp.png`; `reports/figures/india_iv_rv_vrp.png` | Available local; inspected in `local_artifacts/phase14_evidence_review.md` | Use if readable |
+| US/India common-start proxy curves | `reports/figures/phase_10/equity_curves_common_start_us.png`; `reports/figures/phase_10/equity_curves_common_start_india.png` | Available local; inspected in `local_artifacts/phase14_evidence_review.md` | Must label as research-proxy cumulative curves |
+| US/India proxy drawdowns | `reports/figures/phase_10/drawdowns_us.png`; `reports/figures/phase_10/drawdowns_india.png` | Available local; inspected in `local_artifacts/phase14_evidence_review.md` | Must label as proxy drawdowns |
+| US-India VRP comparison | `reports/figures/phase_13/us_india_vrp.png` | Available local; inspected in `local_artifacts/phase14_evidence_review.md` | Descriptive only |
+| US-India stress probability comparison | `reports/figures/phase_13/us_india_stress_prob.png` | Available local; inspected in `local_artifacts/phase14_evidence_review.md` | Descriptive co-movement only |
+| Lagged-US vs India stress diagnostic | `reports/figures/phase_13/lagged_us_vs_india_stress.png` | Available local; inspected in `local_artifacts/phase14_evidence_review.md` | Predictive diagnostic, not causal proof |
 | India overlay exposure | `reports/figures/phase_13/india_overlay_exposure.png` | Available local; optional | Analysis-only overlay |
 | India overlay proxy curve | `reports/figures/phase_13/india_overlay_equity_curves.png` | Available local; optional | Analysis-only; not a new strategy |
 
@@ -112,7 +112,23 @@ Suggested optional path:
 reports/final/figures/
 ```
 
-Do not create or commit this folder unless selected figure commits are explicitly approved.
+This folder now contains the selected final-report figure copies listed below. Do not copy or commit additional figures unless explicitly approved.
+
+## Final Staged Figure Copies
+
+| Final staged artifact | Source artifact | Report section | Commit policy | Caption caveat |
+|---|---|---|---|---|
+| `reports/final/figures/us_iv_rv_vrp.png` | `reports/figures/us_iv_rv_vrp.png` | IV and VRP construction | Commit | VIX proxy, not variance swap quote |
+| `reports/final/figures/india_iv_rv_vrp.png` | `reports/figures/india_iv_rv_vrp.png` | IV and VRP construction | Commit | India VIX proxy, not variance swap quote |
+| `reports/final/figures/phase10_equity_curves_common_start_us.png` | `reports/figures/phase_10/equity_curves_common_start_us.png` | Phase 10 backtest | Commit | Research-proxy cumulative curve, not account equity |
+| `reports/final/figures/phase10_equity_curves_common_start_india.png` | `reports/figures/phase_10/equity_curves_common_start_india.png` | Phase 10 backtest | Commit | Research-proxy cumulative curve, not account equity |
+| `reports/final/figures/phase10_drawdowns_us.png` | `reports/figures/phase_10/drawdowns_us.png` | Phase 10 backtest | Commit | Research-proxy drawdown, not account drawdown |
+| `reports/final/figures/phase10_drawdowns_india.png` | `reports/figures/phase_10/drawdowns_india.png` | Phase 10 backtest | Commit | Research-proxy drawdown, not account drawdown |
+| `reports/final/figures/phase13_us_india_vrp.png` | `reports/figures/phase_13/us_india_vrp.png` | Phase 13 cross-market | Commit | Descriptive diagnostic, not causal proof |
+| `reports/final/figures/phase13_us_india_stress_prob.png` | `reports/figures/phase_13/us_india_stress_prob.png` | Phase 13 cross-market | Commit | Descriptive diagnostic, not causal proof |
+| `reports/final/figures/phase13_lagged_us_vs_india_stress.png` | `reports/figures/phase_13/lagged_us_vs_india_stress.png` | Phase 13 cross-market | Commit | Predictive diagnostic, not causal proof |
+
+Only the copied files under `reports/final/figures/` are selected for final packaging. The original generated figure directories remain local-only by default.
 
 ## Final PDF Inclusion Rule
 
@@ -135,3 +151,9 @@ Every major conclusion in the PDF must be listed in:
 ```text
 reports/final/result_claims_audit.md
 ```
+
+## Phase 14 Evidence Inspection Update
+
+The evidence-backed report update pass used `local_artifacts/phase14_evidence_review.md` to inspect local evidence files. Commit policy remains unchanged: generated Phase 10/11/13 CSV, JSON, YAML, and PNG artifacts stay local-only by default.
+
+The selected final-report figure copies are staged under `reports/final/figures/`. This does not approve table commits and does not approve committing original generated figure directories.

@@ -158,11 +158,22 @@ The data layer has important limitations:
 
 ### 3.4 Data coverage
 
-Insert final inspected data coverage table here.
+Local evidence inspection found one tracked data-audit summary row and a separate calendar-alignment table. The data-audit row covers the US VIX source, while the calendar mismatch table records aligned IV/RV ranges for both markets.
 
-```text
-[INSERT COMPACT TABLE FROM reports/tables/data_audit.csv]
-```
+Data audit summary:
+
+| market | dataset | source | symbol | start_date | end_date | n_rows | n_missing_close |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| US | us_vix | fred_vixcls | VIXCLS | 1990-01-02 | 2026-05-14 | 9186.0000 | 0.0000 |
+
+Calendar alignment summary:
+
+| market | iv_start | iv_end | rv_start | rv_end | iv_rows | rv_rows | common_dates |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| US | 1990-01-02 | 2026-05-14 | 1990-01-02 | 2026-05-15 | 9186.0000 | 9160.0000 | 9156.0000 |
+| INDIA | 2009-03-02 | 2026-05-15 | 2007-09-17 | 2026-05-15 | 4220.0000 | 4576.0000 | 4204.0000 |
+
+The calendar evidence should be read conservatively: the IV and RV calendars do not have identical raw date ranges, and final feature construction uses common dates where the required inputs are available.
 
 ---
 
@@ -219,36 +230,30 @@ The design separates four layers:
 
 Realised variance is estimated from daily OHLC data. The project includes multiple estimators, with Garman-Klass 22-trading-day annualised realised variance used as the primary proxy.
 
-Candidate estimators include:
+The inspected metadata identifies:
 
-| Estimator       | Inputs                      | Role                         |
-| --------------- | --------------------------- | ---------------------------- |
-| Close-to-close  | Close prices                | Baseline                     |
-| Parkinson       | High/low range              | Range-based robustness       |
-| Garman-Klass    | Open/high/low/close         | Primary daily OHLC estimator |
-| Rogers-Satchell | Open/high/low/close         | Drift-robust range estimator |
-| Yang-Zhang      | Gap and intraday components | Optional robustness          |
+| Field | Value |
+|---|---|
+| primary_estimator | `garman_klass` |
+| primary_column | `rv_gk_22d_ann` |
+| rolling convention | `22` trading days |
+| annualization_periods | `252` |
 
-The primary realised variance convention is:
+Candidate estimators include close-to-close, Parkinson, Garman-Klass, Rogers-Satchell, and Yang-Zhang variants. These should all be read as daily-data realised-variance proxies rather than observed variance swap outcomes.
 
-```text
-rv_gk_22d_ann
-```
+Primary realised-variance summary:
 
-This should be interpreted as a daily OHLC-based proxy for annualised realised variance over a 22-trading-day window. It is not a directly observed realised variance swap outcome.
+| market | column | count | missing | mean | median | std | min | max |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| US | rv_gk_22d_ann | 9139.0000 | 21.0000 | 0.0191 | 0.0108 | 0.0303 | 0.0013 | 0.4369 |
+| INDIA | rv_gk_22d_ann | 4555.0000 | 21.0000 | 0.0299 | 0.0140 | 0.0545 | 0.0033 | 0.4845 |
 
-Insert final RV summary here:
+Selected PDF candidate figures, not embedded in this pass:
 
-```text
-[INSERT VALUE/TABLE FROM reports/tables/rv_summary.csv]
-```
-
-Selected figure candidate:
-
-```text
-[INSERT FIGURE IF SELECTED: reports/figures/rv_estimators_us.png]
-[INSERT FIGURE IF SELECTED: reports/figures/rv_estimators_india.png]
-```
+| Figure path | Caption constraint | Status |
+|---|---|---|
+| `reports/figures/rv_estimators_us.png` | Daily OHLC realised-variance estimator comparison, US | optional/maybe |
+| `reports/figures/rv_estimators_india.png` | Daily OHLC realised-variance estimator comparison, India | optional/maybe |
 
 ---
 
@@ -262,30 +267,22 @@ Conceptually:
 implied_variance_proxy = (implied_volatility_index / 100)^2
 ```
 
-The project compares implied variance proxies with realised variance proxies to construct VRP features.
+The inspected VRP metadata identifies `rv_gk_22d_ann` as the primary realised-variance column, `vrp_backward_gk` as the primary backward VRP column, and `vrp_forward_expost_gk_label` as the forward ex-post outcome label. The horizon is `22` trading days, with the metadata noting that 22 trading days approximate the 30-calendar-day VIX / India VIX horizon.
 
-The project uses two VRP concepts:
+Compact VRP construction summary:
 
-| Concept                   | Meaning                                                              | Tradable at signal time?     |
-| ------------------------- | -------------------------------------------------------------------- | ---------------------------- |
-| Ex-post forward VRP       | Implied variance at time t minus future realised variance outcome    | No                           |
-| HAR-based prospective VRP | Implied variance at time t minus HAR-RV forecast available at time t | Yes as a model-based feature |
+| market | iv_ann_mean | iv_ann_median | rv_gk_22d_ann_lag1_mean | rv_gk_22d_ann_lag1_median | vrp_backward_gk_mean | vrp_backward_gk_median | vrp_forward_expost_gk_label_mean | vrp_forward_expost_gk_label_median |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| INDIA | 0.0405 | 0.0281 | 0.0208 | 0.0128 | 0.0196 | 0.0145 | 0.0199 | 0.0148 |
+| US | 0.0439 | 0.0310 | 0.0191 | 0.0108 | 0.0247 | 0.0184 | 0.0248 | 0.0185 |
 
-Forward ex-post labels are outcome labels for evaluation. They are not used as tradable features.
+The forward ex-post VRP label is an evaluation outcome only. It is not a tradable feature at signal time.
 
-Insert final VRP construction summary here:
+Selected final-report figures:
 
-```text
-[INSERT VALUE/TABLE FROM reports/tables/vrp_summary.csv]
-[INSERT METADATA FROM reports/tables/vrp_metadata.json]
-```
+![US implied variance, realised variance, and VRP proxy construction diagnostic. VIX is an implied-volatility proxy, not a variance swap quote.](figures/us_iv_rv_vrp.png)
 
-Selected figure candidates:
-
-```text
-[INSERT FIGURE IF SELECTED: reports/figures/us_iv_rv_vrp.png]
-[INSERT FIGURE IF SELECTED: reports/figures/india_iv_rv_vrp.png]
-```
+![India implied variance, realised variance, and VRP proxy construction diagnostic. India VIX is an implied-volatility proxy, not a variance swap quote.](figures/india_iv_rv_vrp.png)
 
 ---
 
@@ -293,20 +290,22 @@ Selected figure candidates:
 
 The HAR-RV layer estimates prospective realised variance using lagged realised-variance features. Its role is to provide a model-based expected realised variance input for prospective VRP construction.
 
-The HAR forecast layer is constrained by point-in-time rules:
+Compact forecast comparison:
 
-1. Forecasts are estimated with expanding or rolling training windows.
-2. Future realised variance is not used as a feature.
-3. Forecast availability is audited.
-4. HAR outputs are model-dependent estimates, not guarantees.
+| market | forecast_col | target_col | n_obs | rmse | mae | correlation |
+| --- | --- | --- | --- | --- | --- | --- |
+| US | har_rv_gk_22d_forecast_ann | rv_gk_22d_forward_ann_label | 8590.0000 | 0.0247 | 0.0100 | 0.6163 |
+| US | naive_lagged_22d_rv_ann | rv_gk_22d_forward_ann_label | 9112.0000 | 0.0277 | 0.0108 | 0.5829 |
+| US | expanding_mean_forward_rv_baseline | rv_gk_22d_forward_ann_label | 9089.0000 | 0.0305 | 0.0141 | 0.0515 |
+| US | rolling_mean_forward_rv_baseline | rv_gk_22d_forward_ann_label | 9089.0000 | 0.0311 | 0.0148 | 0.1008 |
+| INDIA | har_rv_gk_22d_forecast_ann | rv_gk_22d_forward_ann_label | 3638.0000 | 0.0326 | 0.0131 | 0.1391 |
+| INDIA | naive_lagged_22d_rv_ann | rv_gk_22d_forward_ann_label | 4181.0000 | 0.0384 | 0.0126 | 0.3184 |
+| INDIA | expanding_mean_forward_rv_baseline | rv_gk_22d_forward_ann_label | 4137.0000 | 0.0333 | 0.0182 | 0.2406 |
+| INDIA | rolling_mean_forward_rv_baseline | rv_gk_22d_forward_ann_label | 4137.0000 | 0.0332 | 0.0159 | 0.2270 |
 
-Insert final HAR summary here:
+The HAR no-lookahead audit contains `13360` rows. It records `12228` rows with `forecast_available=True`; blocked rows are labelled with observed reasons such as `insufficient_training_history, missing_target_metadata`. The audit columns include `rule_target_end_before_forecast_date`, `forecast_available`, and `blocked_reason`, supporting point-in-time availability checks.
 
-```text
-[INSERT VALUE/TABLE FROM reports/tables/har_forecast_accuracy.csv]
-[INSERT VALUE/TABLE FROM reports/tables/har_vrp_summary.csv]
-[INSERT AUDIT STATUS FROM reports/tables/har_no_lookahead_audit.csv]
-```
+This evidence supports HAR-RV as a model-dependent prospective RV forecast layer. It does not support guaranteed forecasting superiority.
 
 ---
 
@@ -314,67 +313,72 @@ Insert final HAR summary here:
 
 The regime modelling ladder is intentionally progressive. Each layer addresses a different modelling need.
 
-| Model layer           | Purpose                       | Limitation                                              |
-| --------------------- | ----------------------------- | ------------------------------------------------------- |
-| Threshold regimes     | Simple interpretable baseline | Deterministic and threshold-sensitive                   |
-| Gaussian HMM          | Latent state classification   | Does not directly model observed-series autocorrelation |
-| Markov autoregression | AR-aware regime model         | Reduced-form and numerically sensitive                  |
-| MSVOL appendix        | Volatility-regime robustness  | Python-only MSVOL, not true R MSGARCH                   |
+| Model layer | Purpose | Limitation |
+|---|---|---|
+| Threshold regimes | Simple interpretable baseline | Deterministic and threshold-sensitive |
+| Gaussian HMM | Latent state classification | Does not directly model observed-series autocorrelation |
+| Markov autoregression | AR-aware regime model | Reduced-form and numerically sensitive |
+| MSVOL appendix | Volatility-regime robustness | Python-only MSVOL, not true R MSGARCH |
 
 ### 8.1 Threshold regimes
 
-Threshold regimes provide a deterministic benchmark. They are useful because a complex regime model should be compared against a simple interpretable baseline.
+Threshold regimes provide a deterministic benchmark. The inspected no-lookahead audit supports `uses_strict_prior_thresholds=True` across the audited rows: `True`.
 
-Insert final threshold-regime evidence here:
+Compact threshold-regime evidence:
 
-```text
-[INSERT VALUE/TABLE FROM reports/tables/threshold_regime_summary.csv]
-[INSERT VALUE/TABLE FROM reports/tables/threshold_vrp_by_state.csv]
-[INSERT AUDIT STATUS FROM reports/tables/threshold_no_lookahead_audit.csv]
-```
+| market | state_name | n_days | fraction_days | avg_iv_ann | avg_vrp_har_gk |
+| --- | --- | --- | --- | --- | --- |
+| INDIA | calm | 29.0000 | 0.0086 | 0.0227 | 0.0070 |
+| INDIA | transition | 1735.0000 | 0.5124 | 0.0209 | 0.0024 |
+| INDIA | stress | 1622.0000 | 0.4790 | 0.0440 | 0.0190 |
+| US | calm | 55.0000 | 0.0066 | 0.0208 | 0.0134 |
+| US | transition | 3828.0000 | 0.4591 | 0.0240 | 0.0129 |
+| US | stress | 4455.0000 | 0.5343 | 0.0625 | 0.0365 |
 
 ### 8.2 Gaussian HMM
 
 The Gaussian HMM estimates latent regimes from observed features. Filtered probabilities are used where time-safe probabilities are required. Full-sample smoothed probabilities are diagnostic only.
 
-The HMM layer should be described as a latent regime classifier, not as a true market-state oracle.
+Compact HMM state evidence:
 
-Insert final HMM evidence here:
+| market | economic_state_name | n_observations | occupancy | mean_vrp_har_gk | mean_iv_ann | mean_rv_gk_22d_ann_lag1 | hmm_model_valid |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| US | calm | 3942.0000 | 0.4589 | 0.0093 | 0.0191 | 0.0064 | True |
+| US | transition | 3391.0000 | 0.3948 | 0.0270 | 0.0444 | 0.0178 | True |
+| US | stress | 1257.0000 | 0.1463 | 0.0700 | 0.1203 | 0.0648 | True |
+| INDIA | calm | 2252.0000 | 0.6190 | 0.0024 | 0.0206 | 0.0093 | True |
+| INDIA | transition | 1166.0000 | 0.3205 | 0.0210 | 0.0441 | 0.0207 | True |
+| INDIA | stress | 220.0000 | 0.0605 | 0.0621 | 0.1164 | 0.0866 | True |
 
-```text
-[INSERT VALUE/TABLE FROM reports/tables/phase_6/us/hmm_state_summary.csv]
-[INSERT VALUE/TABLE FROM reports/tables/phase_6/india/hmm_state_summary.csv]
-[INSERT AUDIT STATUS FROM reports/tables/phase_6/us/hmm_no_lookahead_audit.csv]
-[INSERT AUDIT STATUS FROM reports/tables/phase_6/india/hmm_no_lookahead_audit.csv]
-```
+The HMM no-lookahead audits report `overall_passed=True` for both markets: US `True`, India `True`. The report therefore uses filtered-probability/no-smoothed-backtest wording.
 
 ### 8.3 Markov autoregression
 
 Markov autoregression extends the regime ladder by allowing state-dependent autoregressive dynamics in the observed series. This addresses an important limitation of standard Gaussian HMM emissions.
 
-MAR remains a reduced-form model. Its regimes are economic interpretations, not observed ground truth.
+Compact MAR state evidence:
 
-Insert final MAR evidence here:
+| market | economic_state_name | ar_lag1_phi | sigma2 | persistence_prob | ar_stable | target_col |
+| --- | --- | --- | --- | --- | --- | --- |
+| US | stress | 0.9285 | 0.4259 | 0.9097 | True | vrp_har_gk |
+| US | calm | 0.9587 | 0.0093 | 0.9641 | True | vrp_har_gk |
+| INDIA | stress | 0.8660 | 0.3108 | 0.8103 | True | vrp_har_gk |
+| INDIA | calm | 0.9970 | 0.0063 | 0.9593 | True | vrp_har_gk |
 
-```text
-[INSERT VALUE/TABLE FROM reports/tables/phase_7/us/mar_state_summary.csv]
-[INSERT VALUE/TABLE FROM reports/tables/phase_7/india/mar_state_summary.csv]
-[INSERT VALUE/TABLE FROM reports/tables/phase_7/us/mar_ar_stability.csv]
-[INSERT VALUE/TABLE FROM reports/tables/phase_7/india/mar_ar_stability.csv]
-[INSERT AUDIT STATUS FROM reports/tables/phase_7/us/mar_no_lookahead_audit.csv]
-[INSERT AUDIT STATUS FROM reports/tables/phase_7/india/mar_no_lookahead_audit.csv]
-```
+Both markets have two-state MAR summaries in the inspected files. The MAR no-lookahead audits report `passed=True`: US `True`, India `True`. MAR remains a reduced-form model and its regimes are economic interpretations, not observed ground truth.
 
 ### 8.4 MSVOL robustness appendix
 
 The MSVOL layer is a Python-only Markov-switching volatility robustness appendix. It is not a true R MSGARCH implementation and is not used for strategy construction or backtesting.
 
-Insert final MSVOL evidence here:
+Compact MSVOL evidence:
 
-```text
-[INSERT VALUE/TABLE FROM reports/tables/phase_8/msvol_model_comparison_appendix.csv]
-[INSERT AUDIT STATUS FROM reports/tables/phase_8/msvol_no_lookahead_audit.csv]
-```
+| market | status | n_msvol_days | n_overlap_days | diagnostic_only | used_for_strategy | used_for_backtest |
+| --- | --- | --- | --- | --- | --- | --- |
+| INDIA | ok | 4204.0000 | 4204.0000 | True | False | False |
+| US | ok | 9155.0000 | 9155.0000 | True | False | False |
+
+The MSVOL no-lookahead audit reports `44` passed rows out of `44` audited rows.
 
 ---
 
@@ -384,22 +388,26 @@ The strategy layer converts regime and carry information into next-session expos
 
 The strategy outputs are not broker orders. They are research-layer exposure targets used for vectorised backtesting.
 
-Core strategy categories:
+Compact strategy universe:
 
-| Strategy type           | Description                                                      |
-| ----------------------- | ---------------------------------------------------------------- |
-| Unconditional benchmark | Always maintains short-volatility proxy exposure                 |
-| Threshold-conditioned   | Uses threshold regimes to reduce/suppress exposure               |
-| HMM-conditioned         | Uses filtered HMM probabilities                                  |
-| MAR-conditioned         | Uses filtered MAR probabilities                                  |
-| Carry-aware variants    | Combine regime state and prospective HAR-based VRP/carry filters |
+| market | strategy_name | regime_model | available_fraction | mean_target_exposure | first_signal_observation_date | last_signal_observation_date |
+| --- | --- | --- | --- | --- | --- | --- |
+| US | unconditional_full | unconditional | 0.9999 | -1.0000 | 1990-01-02 | 2026-05-14 |
+| US | threshold_hard_filter | threshold | 0.9107 | -0.4657 | 1990-01-02 | 2026-05-14 |
+| US | threshold_defensive | threshold | 0.9107 | -0.1214 | 1990-01-02 | 2026-05-14 |
+| US | hmm_prob_linear | gaussian_hmm | 0.9999 | -0.4586 | 1992-02-27 | 2026-04-14 |
+| US | hmm_prob_linear_carry | gaussian_hmm | 0.9999 | -0.4583 | 1992-02-27 | 2026-04-14 |
+| US | mar_prob_linear | markov_autoreg | 0.9959 | -0.6539 | 1992-02-27 | 2026-04-14 |
+| US | mar_prob_linear_carry | markov_autoreg | 0.9959 | -0.6513 | 1992-02-27 | 2026-04-14 |
+| INDIA | unconditional_full | unconditional | 0.9998 | -1.0000 | 2009-03-02 | 2026-05-15 |
+| INDIA | threshold_hard_filter | threshold | 0.8054 | -0.5210 | 2009-03-02 | 2026-05-15 |
+| INDIA | threshold_defensive | threshold | 0.8054 | -0.1367 | 2009-03-02 | 2026-05-15 |
+| INDIA | hmm_prob_linear | gaussian_hmm | 0.9997 | -0.6177 | 2011-05-17 | 2026-04-13 |
+| INDIA | hmm_prob_linear_carry | gaussian_hmm | 0.9997 | -0.3882 | 2011-05-17 | 2026-04-13 |
+| INDIA | mar_prob_linear | markov_autoreg | 0.9959 | -0.8014 | 2011-05-17 | 2026-04-13 |
+| INDIA | mar_prob_linear_carry | markov_autoreg | 0.9959 | -0.5601 | 2011-05-17 | 2026-04-13 |
 
-Insert final signal evidence here:
-
-```text
-[INSERT VALUE/TABLE FROM reports/tables/phase_9/strategy_signal_summary.csv]
-[INSERT AUDIT STATUS FROM reports/tables/phase_9/strategy_no_lookahead_audit.csv]
-```
+The inspected table contains `7` US strategies and `7` India strategies. The signal no-lookahead audit records forward or diagnostic fields as present but excluded from strategy use where applicable; `22` audited rows have `used_by_strategy=False`.
 
 ---
 
@@ -407,7 +415,7 @@ Insert final signal evidence here:
 
 The Phase 10 backtest is a vectorised research-proxy evaluation. It is not an executable option-chain simulation and does not report account returns.
 
-The backtest evaluates proxy return units based on the project's VRP outcome construction and exposure intentions.
+The backtest evaluates proxy return units based on the project’s VRP outcome construction and exposure intentions.
 
 Important accounting caveats:
 
@@ -417,26 +425,40 @@ Important accounting caveats:
 4. Transaction costs are assumptions in proxy units.
 5. Overlapping 22-day labels make annualised metrics approximate.
 
-Insert final Phase 10 summary here:
+Compact Phase 10 summary:
 
-```text
-[INSERT VALUE/TABLE FROM reports/tables/phase_10/backtest_summary.csv]
-[INSERT VALUE/TABLE FROM reports/tables/phase_10/backtest_common_start_summary.csv]
-[INSERT VALUE/TABLE FROM reports/tables/phase_10/backtest_tail_summary.csv]
-[INSERT AUDIT STATUS FROM reports/tables/phase_10/backtest_no_lookahead_audit.csv]
-[INSERT AUDIT STATUS FROM reports/tables/phase_10/phase10_final_audit.json]
-```
+| market | strategy_name | n_obs | total_return_proxy | annualized_return | annualized_volatility | sharpe | sortino | max_drawdown | hit_rate |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| INDIA | hmm_prob_linear | 3638.0000 | 16.3937 | 1.1359 | 0.3207 | 3.5423 | 3.8483 | -3.2562 | 0.6692 |
+| INDIA | hmm_prob_linear_carry | 3638.0000 | 10.0665 | 0.6975 | 0.3193 | 2.1843 | 2.3633 | -3.2562 | 0.4495 |
+| INDIA | mar_prob_linear | 3638.0000 | 37.1641 | 2.5850 | 0.4502 | 5.7417 | 9.9048 | -2.8145 | 0.8234 |
+| INDIA | mar_prob_linear_carry | 3638.0000 | 30.2355 | 2.1030 | 0.4551 | 4.6210 | 8.0640 | -2.7981 | 0.5722 |
+| INDIA | threshold_defensive | 4204.0000 | 3.6845 | 0.2742 | 0.0671 | 4.0838 | 4.8435 | -0.8432 | 0.4843 |
+| INDIA | threshold_hard_filter | 4204.0000 | 14.0716 | 1.0473 | 0.2604 | 4.0224 | 4.6494 | -3.3729 | 0.4843 |
+| INDIA | unconditional_full | 4204.0000 | 83.3277 | 5.0212 | 0.6365 | 7.8888 | 13.3529 | -6.1924 | 0.9469 |
+| US | hmm_prob_linear | 8590.0000 | 41.9781 | 1.2316 | 0.1445 | 8.5253 | 13.1863 | -1.5720 | 0.5124 |
+| US | hmm_prob_linear_carry | 8590.0000 | 41.9610 | 1.2311 | 0.1445 | 8.5217 | 13.1809 | -1.5720 | 0.5122 |
+| US | mar_prob_linear | 8590.0000 | 82.8569 | 2.4407 | 0.1985 | 12.2965 | 23.1696 | -1.5019 | 0.6928 |
+| US | mar_prob_linear_carry | 8590.0000 | 82.2909 | 2.4240 | 0.1987 | 12.2007 | 23.0167 | -1.5019 | 0.6754 |
+| US | threshold_defensive | 9156.0000 | 14.3671 | 0.4342 | 0.0450 | 9.6535 | 35.6028 | -0.2496 | 0.4475 |
+| US | threshold_hard_filter | 9156.0000 | 55.1127 | 1.6657 | 0.1662 | 10.0226 | 34.1459 | -0.9984 | 0.4475 |
+| US | unconditional_full | 9156.0000 | 226.4497 | 6.2476 | 0.5524 | 11.3094 | 27.8074 | -5.3365 | 0.9508 |
 
-Selected figure candidates:
+All metrics above are research-proxy metrics. Annualized metrics are approximate because the observations are not independent daily returns; the metadata records `annualization_periods=252` and `research_proxy_not_trade_pnl=True`.
 
-```text
-[INSERT FIGURE IF SELECTED: reports/figures/phase_10/equity_curves_common_start_us.png]
-[INSERT FIGURE IF SELECTED: reports/figures/phase_10/equity_curves_common_start_india.png]
-[INSERT FIGURE IF SELECTED: reports/figures/phase_10/drawdowns_us.png]
-[INSERT FIGURE IF SELECTED: reports/figures/phase_10/drawdowns_india.png]
-```
+The no-lookahead audit reports all rows passing: `True`. The Phase 10 final audit status is `passed`.
 
-All captions must use "research-proxy" language.
+Metric-scoped comparison from `backtest_summary.csv`: by `sharpe`, the highest US row is `mar_prob_linear` at `12.2965` and the highest India row is `unconditional_full` at `7.8888`. This is a research-proxy table comparison only, not a live-trading or account-return claim.
+
+Selected final-report figures:
+
+![US research-proxy cumulative curve on the common-start sample; not an account equity curve.](figures/phase10_equity_curves_common_start_us.png)
+
+![India research-proxy cumulative curve on the common-start sample; not an account equity curve.](figures/phase10_equity_curves_common_start_india.png)
+
+![US research-proxy drawdown diagnostic; not account drawdown.](figures/phase10_drawdowns_us.png)
+
+![India research-proxy drawdown diagnostic; not account drawdown.](figures/phase10_drawdowns_india.png)
 
 ---
 
@@ -444,26 +466,18 @@ All captions must use "research-proxy" language.
 
 The robustness layer tests whether Phase 10 findings are sensitive to assumptions and sample choices.
 
-Robustness categories:
+Robustness evidence availability:
 
-| Robustness area          | Evidence                                                  |
-| ------------------------ | --------------------------------------------------------- |
-| Cost sensitivity         | `reports/tables/phase_10/robustness_cost_sensitivity.csv` |
-| Subperiod behaviour      | `reports/tables/phase_10/robustness_subperiods.csv`       |
-| Crisis windows           | `reports/tables/phase_10/crisis_window_performance.csv`   |
-| Tail behaviour           | `reports/tables/phase_10/backtest_tail_summary.csv`       |
-| Tradable proxy detection | `reports/tables/phase_10/tradable_proxy_detection.json`   |
+| Robustness area | Evidence | Inspected status |
+|---|---|---|
+| Cost sensitivity | `reports/tables/phase_10/robustness_cost_sensitivity.csv` | `70` rows across cost-bps scenarios `0.0, 10.0, 2.5, 20.0, 5.0` |
+| Subperiod behaviour | `reports/tables/phase_10/robustness_subperiods.csv` | `70` rows across subperiods `COVID, China_Devaluation_Vol_Shock, EuroDebt_US_Downgrade, GFC, RateShock, TaperTantrum, Volmageddon` |
+| Crisis windows | `reports/tables/phase_10/crisis_window_performance.csv` | `70` rows across windows `COVID, China_Devaluation_Vol_Shock, EuroDebt_US_Downgrade, GFC, RateShock, TaperTantrum, Volmageddon` |
+| Tradable proxy detection | `reports/tables/phase_10/tradable_proxy_detection.json` | status `skipped` |
 
-Insert final robustness summary here:
+The tradable proxy detection artifact reports status `skipped` with reason: required tradable proxy data not found; Phase 10 does not download new tradable proxy data.
 
-```text
-[INSERT VALUE/TABLE FROM reports/tables/phase_10/robustness_cost_sensitivity.csv]
-[INSERT VALUE/TABLE FROM reports/tables/phase_10/robustness_subperiods.csv]
-[INSERT VALUE/TABLE FROM reports/tables/phase_10/crisis_window_performance.csv]
-[INSERT VALUE/TABLE FROM reports/tables/phase_10/tradable_proxy_detection.json]
-```
-
-Robustness findings must not be phrased as proof of future trading performance.
+These are sensitivity diagnostics over research-proxy assumptions. They do not prove robustness to all future execution costs, crises, or market conditions.
 
 ---
 
@@ -471,54 +485,42 @@ Robustness findings must not be phrased as proof of future trading performance.
 
 Phase 13 adds a cross-market analysis layer. It is analysis-only and does not alter the locked Phase 9 strategy universe.
 
-The cross-market layer includes:
+The cross-market layer includes same-date descriptive diagnostics, lagged-US predictive/statistical diagnostics, Granger-style lead-lag diagnostics, logistic incremental-signal tests, and an analysis-only India overlay.
 
-| Analysis type                     | Interpretation                                         |
-| --------------------------------- | ------------------------------------------------------ |
-| Same-date diagnostics             | Descriptive co-movement only                           |
-| Lagged-US diagnostics             | Predictive/statistical association only                |
-| Granger-style diagnostics         | Lead-lag diagnostics, not causal proof                 |
-| Logistic incremental-signal tests | Statistical predictive diagnostics                     |
-| India overlay                     | Analysis-only overlay outside locked strategy universe |
+Alignment and no-lookahead summary:
 
-Insert final cross-market evidence here:
+| model | n_india_dates | n_rows | n_same_date_violations | n_same_date_or_future_us_violations | passes_no_lookahead |
+| --- | --- | --- | --- | --- | --- |
+| gaussian_hmm | 3638.0000 | 3638.0000 | 0.0000 | 0.0000 | True |
+| markov_autoreg | 3638.0000 | 3638.0000 | 0.0000 | 0.0000 | True |
 
-```text
-[INSERT VALUE/TABLE FROM reports/tables/phase_13/alignment_audit.csv]
-[INSERT AUDIT STATUS FROM reports/tables/phase_13/no_lookahead_audit.csv]
-[INSERT VALUE/TABLE FROM reports/tables/phase_13/vrp_level_correlations.csv]
-[INSERT VALUE/TABLE FROM reports/tables/phase_13/lead_lag_table.csv]
-[INSERT VALUE/TABLE FROM reports/tables/phase_13/granger_diagnostics.csv]
-[INSERT VALUE/TABLE FROM reports/tables/phase_13/logistic_model_comparison.csv]
-[INSERT VALUE/TABLE FROM reports/tables/phase_13/logistic_oos_diagnostics.csv]
-[INSERT VALUE/TABLE FROM reports/tables/phase_13/india_overlay_summary.csv]
-```
+Logistic model comparison:
 
-Selected figure candidates:
+| model | local_n_obs | plus_us_n_obs | local_auc | plus_us_auc | delta_auc | local_pseudo_r2 | plus_us_pseudo_r2 | delta_pseudo_r2 | likelihood_ratio_p_value |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| gaussian_hmm | 3637.0000 | 3637.0000 | 0.9959 | 0.9968 | 0.0009 | 0.8975 | 0.9005 | 0.0031 | 0.2783 |
+| markov_autoreg | 3637.0000 | 3637.0000 | 0.9050 | 0.9002 | -0.0048 | 0.3517 | 0.3689 | 0.0172 | 0.0000 |
 
-```text
-[INSERT FIGURE IF SELECTED: reports/figures/phase_13/us_india_vrp.png]
-[INSERT FIGURE IF SELECTED: reports/figures/phase_13/us_india_stress_prob.png]
-[INSERT FIGURE IF SELECTED: reports/figures/phase_13/lagged_us_vs_india_stress.png]
-[INSERT FIGURE IF SELECTED: reports/figures/phase_13/india_overlay_exposure.png]
-```
+India overlay summary:
 
-The correct wording is:
+| model | strategy | cutoff | n_obs | base_sharpe | overlay_sharpe | base_max_drawdown | overlay_max_drawdown | analysis_only |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| gaussian_hmm | hmm_prob_linear_carry | 0.5000 | 514.0000 | 0.8958 | 0.7773 | -0.7231 | -0.7233 | True |
+| gaussian_hmm | hmm_prob_linear_carry | 0.6000 | 514.0000 | 0.8958 | 0.7773 | -0.7231 | -0.7233 | True |
+| gaussian_hmm | hmm_prob_linear_carry | 0.7000 | 514.0000 | 0.8958 | 0.7773 | -0.7231 | -0.7233 | True |
+| markov_autoreg | mar_prob_linear_carry | 0.5000 | 562.0000 | 4.8201 | 3.7103 | -0.5531 | -0.5538 | True |
+| markov_autoreg | mar_prob_linear_carry | 0.6000 | 562.0000 | 4.8201 | 3.9909 | -0.5531 | -0.5538 | True |
+| markov_autoreg | mar_prob_linear_carry | 0.7000 | 562.0000 | 4.8201 | 4.0979 | -0.5531 | -0.5538 | True |
 
-```text
-predictive/statistical diagnostic
-lead-lag association
-analysis-only overlay
-```
+The Phase 13 run-status artifact reports status `ok`. Same-date diagnostics are descriptive only. Lagged-US and logistic diagnostics are predictive/statistical diagnostics only. The India overlay is analysis-only and outside the locked Phase 9 strategy universe.
 
-The forbidden wording is:
+Selected final-report figures:
 
-```text
-causal transmission
-US causes India
-new strategy implementation
-live-trading evidence
-```
+![US-India VRP descriptive cross-market diagnostic; not causal evidence.](figures/phase13_us_india_vrp.png)
+
+![US-India stress probability descriptive cross-market diagnostic; not causal evidence.](figures/phase13_us_india_stress_prob.png)
+
+![Lagged-US versus India stress predictive diagnostic; not causal proof.](figures/phase13_lagged_us_vs_india_stress.png)
 
 ---
 
@@ -544,125 +546,62 @@ live strategy
 broker backtest
 ```
 
-Insert final Phase 11 evidence here:
+Compact guard evidence:
 
-```text
-[INSERT VALUE/TABLE FROM reports/tables/phase_11/risk_check_report.csv]
-[INSERT VALUE/TABLE FROM reports/tables/phase_11/phase11_integration_report.json]
-[INSERT VALUE/TABLE FROM reports/tables/phase_11/live_order_guard_report.json]
-```
+| artifact | field | value |
+| --- | --- | --- |
+| live_order_guard_report.json | passed | True |
+| live_order_guard_report.json | violations | [] |
+| phase11_integration_report.json | passed | True |
+| phase11_integration_report.json | violations | [] |
+| run_metadata.json | live_order_sent | False |
+| run_metadata.json | live_orders_enabled | False |
+| run_metadata.json | allow_order_placement | False |
+| run_metadata.json | paper_only | True |
+| run_metadata.json | kill_switch | True |
+| broker_metadata.json | live_order_sent | False |
+| broker_metadata.json | live_orders_enabled | False |
+| broker_metadata.json | allow_order_placement | False |
+| broker_metadata.json | paper_only | True |
+| broker_metadata.json | kill_switch | True |
+| risk_check_report.csv | data_rows | 0 |
+| risk_check_report.csv | columns | valid risk-check schema |
 
-No broker-sensitive fields should be included in this report.
+The risk-check CSV has zero data rows but a valid risk-check schema. Broker-sensitive details are excluded from this report. The inspected guard and metadata fields support the statement that no broker orders were placed: `True`.
 
 ---
 
 ## 14. Main Findings
 
-This section should be completed only after local evidence inspection.
+This section is based only on inspected local evidence listed in the Phase 14 evidence review and claim audit.
 
-### Finding 1 — VRP construction validity
+### Finding 1 - VRP construction validity
 
-Placeholder:
+The project constructs aligned US and India VRP panels using VIX/India VIX implied-variance proxies and daily OHLC realised-variance proxies. The VRP metadata identifies `rv_gk_22d_ann` as the primary realised-variance column, `vrp_backward_gk` as the primary backward VRP column, and `vrp_forward_expost_gk_label` as an evaluation outcome label.
 
-```text
-[INSERT CLAIM AFTER INSPECTING reports/tables/vrp_summary.csv AND reports/tables/vrp_metadata.json]
-```
+### Finding 2 - HAR forecast usefulness
 
-Allowed form:
+The HAR-RV layer provides a model-dependent, point-in-time realised-variance forecast for prospective VRP construction. The forecast accuracy table contains HAR and baseline forecast rows for both markets, and the audit table records forecast availability and blocked rows by reason.
 
-```text
-The project successfully constructs aligned US and India VRP panels using VIX/India VIX implied-variance proxies and daily OHLC realised-variance proxies.
-```
+### Finding 3 - Regime interpretability
 
-### Finding 2 — HAR forecast usefulness
+The regime ladder provides interpretable threshold, HMM, and MAR state summaries for both markets. The HMM no-lookahead audits report `overall_passed=True` for both markets, and the MAR no-lookahead audits report `passed=True` for both markets. MAR adds an AR-aware reduced-form layer beyond the Gaussian HMM.
 
-Placeholder:
+### Finding 4 - Research-proxy strategy performance
 
-```text
-[INSERT CLAIM AFTER INSPECTING reports/tables/har_forecast_accuracy.csv]
-```
+In `backtest_summary.csv`, Phase 10 contains seven research-proxy strategy rows per market. By the metric `sharpe`, the highest US row is `mar_prob_linear` at `12.2965` and the highest India row is `unconditional_full` at `7.8888`. This comparison is metric-scoped and applies only to the vectorised research-proxy table.
 
-Allowed form:
+### Finding 5 - Robustness and cost sensitivity
 
-```text
-The HAR-RV layer provides a point-in-time model-based realised-variance forecast that supports prospective VRP construction.
-```
+The robustness artifacts provide sensitivity diagnostics across cost-bps assumptions, named subperiods, and crisis windows. The tradable proxy detection artifact reports status `skipped`, so the report should not present Phase 10 as true instrument-level tradable proxy evidence.
 
-### Finding 3 — Regime interpretability
+### Finding 6 - Cross-market evidence
 
-Placeholder:
+Phase 13 alignment and no-lookahead tables report zero same-date or future-US violations for the inspected models. Logistic comparison tables and overlay diagnostics are available, but they support only predictive/statistical wording and analysis-only overlay wording, not causal conclusions.
 
-```text
-[INSERT CLAIM AFTER INSPECTING PHASE 5/6/7 STATE SUMMARY TABLES]
-```
+### Finding 7 - Paper-signal readiness
 
-Allowed form:
-
-```text
-The regime ladder produces economically interpretable calm/stress classifications, with MAR adding an AR-aware layer beyond the Gaussian HMM.
-```
-
-### Finding 4 — Research-proxy strategy performance
-
-Placeholder:
-
-```text
-[INSERT CLAIM AFTER INSPECTING reports/tables/phase_10/backtest_summary.csv]
-```
-
-Allowed form:
-
-```text
-In the research-proxy backtest, selected regime-conditioned variants show [INSERT VERIFIED RELATION] relative to the unconditional benchmark in the tested sample.
-```
-
-Forbidden form:
-
-```text
-The strategy is profitable in live trading.
-```
-
-### Finding 5 — Robustness and cost sensitivity
-
-Placeholder:
-
-```text
-[INSERT CLAIM AFTER INSPECTING reports/tables/phase_10/robustness_cost_sensitivity.csv AND robustness_subperiods.csv]
-```
-
-Allowed form:
-
-```text
-Robustness diagnostics show how the research-proxy results vary across cost assumptions and subperiods.
-```
-
-### Finding 6 — Cross-market evidence
-
-Placeholder:
-
-```text
-[INSERT CLAIM AFTER INSPECTING reports/tables/phase_13/logistic_model_comparison.csv AND lead_lag_table.csv]
-```
-
-Allowed form:
-
-```text
-Cross-market diagnostics indicate [INSERT VERIFIED ASSOCIATION], interpreted as statistical/predictive evidence rather than causal proof.
-```
-
-### Finding 7 — Paper-signal readiness
-
-Placeholder:
-
-```text
-[INSERT CLAIM AFTER INSPECTING reports/tables/phase_11/live_order_guard_report.json]
-```
-
-Allowed form:
-
-```text
-The Phase 11 appendix validates paper-signal readiness and live-order guard behaviour; no broker orders were placed.
-```
+The Phase 11 guard artifacts report passing live-order guard and integration checks, with `live_order_sent=False` in both run and broker metadata. This supports paper-signal readiness and live-order guard wording; no broker orders were placed.
 
 ---
 
