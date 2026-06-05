@@ -83,6 +83,27 @@ def _repo_path(path: str | Path, root: str | Path | None = None) -> Path:
     return Path(root) / p
 
 
+def _date64ns(values: Any, name: str | None = None) -> pd.Series:
+    s = pd.Series(values)
+    dt = pd.to_datetime(s, errors="coerce")
+
+    if isinstance(dt.dtype, pd.DatetimeTZDtype):
+        dt = dt.dt.tz_convert(None)
+
+    dt = dt.dt.normalize()
+    return pd.Series(
+        dt.to_numpy(dtype="datetime64[ns]"),
+        index=s.index,
+        name=name,
+    )
+
+
+def _assign_date64ns(df: pd.DataFrame, col: str) -> pd.DataFrame:
+    out = df.copy()
+    out[col] = _date64ns(out[col], name=col).to_numpy(dtype="datetime64[ns]")
+    return out
+
+
 def _iter_config_paths(obj: Any) -> Iterable[str]:
     """
     Recursively yield string values that look like file paths.
@@ -371,7 +392,10 @@ def _coerce_date_column(df: pd.DataFrame, target_col: str) -> pd.DataFrame:
         else:
             out = out.rename(columns={matched[0]: target_col})
 
-    out[target_col] = pd.to_datetime(out[target_col], errors="coerce").dt.normalize()
+    out[target_col] = _date64ns(
+        out[target_col],
+        name=target_col,
+    ).to_numpy(dtype="datetime64[ns]")
     if out[target_col].isna().any():
         n_bad = int(out[target_col].isna().sum())
         raise CrossMarketInputError(
@@ -684,14 +708,17 @@ def previous_us_trading_date_for_india(
             lag_is_strictly_prior
     """
     india = pd.DataFrame(
-        {"india_date": pd.to_datetime(pd.Series(list(india_dates))).dt.normalize()}
+        {"india_date": _date64ns(list(india_dates), name="india_date")}
     )
     us = pd.DataFrame(
-        {"us_lagged_date": pd.to_datetime(pd.Series(list(us_dates))).dt.normalize()}
+        {"us_lagged_date": _date64ns(list(us_dates), name="us_lagged_date")}
     )
 
     india = india.dropna().drop_duplicates().sort_values("india_date")
     us = us.dropna().drop_duplicates().sort_values("us_lagged_date")
+
+    india["india_date"] = india["india_date"].astype("datetime64[ns]")
+    us["us_lagged_date"] = us["us_lagged_date"].astype("datetime64[ns]")
 
     if india.empty:
         raise CrossMarketInputError("No India dates supplied for alignment.")
@@ -738,8 +765,14 @@ def align_us_india_predictive_panel(
     us = us_df.copy()
     india = india_df.copy()
 
-    us["us_date"] = pd.to_datetime(us["us_date"]).dt.normalize()
-    india["india_date"] = pd.to_datetime(india["india_date"]).dt.normalize()
+    us["us_date"] = _date64ns(
+        us["us_date"],
+        name="us_date",
+    ).to_numpy(dtype="datetime64[ns]")
+    india["india_date"] = _date64ns(
+        india["india_date"],
+        name="india_date",
+    ).to_numpy(dtype="datetime64[ns]")
 
     us = us.sort_values("us_date").drop_duplicates("us_date", keep="last")
     india = india.sort_values("india_date").drop_duplicates("india_date", keep="last")
@@ -750,8 +783,13 @@ def align_us_india_predictive_panel(
     )
 
     us_lagged = us.rename(columns={"us_date": "us_lagged_date"})
+    us_lagged["us_lagged_date"] = us_lagged["us_lagged_date"].astype(
+        "datetime64[ns]"
+    )
 
     panel = india.merge(alignment, on="india_date", how="left")
+    panel["india_date"] = panel["india_date"].astype("datetime64[ns]")
+    panel["us_lagged_date"] = panel["us_lagged_date"].astype("datetime64[ns]")
     panel = panel.merge(us_lagged, on="us_lagged_date", how="left")
 
     panel["lag_calendar_days"] = (
@@ -788,8 +826,14 @@ def assert_no_same_date_us_leakage(panel: pd.DataFrame) -> None:
         )
 
     audit = panel.copy()
-    audit["india_date"] = pd.to_datetime(audit["india_date"]).dt.normalize()
-    audit["us_lagged_date"] = pd.to_datetime(audit["us_lagged_date"]).dt.normalize()
+    audit["india_date"] = _date64ns(
+        audit["india_date"],
+        name="india_date",
+    ).to_numpy(dtype="datetime64[ns]")
+    audit["us_lagged_date"] = _date64ns(
+        audit["us_lagged_date"],
+        name="us_lagged_date",
+    ).to_numpy(dtype="datetime64[ns]")
 
     matched = audit["us_lagged_date"].notna()
     violations = matched & (audit["us_lagged_date"] >= audit["india_date"])
@@ -821,8 +865,14 @@ def build_cross_market_no_lookahead_audit(
         )
 
     work = panel.copy()
-    work["india_date"] = pd.to_datetime(work["india_date"]).dt.normalize()
-    work["us_lagged_date"] = pd.to_datetime(work["us_lagged_date"]).dt.normalize()
+    work["india_date"] = _date64ns(
+        work["india_date"],
+        name="india_date",
+    ).to_numpy(dtype="datetime64[ns]")
+    work["us_lagged_date"] = _date64ns(
+        work["us_lagged_date"],
+        name="us_lagged_date",
+    ).to_numpy(dtype="datetime64[ns]")
 
     matched = work["us_lagged_date"].notna()
     same_date_or_future = matched & (work["us_lagged_date"] >= work["india_date"])
@@ -1005,8 +1055,14 @@ def build_descriptive_same_date_panel(
     us = us_df.copy()
     india = india_df.copy()
 
-    us["date"] = pd.to_datetime(us["us_date"]).dt.normalize()
-    india["date"] = pd.to_datetime(india["india_date"]).dt.normalize()
+    us["date"] = _date64ns(
+        us["us_date"],
+        name="date",
+    ).to_numpy(dtype="datetime64[ns]")
+    india["date"] = _date64ns(
+        india["india_date"],
+        name="date",
+    ).to_numpy(dtype="datetime64[ns]")
 
     us = us.sort_values("date").drop_duplicates("date", keep="last")
     india = india.sort_values("date").drop_duplicates("date", keep="last")
@@ -1115,7 +1171,10 @@ def create_lagged_india_local_features(panel: pd.DataFrame) -> pd.DataFrame:
         )
 
     out = panel.copy()
-    out["india_date"] = pd.to_datetime(out["india_date"]).dt.normalize()
+    out["india_date"] = _date64ns(
+        out["india_date"],
+        name="india_date",
+    ).to_numpy(dtype="datetime64[ns]")
     out = out.sort_values("india_date").reset_index(drop=True)
 
     out["india_vrp_har_gk_lag1"] = pd.to_numeric(
@@ -1283,14 +1342,14 @@ def build_alignment_audit(
         raise CrossMarketInputError(f"Cannot build alignment audit. Missing: {missing}")
 
     work = panel.copy()
-    work["india_date"] = pd.to_datetime(
+    work["india_date"] = _date64ns(
         work["india_date"],
-        errors="coerce",
-    ).dt.normalize()
-    work["us_lagged_date"] = pd.to_datetime(
+        name="india_date",
+    ).to_numpy(dtype="datetime64[ns]")
+    work["us_lagged_date"] = _date64ns(
         work["us_lagged_date"],
-        errors="coerce",
-    ).dt.normalize()
+        name="us_lagged_date",
+    ).to_numpy(dtype="datetime64[ns]")
     work["lag_calendar_days"] = pd.to_numeric(
         work["lag_calendar_days"],
         errors="coerce",
@@ -1828,7 +1887,10 @@ def compute_vrp_change_correlations(
     for meta, part in _iter_panel_groups(panel):
         date_col = _date_sort_column(part)
         work = part.copy()
-        work[date_col] = pd.to_datetime(work[date_col], errors="coerce").dt.normalize()
+        work[date_col] = _date64ns(
+            work[date_col],
+            name=date_col,
+        ).to_numpy(dtype="datetime64[ns]")
         work = work.sort_values(date_col).reset_index(drop=True)
 
         if (
@@ -2133,7 +2195,10 @@ def build_lead_lag_table(
     for meta, part in _iter_panel_groups(panel):
         date_col = _date_sort_column(part)
         work = part.copy()
-        work[date_col] = pd.to_datetime(work[date_col], errors="coerce").dt.normalize()
+        work[date_col] = _date64ns(
+            work[date_col],
+            name=date_col,
+        ).to_numpy(dtype="datetime64[ns]")
         work = work.sort_values(date_col).reset_index(drop=True)
 
         for pair in pairs:
@@ -2326,7 +2391,10 @@ def compute_granger_diagnostics(
     for meta, part in _iter_panel_groups(candidate_panel):
         date_col = _date_sort_column(part)
         work = part.copy()
-        work[date_col] = pd.to_datetime(work[date_col], errors="coerce").dt.normalize()
+        work[date_col] = _date64ns(
+            work[date_col],
+            name=date_col,
+        ).to_numpy(dtype="datetime64[ns]")
         work = work.sort_values(date_col).reset_index(drop=True)
 
         for pair in pairs:
@@ -3167,7 +3235,10 @@ def chronological_oos_logit_diagnostic(
 
     date_col = _date_sort_column(panel)
     work = panel.copy()
-    work[date_col] = pd.to_datetime(work[date_col], errors="coerce").dt.normalize()
+    work[date_col] = _date64ns(
+        work[date_col],
+        name=date_col,
+    ).to_numpy(dtype="datetime64[ns]")
     work = work.sort_values(date_col).reset_index(drop=True)
 
     rows: list[dict[str, Any]] = []

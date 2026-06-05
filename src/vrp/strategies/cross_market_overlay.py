@@ -10,6 +10,7 @@ import pandas as pd
 from vrp.reports.cross_market import (
     CrossMarketInputError,
     CrossMarketLeakageError,
+    _date64ns,
     _repo_path,
     _safe_to_csv,
     _safe_to_parquet,
@@ -36,6 +37,10 @@ def _coerce_date(df: pd.DataFrame, target_col: str = "date") -> pd.DataFrame:
             "trade_date",
             "session_date",
             "india_date",
+            "signal_observation_date",
+            "target_trade_date",
+            "outcome_label_date",
+            "signal_available_after_close_date",
         ]
         matched = [c for c in candidates if c in out.columns]
         if matched:
@@ -48,7 +53,10 @@ def _coerce_date(df: pd.DataFrame, target_col: str = "date") -> pd.DataFrame:
                 f"Could not find date column. Available columns: {list(out.columns)}"
             )
 
-    out[target_col] = pd.to_datetime(out[target_col], errors="coerce").dt.normalize()
+    out[target_col] = _date64ns(
+        out[target_col],
+        name=target_col,
+    ).to_numpy(dtype="datetime64[ns]")
     if out[target_col].isna().any():
         n_bad = int(out[target_col].isna().sum())
         raise CrossMarketOverlayError(
@@ -263,6 +271,8 @@ def _select_backtest_return_column(
         f"{strategy_name}_payoff",
         "strategy_net_return",
         "strategy_return",
+        "net_return_proxy",
+        "gross_return_proxy",
         "net_return",
         "return",
         "daily_return",

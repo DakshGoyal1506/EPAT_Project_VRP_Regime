@@ -258,6 +258,7 @@ outputs:
   logistic_model_summary: reports/tables/phase_13/logistic_model_summary.csv
   logistic_model_comparison: reports/tables/phase_13/logistic_model_comparison.csv
   logistic_oos_diagnostics: reports/tables/phase_13/logistic_oos_diagnostics.csv
+  logistic_parameter_summary: reports/tables/phase_13/logistic_parameter_summary.csv
 
   overlay_summary: reports/tables/phase_13/india_overlay_summary.csv
   phase13_summary_index: reports/tables/phase_13/phase13_summary_index.csv

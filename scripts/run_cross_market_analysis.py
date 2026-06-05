@@ -36,6 +36,7 @@ from vrp.reports.cross_market_diagnostics import (  # noqa: E402
     write_phase13_summary_index,
 )
 from vrp.strategies.cross_market_overlay import (  # noqa: E402
+    CrossMarketOverlayError,
     build_all_india_cross_market_overlays,
     validate_overlay_summary_schema,
     write_india_cross_market_overlay_outputs,
@@ -386,7 +387,12 @@ def main() -> int:
 
     try:
         return run_phase13(args)
-    except (CrossMarketError, CrossMarketInputError, CrossMarketLeakageError) as exc:
+    except (
+        CrossMarketError,
+        CrossMarketInputError,
+        CrossMarketLeakageError,
+        CrossMarketOverlayError,
+    ) as exc:
         root = Path(args.root).resolve()
         try:
             config_path = Path(args.config)

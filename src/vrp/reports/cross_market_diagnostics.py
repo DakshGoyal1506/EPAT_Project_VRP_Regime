@@ -536,7 +536,7 @@ def write_phase13_summary_index(
                 "artifact_type": "figure",
                 "artifact_name": name,
                 "configured_path": str(path),
-                "exists_after_write": bool(Path(path).exists()),
+                "exists_after_write": bool(_repo_path(path, root).exists()),
                 "n_rows": np.nan,
                 "n_ok": np.nan,
                 "n_skipped": np.nan,
