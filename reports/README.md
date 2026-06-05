@@ -223,3 +223,29 @@ reports/tables/phase_11/live_order_guard_report.json
 
 These are runtime broker-readiness artifacts and stay local by default. Commit only README files or explicitly approved redacted summaries.
 
+## Phase 13 Cross-Market Outputs
+
+Phase 13 may generate:
+
+```text
+reports/tables/phase_13/alignment_audit.csv
+reports/tables/phase_13/no_lookahead_audit.csv
+reports/tables/phase_13/vrp_level_correlations.csv
+reports/tables/phase_13/vrp_change_correlations.csv
+reports/tables/phase_13/regime_probability_correlations.csv
+reports/tables/phase_13/state_label_agreement.csv
+reports/tables/phase_13/lead_lag_table.csv
+reports/tables/phase_13/granger_diagnostics.csv
+reports/tables/phase_13/logistic_model_summary.csv
+reports/tables/phase_13/logistic_parameter_summary.csv
+reports/tables/phase_13/logistic_model_comparison.csv
+reports/tables/phase_13/logistic_oos_diagnostics.csv
+reports/tables/phase_13/india_overlay_summary.csv
+reports/tables/phase_13/phase13_summary_index.csv
+reports/tables/phase_13/phase13_metadata.json
+reports/tables/phase_13/phase13_run_status.json
+reports/figures/phase_13/*.png
+```
+
+These are generated diagnostics and stay local by default. Same-date cross-market diagnostics are descriptive only. Predictive diagnostics must use lagged US information only. The overlay is analysis-only and is not a new Phase 9 strategy.
+

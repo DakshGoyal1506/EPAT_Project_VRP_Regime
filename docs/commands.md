@@ -432,11 +432,42 @@ Phase 12 is intentionally not implemented. It requires explicit re-scoping befor
 
 ## Phase 13 - Cross-Market US-India Analysis
 
+Phase 13 uses strict previous-US-date alignment for predictive India diagnostics. Same-date US/India data is descriptive only.
+
+Validate inputs:
+
 ```bash
-python scripts/audit_phase13_inputs.py --help
+python scripts/run_cross_market_analysis.py --validate-inputs-only
 ```
 
-If Phase 13 scripts are not present yet, keep this phase in design/review status and do not reuse Phase 10 backtest commands as cross-market validation.
+Run cross-market diagnostics without overlay:
+
+```bash
+python scripts/run_cross_market_analysis.py --model ALL --skip-overlay --force
+```
+
+Run full Phase 13 including analysis-only overlay:
+
+```bash
+python scripts/run_cross_market_analysis.py --model ALL --force
+```
+
+Phase-specific tests:
+
+```bash
+pytest tests/test_cross_market_alignment.py tests/test_cross_market_no_lookahead.py tests/test_cross_market_stats.py tests/test_cross_market_overlay.py tests/test_phase13_artifact_mutation.py tests/test_phase13_datetime_dtype.py
+```
+
+Generated outputs are local-only by default:
+
+```text
+data/processed/cross_market_same_date_descriptive_panel.parquet
+data/processed/cross_market_predictive_panel.parquet
+data/processed/cross_market_panel.parquet
+data/processed/india_cross_market_overlay_panel.parquet
+reports/tables/phase_13/*
+reports/figures/phase_13/*
+```
 
 ## Phase 14 - Final Report and Release Package
 

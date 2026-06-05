@@ -73,6 +73,16 @@ This document lists current limitations, non-goals, and assumptions. It should b
 6. Phase 10 cumulative curves are additive research proxy sums, not executable account equity curves.
 7. Phase 10 does not define initial capital, margin, or percentage return on invested capital.
 
+## Cross-Market Analysis Limitations
+
+1. Phase 13 uses daily close-level data and does not model intraday timezone mechanics.
+2. Predictive India diagnostics use the latest US observation strictly before the India date.
+3. Same-date US/India comparisons are descriptive only.
+4. US and India holiday gaps may create stale lagged US observations.
+5. Granger-style diagnostics are lead-lag statistical diagnostics, not causal proof.
+6. The Phase 13 overlay is analysis-only and not part of the Phase 9 strategy universe.
+7. Overlay results do not constitute live-trading or execution evidence.
+
 ## Broker / Paper-Signal Limitations
 
 1. iBridgePy / IBKR is optional and not required for core research reproducibility.

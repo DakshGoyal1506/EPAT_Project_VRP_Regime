@@ -70,8 +70,8 @@ final report
 | 10 | Complete / frozen | Vectorised research backtest and robustness |
 | 11 | Complete / frozen | IBKR paper-signal readiness layer |
 | 12 | Not started | Optional future IBKR paper execution adapter |
-| 13 | Not started | Cross-market US-India analysis |
-| 14 | Blocked | Final report / release package |
+| 13 | Complete / frozen | Cross-market US-India analysis with strict previous-US-date alignment, descriptive same-date diagnostics, lagged-US predictive diagnostics, and analysis-only India overlay |
+| 14 | Next | Final report / release package |
 
 ## Repository Structure
 
@@ -89,7 +89,8 @@ EPAT_Project_VRP_Regime/
 │   ├── model_msgarch.yaml
 │   ├── strategies.yaml
 │   ├── backtest.yaml
-│   └── ibkr_paper.yaml
+│   ├── ibkr_paper.yaml
+│   └── cross_market.yaml
 ├── data/
 │   ├── README.md
 │   ├── raw/
@@ -127,7 +128,8 @@ EPAT_Project_VRP_Regime/
 │   ├── run_backtest.py
 │   ├── run_robustness.py
 │   ├── run_ibkr_paper_signal.py
-│   └── validate_phase11.py
+│   ├── validate_phase11.py
+│   └── run_cross_market_analysis.py
 ├── src/
 │   └── vrp/
 │       ├── README.md
@@ -162,6 +164,8 @@ EPAT_Project_VRP_Regime/
 | `docs/phases/phase_11_ibkr_readiness.md` | Phase 11 implementation boundary and validation |
 | `docs/artifacts/phase_11_artifacts.md` | Phase 11 local artifact schema and commit policy |
 | `docs/phase11_runbook.md` | Phase 11 operational runbook |
+| `docs/phases/phase_13_cross_market.md` | Phase 13 cross-market analysis boundary, commands, validation, and safety rules |
+| `docs/artifacts/phase_13_artifacts.md` | Phase 13 generated artifact documentation |
 | `scripts/README.md` | Script entry points and CLI usage |
 | `src/vrp/*/README.md` | Module-specific contracts and commands |
 

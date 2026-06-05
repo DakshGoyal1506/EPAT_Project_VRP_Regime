@@ -6,7 +6,7 @@
 
 It converts already-produced feature, forecast, and regime panels into next-session short-vol exposure intentions.
 
-It does not run backtests, compute returns, estimate transaction costs, place broker orders, or perform cross-market analysis.
+It does not run backtests, compute returns, estimate transaction costs, place broker orders, or perform cross-market strategy construction.
 
 ## Phase Ownership
 
@@ -52,7 +52,7 @@ option-chain execution
 live trading
 IBKR order placement
 MSVOL strategy construction
-cross-market analysis
+cross-market strategy construction
 ```
 
 ## Approved Strategy Universe
@@ -92,6 +92,7 @@ msgarch
 | `exposure_rules.py` | Pure exposure-decision functions. |
 | `signal_schema.py` | Canonical output schema and no-lookahead sanitation. |
 | `signal_builder.py` | Build long-format Phase 9 signal panels. |
+| `cross_market_overlay.py` | Phase 13 analysis-only overlay diagnostic; not part of Phase 9 strategy construction. |
 
 ## Expected Inputs
 
@@ -290,3 +291,29 @@ create hidden strategy variants
 place or preview broker orders
 write large artifacts to Git
 ```
+
+## Phase 13 Analysis-Only Overlay Exception
+
+`cross_market_overlay.py` belongs to Phase 13, not Phase 9.
+
+It may:
+
+```text
+read locked Phase 9 India strategy signals
+read locked Phase 10 India backtest panels
+apply a lagged-US-stress exposure block for analysis only
+write Phase 13 overlay diagnostics
+```
+
+It must not:
+
+```text
+modify Phase 9 signal files
+modify Phase 10 backtest files
+create a new approved strategy
+change the seven-strategy Phase 9 universe
+read Phase 11 broker or paper-signal artifacts
+place or preview broker orders
+```
+
+All Phase 13 overlay outputs are marked `analysis_only = true`.

@@ -95,8 +95,13 @@ This file documents generated artifacts, whether they should be committed, and w
 | 11 | Broker cache | `data/broker_cache/*` | Broker/paper-signal layer | No | Sensitive/local | Redacted status taxonomy only |
 | 11 | Detailed Phase 11 artifact documentation | `docs/artifacts/phase_11_artifacts.md` | Manual docs | Yes | Phase artifact documentation | File review |
 | 12 | Optional paper execution outputs | `reports/tables/phase_12/*`, `broker_logs/*` | Future paper-execution scripts if explicitly scoped | No | Broker-sensitive/local runtime context | Redacted execution summary |
-| 13 | Cross-market panels | `data/processed/*cross_market*.parquet` | Phase 13 scripts | No | Generated panels | Phase 13 audit summary |
-| 13 | Cross-market summary | `reports/tables/phase_13/*.csv` | Phase 13 scripts | Optional | Small summary | Selected CSV |
+| 13 | Cross-market descriptive panel | `data/processed/cross_market_same_date_descriptive_panel.parquet` | `python scripts/run_cross_market_analysis.py --model ALL --force` | No | Generated processed panel | `alignment_audit.csv`, schema/head preview |
+| 13 | Cross-market predictive panel | `data/processed/cross_market_predictive_panel.parquet` | Same | No | Generated lagged predictive panel | `no_lookahead_audit.csv`, schema/head preview |
+| 13 | Cross-market combined panel | `data/processed/cross_market_panel.parquet` | Same | No | Generated convenience panel | Separate descriptive/predictive panel previews |
+| 13 | India cross-market overlay panel | `data/processed/india_cross_market_overlay_panel.parquet` | Same | No | Generated overlay diagnostic panel | `india_overlay_summary.csv` |
+| 13 | Cross-market diagnostics | `reports/tables/phase_13/*.csv`, `reports/tables/phase_13/*.json` | Same | No by default | Generated diagnostics and metadata | Selected CSV/JSON previews |
+| 13 | Cross-market figures | `reports/figures/phase_13/*.png` | Same | No by default | Generated diagnostic figures | Screenshots or final-report-selected figures |
+| 13 | Detailed Phase 13 artifact documentation | `docs/artifacts/phase_13_artifacts.md` | Manual docs | Yes | Phase artifact documentation | File review |
 | 14 | Final report | `reports/final_report.md` or final report export | Final report generation | Yes when ready | Deliverable | Full review |
 | 14 | Release checklist | `docs/release_checklist.md` if created | Manual cleanup | Yes | Freeze governance | File review |
 

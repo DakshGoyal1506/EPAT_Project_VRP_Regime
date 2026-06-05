@@ -183,3 +183,28 @@ phase_11/live_order_guard_report.json
 ```
 
 These are generated broker-readiness outputs and stay local by default. They must not indicate `live_order_sent=true`.
+
+## Phase 13 Examples
+
+Local Phase 13 tables may include:
+
+```text
+phase_13/alignment_audit.csv
+phase_13/no_lookahead_audit.csv
+phase_13/vrp_level_correlations.csv
+phase_13/vrp_change_correlations.csv
+phase_13/regime_probability_correlations.csv
+phase_13/state_label_agreement.csv
+phase_13/lead_lag_table.csv
+phase_13/granger_diagnostics.csv
+phase_13/logistic_model_summary.csv
+phase_13/logistic_parameter_summary.csv
+phase_13/logistic_model_comparison.csv
+phase_13/logistic_oos_diagnostics.csv
+phase_13/india_overlay_summary.csv
+phase_13/phase13_summary_index.csv
+phase_13/phase13_metadata.json
+phase_13/phase13_run_status.json
+```
+
+These are generated run outputs and stay local by default. `alignment_audit.csv`, `no_lookahead_audit.csv`, `logistic_model_comparison.csv`, and `india_overlay_summary.csv` are the preferred review substitutes.

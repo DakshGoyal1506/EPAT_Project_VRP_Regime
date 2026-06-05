@@ -31,8 +31,8 @@ The top-level `README.md` gives the project overview. This file tracks phase sta
 | 10 | complete / frozen | Vectorised research backtest and robustness | `python scripts/run_backtest.py --help` and `python scripts/run_robustness.py --help` |
 | 11 | complete / frozen | IBKR paper-signal readiness layer; no live orders | `python scripts/run_ibkr_paper_signal.py --help` and `python scripts/validate_phase11.py --help` |
 | 12 | not started | Optional future IBKR paper execution adapter | Explicit re-scope required before implementation |
-| 13 | not started | Cross-market US-India analysis | Starts after Phase 0-12 cleanup baseline |
-| 14 | blocked | Final report / release package | Wait for frozen Phase 0-13 baseline |
+| 13 | complete / frozen | Cross-market US-India analysis with strict lagged-US predictive alignment, descriptive same-date diagnostics, logistic incremental-signal tests, Granger-style descriptive diagnostics, and analysis-only India overlay | `python scripts/run_cross_market_analysis.py --validate-inputs-only` and `pytest tests/test_cross_market_alignment.py tests/test_cross_market_no_lookahead.py tests/test_cross_market_stats.py tests/test_cross_market_overlay.py tests/test_phase13_artifact_mutation.py tests/test_phase13_datetime_dtype.py` |
+| 14 | not started | Final report / release package | Wait for frozen Phase 0-13 baseline |
 
 ## Frozen Phase Rules
 

@@ -46,6 +46,7 @@ python scripts/train_har.py --help
 python scripts/train_regimes.py --help
 python scripts/run_backtest.py --help
 python scripts/run_ibkr_paper_signal.py --help
+python scripts/run_cross_market_analysis.py --help
 ```
 
 ## Full Local Regeneration Sequence
@@ -97,6 +98,15 @@ python scripts/run_msvol_no_lookahead_audit.py --market ALL
 ```
 
 Phase 8 is Python-only MSVOL, not true MSGARCH. True R MSGARCH remains optional/future and is not required for reproducibility.
+
+Phase 13 cross-market analysis requires locally generated Phase 4, 6, 7, 9, and 10 outputs:
+
+```bash
+python scripts/run_cross_market_analysis.py --validate-inputs-only
+python scripts/run_cross_market_analysis.py --model ALL --force
+```
+
+Generated Phase 13 panels, diagnostics, and figures remain local-only.
 
 ## Reproducibility Boundaries
 

@@ -20,6 +20,7 @@ Use `docs/commands.md` for the canonical command index.
 - `run_msvol_no_lookahead_audit.py` - Phase 8 no-lookahead audit.
 - `run_msvol_regimes.py` - Phase 8 Python-only MSVOL fitting.
 - `run_robustness.py` - robustness evaluation workflows.
+- `run_cross_market_analysis.py` - Phase 13 cross-market US-India diagnostics and analysis-only overlay.
 - `train_regimes.py` - regime-model training workflows.
 - `train_har.py` - Phase 4 HAR-RV forecasting orchestration and HAR-based VRP outputs.
 - `validate_phase11.py` - Phase 11 source guard and runtime artifact validator.
@@ -156,6 +157,27 @@ reports/tables/phase_11/live_order_guard_report.json
 ```
 
 Generated Phase 11 outputs stay local by default. Phase 11 must keep `live_order_sent=false`.
+
+### Cross-Market US-India Analysis (Phase 13)
+
+```bash
+python scripts/run_cross_market_analysis.py --validate-inputs-only
+python scripts/run_cross_market_analysis.py --model ALL --skip-overlay --force
+python scripts/run_cross_market_analysis.py --model ALL --force
+```
+
+Expected local outputs:
+
+```text
+data/processed/cross_market_same_date_descriptive_panel.parquet
+data/processed/cross_market_predictive_panel.parquet
+data/processed/cross_market_panel.parquet
+data/processed/india_cross_market_overlay_panel.parquet
+reports/tables/phase_13/*
+reports/figures/phase_13/*
+```
+
+Generated Phase 13 outputs stay local by default. The overlay is analysis-only and must not be treated as a new Phase 9 strategy.
 
 ### Expected VRP Outputs
 

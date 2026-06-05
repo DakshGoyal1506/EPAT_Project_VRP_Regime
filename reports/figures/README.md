@@ -120,3 +120,17 @@ phase_10/return_distribution_india.png
 ```
 
 These are generated diagnostics and stay local unless explicitly approved as final-report artifacts. Phase 10 equity curves are additive research proxy curves, not executable account equity curves.
+
+## Phase 13 Examples
+
+Local Phase 13 figures may include:
+
+```text
+phase_13/us_india_vrp.png
+phase_13/us_india_stress_prob.png
+phase_13/lagged_us_vs_india_stress.png
+phase_13/india_overlay_equity_curves.png
+phase_13/india_overlay_exposure.png
+```
+
+These are generated diagnostics and stay local unless explicitly approved as final-report artifacts. Overlay figures are analysis-only and must not be presented as live-trading or new-strategy evidence.

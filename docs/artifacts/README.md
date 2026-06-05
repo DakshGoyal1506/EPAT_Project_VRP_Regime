@@ -20,3 +20,4 @@ Generated artifacts are local-only by default. Commit source code, configs, scri
 | 9 | `phase_09_artifacts.md` | Strategy signal construction artifacts |
 | 10 | `phase_10_artifacts.md` | Vectorised research backtest and robustness artifacts |
 | 11 | `phase_11_artifacts.md` | IBKR paper-signal readiness artifacts |
+| 13 | `phase_13_artifacts.md` | Cross-market US-India analysis artifacts |
