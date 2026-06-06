@@ -8,17 +8,17 @@ This directory contains the final EPAT submission package for:
 
 | File | Purpose | Status |
 |---|---|---|
-| `final_report.md` | Markdown source of truth for the final report | To be created in Phase 14 |
-| `final_report.pdf` | PDF export generated from `final_report.md` after claims audit | To be generated in Phase 14 |
-| `executive_summary.md` | Short reviewer-facing project summary | To be created in Phase 14 |
-| `presentation_outline.md` | Evidence-first presentation outline | To be created in Phase 14 |
-| `selected_artifacts.md` | Final-report artifact and evidence inventory | Created in Phase 14 |
-| `limitations.md` | Final curated limitations and caveats | To be created in Phase 14 |
-| `reproducibility_note.md` | Final report reproducibility note | To be created in Phase 14 |
-| `future_work.md` | Future work and explicitly out-of-scope extensions | To be created in Phase 14 |
-| `result_claims_audit.md` | Claim-to-evidence audit for final report conclusions | Created in Phase 14 |
-| `table_inventory.md` | Table inventory for final report and PDF | Created in Phase 14 |
-| `figure_inventory.md` | Figure inventory for final report and PDF | Created in Phase 14 |
+| `final_report.md` | Markdown source of truth for the final report | Created; evidence-backed draft complete |
+| `final_report.pdf` | PDF export generated from `final_report.md` after claims audit | Pending external PDF export |
+| `executive_summary.md` | Short reviewer-facing project summary | Created |
+| `presentation_outline.md` | Evidence-first presentation outline | Created |
+| `selected_artifacts.md` | Final-report artifact and evidence inventory | Created; local evidence reviewed |
+| `limitations.md` | Final curated limitations and caveats | Created |
+| `reproducibility_note.md` | Final report reproducibility note | Created |
+| `future_work.md` | Future work and explicitly out-of-scope extensions | Created |
+| `result_claims_audit.md` | Claim-to-evidence audit for final report conclusions | Created; evidence-backed |
+| `table_inventory.md` | Table inventory for final report and PDF | Created; local evidence reviewed |
+| `figure_inventory.md` | Figure inventory for final report and PDF | Created; selected figures staged |
 
 ## Selected Final Figures
 
@@ -45,6 +45,25 @@ reports/final/final_report.pdf
 ```
 
 Do not manually diverge the PDF from the Markdown source. If the PDF needs edits, update the Markdown or the Markdown-to-PDF export path first.
+
+## License and Attribution
+
+The final report package is public for portfolio, academic review, and professional evaluation purposes.
+
+Documentation, reports, figures, and presentation material are licensed under CC BY-NC 4.0 unless otherwise stated.
+
+Attribution is required.
+
+Commercial or profit-generating use requires separate written permission from Daksh Goyal.
+
+See repository root:
+
+```text
+LICENSE.md
+NOTICE.md
+COMMERCIAL_USE.md
+CITATION.cff
+```
 
 ## Phase 14 Package Rule
 

@@ -70,7 +70,7 @@ Main evidence categories:
 | Paper-signal readiness       | `reports/tables/phase_11/live_order_guard_report.json`                                                         |
 | Cross-market analysis        | `reports/tables/phase_13/logistic_model_comparison.csv`; `reports/tables/phase_13/lead_lag_table.csv`          |
 
-Numeric findings are intentionally left as placeholders until the final local artifacts are inspected.
+Numeric findings in this report are based on locally inspected summary artifacts and must be interpreted under the claims audit, table inventory, figure inventory, and stated research-proxy limitations.
 
 ---
 

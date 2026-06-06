@@ -1,0 +1,20 @@
+cff-version: 1.2.0
+message: "If you use this project for academic, research, or professional reference, please cite it."
+title: "Variance Risk Premium Decomposition and Regime-Conditional Harvesting: A Dual-Market Empirical Study across SPX/VIX in the US and NIFTY/India VIX in India"
+authors:
+  - family-names: "Goyal"
+    given-names: "Daksh"
+year: 2026
+repository-code: "https://github.com/DakshGoyal1506/EPAT_Project_VRP_Regime"
+license: "PolyForm-Noncommercial-1.0.0 AND CC-BY-NC-4.0"
+abstract: "A public-data empirical research project studying variance risk premium construction, regime modelling, research-proxy harvesting, and cross-market US-India volatility diagnostics."
+keywords:
+  - variance risk premium
+  - volatility
+  - regime modelling
+  - HAR-RV
+  - hidden Markov model
+  - Markov autoregression
+  - backtesting
+  - cross-market analysis
+  - EPAT

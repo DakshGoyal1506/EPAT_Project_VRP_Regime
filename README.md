@@ -247,6 +247,38 @@ Strategy outputs are exposure intentions, not broker orders.
 
 Notebooks are for inspection, diagnostics, and presentation only. Production logic belongs in `src/vrp/`, `scripts/`, and `tests/`.
 
+## License, Attribution, and Commercial Use
+
+This repository is public for portfolio, academic review, and professional evaluation purposes.
+
+It is not released under a permissive open-source license.
+
+License structure:
+
+```text
+Code:
+    PolyForm Noncommercial License 1.0.0
+
+Documentation, reports, figures, and presentation material:
+    Creative Commons Attribution-NonCommercial 4.0 International
+
+Commercial/profit use:
+    Separate written permission required from Daksh Goyal
+```
+
+Attribution is required for non-commercial reuse.
+
+Commercial use, profit-generating use, trading-desk use, product integration, paid training reuse, paid consulting reuse, redistribution in paid material, or use in live/paper trading systems requires separate written permission.
+
+See:
+
+```text
+LICENSE.md
+NOTICE.md
+COMMERCIAL_USE.md
+CITATION.cff
+```
+
 ## No-Live-Trading Warning
 
 This repository is for academic research, research-proxy evaluation, and paper-signal readiness. It does not claim live-trading profitability, true option-chain PnL, executable account returns, or broker execution.

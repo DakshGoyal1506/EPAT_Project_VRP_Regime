@@ -17,6 +17,10 @@ Project:
 | Final report PDF | `reports/final/final_report.pdf` |
 | Executive summary | `reports/final/executive_summary.md` |
 | Presentation outline | `reports/final/presentation_outline.md` |
+| License and permitted use | `LICENSE.md` |
+| Notice and attribution | `NOTICE.md` |
+| Commercial-use restrictions | `COMMERCIAL_USE.md` |
+| Citation metadata | `CITATION.cff` |
 
 Recommended first read:
 
@@ -25,6 +29,8 @@ README.md
 reports/final/executive_summary.md
 reports/final/final_report.md
 ```
+
+This repository is public for review and portfolio visibility, but it is not released under a permissive open-source license. Attribution is required for non-commercial reuse. Commercial or profit-generating use requires separate written permission from Daksh Goyal.
 
 ---
 
