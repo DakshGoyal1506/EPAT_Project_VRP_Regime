@@ -1,0 +1,600 @@
+\documentclass[11pt,a4paper]{article}
+
+\usepackage[margin=0.85in]{geometry}
+\usepackage{graphicx}
+\usepackage{amsmath,amssymb}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{float}
+\usepackage{caption}
+\usepackage{hyperref}
+\usepackage{xurl}
+\usepackage{xcolor}
+\usepackage{enumitem}
+\usepackage{titlesec}
+\usepackage{lmodern}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+
+\graphicspath{{images/}}
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue!45!black,
+    urlcolor=blue!45!black,
+    citecolor=blue!45!black
+}
+\setlist[itemize]{leftmargin=1.2em, itemsep=0.25em}
+\setlist[enumerate]{leftmargin=1.4em, itemsep=0.25em}
+\renewcommand{\arraystretch}{1.15}
+\captionsetup{font=small,labelfont=bf}
+\titleformat{\section}{\Large\bfseries}{\thesection}{0.6em}{}
+\titleformat{\subsection}{\large\bfseries}{\thesubsection}{0.6em}{}
+\titleformat{\subsubsection}{\normalsize\bfseries}{\thesubsubsection}{0.6em}{}
+
+\newcommand{\ReportFigure}[3]{%
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.98\linewidth,height=0.42\textheight,keepaspectratio]{#1}
+\caption{#2}
+\end{figure}
+\noindent\textit{Interpretation.} #3\par\vspace{0.8em}
+}
+
+\newcommand{\SmallReportFigure}[3]{%
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.90\linewidth,height=0.34\textheight,keepaspectratio]{#1}
+\caption{#2}
+\end{figure}
+\noindent\textit{Interpretation.} #3\par\vspace{0.8em}
+}
+
+\begin{document}
+
+\begin{titlepage}
+\centering
+\vspace*{1.8cm}
+{\LARGE\bfseries Variance Risk Premium Decomposition and Regime-Conditional Harvesting\par}
+\vspace{0.35cm}
+{\Large A Dual-Market Empirical Study across SPX/VIX and NIFTY/India VIX\par}
+\vspace{1.2cm}
+{\large EPAT Final Project Report\par}
+\vspace{0.6cm}
+{\large Daksh Goyal\par}
+\vspace{0.2cm}
+{\large Executive Programme in Algorithmic Trading\par}
+\vspace{0.2cm}
+{\large QuantInsti\par}
+\vfill
+\begin{minipage}{0.88\linewidth}
+\small
+\textbf{Report control statement.} This report is a research-layer empirical study. It evaluates variance-risk-premium construction, regime decomposition, and vectorised research-proxy exposure rules. It does not claim live-trading profitability, true option-chain profit and loss, broker execution, margin-aware portfolio returns, or causal cross-market transmission.
+\end{minipage}
+\vfill
+{\large June 2026\par}
+\end{titlepage}
+
+\tableofcontents
+\newpage
+
+\section{Abstract}
+
+The variance risk premium (VRP) is the empirical spread between implied variance and subsequently realised variance. In equity-index markets, implied volatility indices such as VIX and India VIX often stand above subsequent realised volatility, but unconditional short-volatility exposure can suffer severe losses during stress periods.
+
+This project builds a reproducible dual-market research pipeline for the United States and India. The US leg uses SPX/SPY and VIX. The India leg uses NIFTY 50 and India VIX. The pipeline constructs realised variance from daily OHLC data, converts implied-volatility indices into annualised implied-variance proxies, constructs VRP features and forward outcome labels, estimates HAR-RV forecasts, fits threshold, Gaussian HMM, Markov autoregression, and MSVOL-style robustness regime models, constructs regime-conditioned exposure intentions, evaluates a vectorised research-proxy backtest, and performs cross-market US-India diagnostics.
+
+The empirical objective is not to prove live tradability. It is to test whether regime-conditioned exposure improves research-proxy risk-adjusted behaviour relative to unconditional short-volatility harvesting, and whether US and Indian VRP regimes display useful descriptive or predictive relationships. The project also documents a guarded paper-signal readiness layer, but no broker orders are placed.
+
+\section{Executive Summary}
+
+Variance risk premium research sits between market microstructure, volatility forecasting, and systematic risk-premia design. Equity-index options often embed a premium for protection demand, crash risk, jump risk, and volatility uncertainty. Short-volatility strategies attempt to harvest that premium, but unconditional exposure is structurally vulnerable to volatility spikes. The central question of this project is whether conditioning exposure on market regimes can keep useful carry while reducing exposure during historically adverse states.
+
+The research design has three central components:
+
+\begin{enumerate}
+    \item \textbf{VRP measurement:} estimate realised variance from daily OHLC data and compare it with implied variance proxies derived from VIX and India VIX.
+    \item \textbf{Regime decomposition:} classify market states using threshold regimes, Gaussian HMM, Markov autoregression, and MSVOL robustness diagnostics.
+    \item \textbf{Research-proxy strategy evaluation:} compare unconditional short-volatility harvesting with regime-conditioned exposure intentions in a vectorised backtest.
+\end{enumerate}
+
+The results are deliberately interpreted as research-proxy evidence. In the inspected backtest table, unconditional short-volatility exposure delivers the highest total proxy return in both markets and the highest India Sharpe ratio, but it also carries substantially larger drawdowns. Regime-conditioned methods reduce exposure during stress states and can materially improve drawdown and volatility characteristics. In the US table, the Markov autoregression strategy has the highest Sharpe ratio. In India, unconditional exposure remains strongest by Sharpe in the proxy table, while MAR and HMM variants reduce drawdown relative to the unconditional baseline. This is a nuanced result: regime conditioning helps risk control, but it is not uniformly dominant across all metrics and markets.
+
+\section{Research Questions and Scope}
+
+\subsection{Core research questions}
+
+The project addresses seven questions:
+
+\begin{enumerate}
+    \item Can VIX and India VIX be used as implied-volatility proxies to construct consistent public-data VRP panels for the US and Indian markets?
+    \item Does a HAR-RV model provide a useful point-in-time realised-variance forecast layer for prospective VRP construction?
+    \item Do threshold, Gaussian HMM, and Markov autoregression models produce economically interpretable volatility or VRP regimes?
+    \item Do regime-conditioned exposure rules improve research-proxy risk-adjusted behaviour relative to unconditional short-volatility harvesting in the tested sample?
+    \item Are results sensitive to transaction-cost assumptions, subperiods, crisis windows, model choice, and sample alignment?
+    \item Do US and Indian VRP or stress diagnostics display descriptive co-movement or lagged predictive associations?
+    \item Can final research signals be converted into a guarded paper-signal format without placing broker orders?
+\end{enumerate}
+
+\subsection{Scope restrictions}
+
+The report makes the following restrictions explicit:
+
+\begin{itemize}
+    \item VIX and India VIX are implied-volatility proxies, not variance swap quotes.
+    \item Daily OHLC estimators are realised-variance proxies, not full intraday realised variance.
+    \item Forward ex-post VRP labels are evaluation outcomes only, not tradable signals.
+    \item Full-sample smoothed HMM probabilities are diagnostic only. Strategy decisions use filtered, time-available probabilities.
+    \item Backtest returns are research-proxy units, not account equity returns.
+    \item Cross-market diagnostics are statistical or predictive diagnostics, not causal proof.
+\end{itemize}
+
+\section{Data and Feature Construction}
+
+\subsection{Market universe}
+
+The project uses daily market data for two equity-index volatility markets.
+
+\begin{table}[H]
+\centering
+\caption{Market universe and proxy definitions.}
+\begin{tabular}{lll}
+\toprule
+Market & Underlying series & Implied-volatility proxy \\
+\midrule
+United States & SPX / SPY daily OHLC & VIX \\
+India & NIFTY 50 daily OHLC & India VIX \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The implied-volatility proxies are converted into annualised implied variance by scaling the volatility index and squaring it:
+
+\begin{equation}
+IV_t = \left(\frac{\text{VolIndex}_t}{100}\right)^2.
+\end{equation}
+
+The central VRP object is the difference between implied variance and the expected future realised variance:
+
+\begin{equation}
+VRP_t = IV_t - \mathbb{E}_t^{\mathbb{P}}[RV_{t,t+22}].
+\end{equation}
+
+Here, 22 trading days are used as the one-month realised-variance horizon to align approximately with the 30-calendar-day VIX and India VIX construction horizon.
+
+\subsection{Realised variance estimation}
+
+Realised variance is estimated from daily OHLC data. The primary estimator is the Garman-Klass 22-trading-day annualised realised variance estimator. For each day, define
+
+\begin{equation}
+ u_t = \ln\left(\frac{H_t}{O_t}\right), \quad d_t = \ln\left(\frac{L_t}{O_t}\right), \quad c_t = \ln\left(\frac{C_t}{O_t}\right),
+\end{equation}
+
+where $O_t$, $H_t$, $L_t$, and $C_t$ are open, high, low, and close prices. The daily Garman-Klass variance is
+
+\begin{equation}
+\sigma^2_{GK,t} = \frac{1}{2}(u_t-d_t)^2 - (2\ln 2 - 1)c_t^2.
+\end{equation}
+
+The 22-day annualised realised variance is then computed as
+
+\begin{equation}
+RV^{GK}_{t,22} = \frac{252}{22}\sum_{i=0}^{21}\sigma^2_{GK,t-i}.
+\end{equation}
+
+The project also computes close-to-close, Parkinson, Rogers-Satchell, and Yang-Zhang-style robustness estimators where available. The purpose is not to identify a single universally correct volatility estimator, but to test whether the main VRP and regime conclusions are robust to estimator choice.
+
+\begin{table}[H]
+\centering
+\caption{Primary realised-variance summary.}
+\begin{tabular}{lrrrrrr}
+\toprule
+Market & Count & Missing & Mean & Median & Std. dev. & Max \\
+\midrule
+US & 9139 & 21 & 0.0191 & 0.0108 & 0.0303 & 0.4369 \\
+India & 4555 & 21 & 0.0299 & 0.0140 & 0.0545 & 0.4845 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\ReportFigure{rv_estimators_india.png}{Daily OHLC realised-variance estimator comparison for India.}{The estimator panel shows that close-to-close realised variance is noisier, while range-based estimators provide smoother estimates of intraday path variation. The spikes show that realised variance is episodic and heavily crisis-driven, which supports using a state-dependent modelling layer rather than a static unconditional exposure rule.}
+
+\ReportFigure{rv_estimators_us.png}{Daily OHLC realised-variance estimator comparison for the United States.}{The US realised-variance panel displays long calm periods interrupted by concentrated crisis spikes. The non-normality and clustering of variance motivate both HAR-style forecasting and regime detection.}
+
+\subsection{Implied variance and VRP panels}
+
+VIX and India VIX are used as public implied-volatility proxies. The backward VRP uses lagged realised variance as a descriptive spread. The forward ex-post VRP label uses subsequently realised variance and is used only for evaluation. The HAR-based VRP replaces future realised variance with a point-in-time forecast and is therefore the more realistic signal candidate.
+
+\begin{table}[H]
+\centering
+\caption{Compact VRP construction summary.}
+\begin{tabular}{lrrrr}
+\toprule
+Market & Mean implied variance & Median implied variance & Mean backward VRP & Median backward VRP \\
+\midrule
+US & 0.0439 & 0.0310 & 0.0247 & 0.0184 \\
+India & 0.0405 & 0.0281 & 0.0196 & 0.0145 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\ReportFigure{india_iv_rv_vrp.png}{India implied variance, realised variance, and VRP construction diagnostic.}{The plot visualises the relationship between India VIX-implied variance, realised variance, and the constructed VRP proxy. In non-crisis periods implied variance is often above realised variance. During market stress, realised variance can spike above implied variance, producing adverse VRP outcomes for short-volatility exposure.}
+
+\ReportFigure{us_iv_rv_vrp.png}{US implied variance, realised variance, and VRP construction diagnostic.}{The US panel shows the same structural premium and the same tail problem. Positive average carry exists, but the largest losses are concentrated in the same periods in which realised volatility expands rapidly.}
+
+\section{Predictive Volatility Modelling}
+
+\subsection{HAR-RV framework}
+
+The HAR-RV model estimates prospective realised variance using lagged realised-variance features. It is designed to capture volatility persistence across daily, weekly, and monthly horizons:
+
+\begin{equation}
+\widehat{RV}_{t,t+22} = \beta_0 + \beta_d RV^{(d)}_t + \beta_w RV^{(w)}_t + \beta_m RV^{(m)}_t.
+\end{equation}
+
+The HAR forecast is used to form a point-in-time premium estimate:
+
+\begin{equation}
+VRP^{HAR}_t = IV_t - \widehat{RV}_{t,t+22}^{HAR}.
+\end{equation}
+
+This distinction is essential. The ex-post forward VRP label is an outcome. The HAR-based VRP is the signal candidate because it is computed from information available at time $t$.
+
+\begin{table}[H]
+\centering
+\caption{HAR-RV forecast comparison.}
+\begin{tabular}{llrrr}
+\toprule
+Market & Forecast & RMSE & MAE & Correlation \\
+\midrule
+US & HAR-RV & 0.0247 & 0.0100 & 0.6163 \\
+US & Naive lagged RV & 0.0277 & 0.0108 & 0.5829 \\
+India & HAR-RV & 0.0326 & 0.0131 & 0.1391 \\
+India & Naive lagged RV & 0.0384 & 0.0126 & 0.3184 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The US HAR layer improves over naive lagged RV on RMSE and correlation in the inspected summary. In India, HAR improves RMSE but its correlation is weaker than the naive lagged-RV baseline. This difference matters: volatility persistence exists in both markets, but its predictive structure is not identical across markets.
+
+\ReportFigure{har_forecast_india.png}{India HAR-RV forecast and realised-variance outcome.}{The HAR forecast captures the lower-frequency movement in realised variance but lags abrupt volatility shocks. This is expected for a linear autoregressive forecast and motivates adding a regime-detection layer.}
+
+\ReportFigure{har_forecast_us.png}{US HAR-RV forecast and realised-variance outcome.}{The US forecast panel shows stronger persistence and better tracking than India, although sudden jumps still generate forecast errors.}
+
+\SmallReportFigure{har_residuals_india.png}{India HAR-RV residual diagnostic.}{Residual clustering shows that forecast errors are not independent white noise. Large residuals concentrate during volatility transitions and crisis periods.}
+
+\SmallReportFigure{har_residuals_us.png}{US HAR-RV residual diagnostic.}{The US residual panel shows concentrated forecast errors during stress events, reinforcing the need for state classification beyond a single linear forecasting layer.}
+
+\ReportFigure{har_vrp_india.png}{India HAR-based prospective VRP.}{The HAR-based VRP replaces future realised variance with a point-in-time forecast. It is therefore closer to a tradable premium estimate than the ex-post forward label.}
+
+\ReportFigure{har_vrp_us.png}{US HAR-based prospective VRP.}{The US HAR-based VRP provides the main carry signal used by the regime and strategy layers. It remains model-dependent and must be interpreted with forecast-error risk.}
+
+\section{Regime Decomposition}
+
+\subsection{Model ladder}
+
+The regime modelling ladder is progressive rather than decorative. Each level addresses a different modelling need.
+
+\begin{table}[H]
+\centering
+\caption{Regime model ladder.}
+\begin{tabular}{lll}
+\toprule
+Model layer & Purpose & Limitation \\
+\midrule
+Threshold regimes & Simple interpretable baseline & Deterministic and threshold-sensitive \\
+Gaussian HMM & Latent state classification & Does not directly model observed-series autocorrelation \\
+Markov autoregression & AR-aware regime model & Reduced-form and numerically sensitive \\
+MSVOL appendix & Volatility-regime robustness & Diagnostic only; not true R MSGARCH \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Threshold regimes}
+
+Threshold regimes classify market days into calm, transition, and stress states using deterministic feature cutoffs. This layer provides a transparent benchmark and an easy sanity check for crisis alignment.
+
+\ReportFigure{threshold_regimes_india.png}{India threshold regime timeline.}{The deterministic threshold model separates periods where premium and variance conditions are benign from periods where realised variance pressure is high. It provides a non-parametric baseline against which HMM and MAR regimes can be compared.}
+
+\ReportFigure{threshold_regimes_us.png}{US threshold regime timeline.}{The US threshold timeline isolates major historical stress episodes such as the global financial crisis, volatility shock periods, and COVID-19. It is deliberately simple and interpretable.}
+
+\SmallReportFigure{threshold_component_states_india.png}{India threshold component-state diagnostic.}{The component-state diagnostic disaggregates the deterministic rules and checks whether the state definitions are driven by the intended variance and premium features.}
+
+\SmallReportFigure{threshold_component_states_us.png}{US threshold component-state diagnostic.}{The US component-state panel performs the same validation for the US feature set.}
+
+\subsection{Threshold regime premium distributions}
+
+\SmallReportFigure{threshold_regime_vrp_boxplots_india.png}{India VRP distribution by threshold regime.}{The stress-regime distribution is wider and less stable than calm and transition regimes. This means the compensation for short-volatility exposure is itself more uncertain during stressed states.}
+
+\SmallReportFigure{threshold_regime_vrp_boxplots_us.png}{US VRP distribution by threshold regime.}{The US boxplot confirms that stress regimes alter the distribution of the premium and increase tail risk. Regime conditioning is therefore a risk-control mechanism, not merely a return enhancement device.}
+
+\subsection{Gaussian HMM and Markov autoregression}
+
+The Gaussian HMM estimates latent regimes from observed VRP and volatility features. For strategy decisions, the model uses filtered probabilities available at time $t$, not full-sample smoothed probabilities. This is necessary to avoid lookahead bias.
+
+\begin{table}[H]
+\centering
+\caption{Compact Gaussian HMM state evidence.}
+\begin{tabular}{llrrr}
+\toprule
+Market & State & Occupancy & Mean HAR-VRP & Mean implied variance \\
+\midrule
+US & Calm & 0.4589 & 0.0093 & 0.0191 \\
+US & Transition & 0.3948 & 0.0270 & 0.0444 \\
+US & Stress & 0.1463 & 0.0700 & 0.1203 \\
+India & Calm & 0.6190 & 0.0024 & 0.0206 \\
+India & Transition & 0.3205 & 0.0210 & 0.0441 \\
+India & Stress & 0.0605 & 0.0621 & 0.1164 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Markov autoregression extends the regime ladder by allowing state-dependent autoregressive dynamics in the observed series. This addresses the core limitation of a standard Gaussian HMM: standard HMM emissions are conditionally independent given the current state and do not directly represent observed-series autocorrelation.
+
+\begin{table}[H]
+\centering
+\caption{Compact Markov autoregression state evidence.}
+\begin{tabular}{llrrr}
+\toprule
+Market & State & AR(1) coefficient & Persistence probability & Stable \\
+\midrule
+US & Calm & 0.9587 & 0.9641 & Yes \\
+US & Stress & 0.9285 & 0.9097 & Yes \\
+India & Calm & 0.9970 & 0.9593 & Yes \\
+India & Stress & 0.8660 & 0.8103 & Yes \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The MAR results should not be read as discovering true economic states. They are reduced-form statistical regimes, but they are useful because they model persistence in the VRP process more directly than a simple Gaussian HMM.
+
+\section{Strategy Construction and Backtest Design}
+
+\subsection{Exposure intention}
+
+The strategy layer converts regime and carry information into next-session exposure intentions. The signal is not a broker order. The exposure target $w_t$ lies between no short-vol exposure and full short-vol exposure:
+
+\begin{equation}
+w_t \in [-1,0].
+\end{equation}
+
+A stylised research-proxy cumulative path is computed as
+
+\begin{equation}
+P_T = \sum_{t=1}^{T} w_t \cdot VRP^{outcome}_t - \text{costs}_t.
+\end{equation}
+
+This is an additive research-proxy curve, not an account equity curve. It does not model option strikes, margin, assignment, implied-vol surface dynamics, contract-level bid-ask spread, or broker execution.
+
+\subsection{Strategies evaluated}
+
+The inspected strategy universe contains seven strategies per market:
+
+\begin{itemize}
+    \item unconditional full exposure,
+    \item threshold hard filter,
+    \item threshold defensive,
+    \item Gaussian HMM probability-linear,
+    \item Gaussian HMM probability-linear with carry,
+    \item MAR probability-linear,
+    \item MAR probability-linear with carry.
+\end{itemize}
+
+The unconditional strategy is the benchmark. The regime-conditioned strategies reduce or suppress exposure in identified stress states. This can reduce drawdown, but it can also sacrifice premium during periods when the market later pays positive carry.
+
+\section{Empirical Backtest Results}
+
+\subsection{Proxy performance summary}
+
+The table below is metric-scoped and must be read as research-proxy evidence only.
+
+\begin{table}[H]
+\centering
+\caption{US research-proxy backtest summary.}
+\scriptsize
+\begin{tabular}{lrrrrr}
+\toprule
+Strategy & Observations & Total proxy return & Annualized return & Sharpe & Max drawdown \\
+\midrule
+Unconditional full & 9156 & 226.4497 & 6.2476 & 11.3094 & -5.3365 \\
+Threshold hard filter & 9156 & 55.1127 & 1.6657 & 10.0226 & -0.9984 \\
+Threshold defensive & 9156 & 14.3671 & 0.4342 & 9.6535 & -0.2496 \\
+HMM probability-linear & 8590 & 41.9781 & 1.2316 & 8.5253 & -1.5720 \\
+HMM probability-linear carry & 8590 & 41.9610 & 1.2311 & 8.5217 & -1.5720 \\
+MAR probability-linear & 8590 & 82.8569 & 2.4407 & 12.2965 & -1.5019 \\
+MAR probability-linear carry & 8590 & 82.2909 & 2.4240 & 12.2007 & -1.5019 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+For the US market, the unconditional full-exposure benchmark has the largest total proxy return, but the MAR probability-linear strategy has the highest Sharpe ratio in the inspected table and materially lower drawdown than the unconditional strategy.
+
+\begin{table}[H]
+\centering
+\caption{India research-proxy backtest summary.}
+\scriptsize
+\begin{tabular}{lrrrrr}
+\toprule
+Strategy & Observations & Total proxy return & Annualized return & Sharpe & Max drawdown \\
+\midrule
+Unconditional full & 4204 & 83.3277 & 5.0212 & 7.8888 & -6.1924 \\
+Threshold hard filter & 4204 & 14.0716 & 1.0473 & 4.0224 & -3.3729 \\
+Threshold defensive & 4204 & 3.6845 & 0.2742 & 4.0838 & -0.8432 \\
+HMM probability-linear & 3638 & 16.3937 & 1.1359 & 3.5423 & -3.2562 \\
+HMM probability-linear carry & 3638 & 10.0665 & 0.6975 & 2.1843 & -3.2562 \\
+MAR probability-linear & 3638 & 37.1641 & 2.5850 & 5.7417 & -2.8145 \\
+MAR probability-linear carry & 3638 & 30.2355 & 2.1030 & 4.6210 & -2.7981 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+For India, unconditional full exposure is strongest by total proxy return and Sharpe ratio in the inspected table. The regime-conditioned variants reduce drawdown, with the threshold defensive rule producing a much smaller drawdown, but they also reduce total carry. The India result is therefore risk-control evidence rather than uniform outperformance evidence.
+
+\subsection{Equity-curve diagnostics}
+
+\ReportFigure{equity_curves_common_start_india.png}{India common-start research-proxy cumulative curves.}{The common-start plot compares strategies from a shared inception point. The regime-conditioned strategies reduce exposure in stress states and therefore produce smoother paths, but they also surrender some carry relative to the unconditional benchmark.}
+
+\ReportFigure{equity_curves_common_start_us.png}{US common-start research-proxy cumulative curves.}{The US plot shows that MAR-style regime conditioning improves risk-adjusted behaviour while avoiding a portion of unconditional drawdowns.}
+
+\SmallReportFigure{equity_curves_india.png}{India full-sample research-proxy cumulative curves.}{The full-sample India trajectory shows the cost of de-risking: smoother curves but lower accumulated proxy carry for several regime-conditioned models.}
+
+\SmallReportFigure{equity_curves_us.png}{US full-sample research-proxy cumulative curves.}{The US full-sample trajectory shows the long-run accumulation of proxy carry and the relative behaviour of the regime-conditioned variants across crisis periods.}
+
+\subsection{Drawdown and return distribution diagnostics}
+
+\ReportFigure{drawdowns_india.png}{India research-proxy drawdown diagnostic.}{The drawdown curve shows the main trade-off. Unconditional exposure captures more carry but suffers larger drawdowns. Defensive or probabilistic regime rules compress drawdowns at the cost of lower gross proxy return.}
+
+\ReportFigure{drawdowns_us.png}{US research-proxy drawdown diagnostic.}{US drawdown compression is strongest for threshold defensive and MAR-style models. This is the central risk-control benefit of regime conditioning.}
+
+\SmallReportFigure{return_distribution_india.png}{India research-proxy return distribution.}{Regime conditioning changes the return distribution by adding more near-zero observations when the strategy is de-risked and by reducing the frequency of large adverse outcomes.}
+
+\SmallReportFigure{return_distribution_us.png}{US research-proxy return distribution.}{The US return distribution shows the same mechanism: regime filters reduce left-tail exposure, but the distribution becomes more dependent on the model's decision to remain active or inactive.}
+
+\section{Cross-Market Dynamics}
+
+\subsection{Purpose}
+
+The cross-market layer studies whether US and Indian VRP or stress diagnostics display useful descriptive or lagged predictive relationships. It does not change the locked strategy universe and does not support causal conclusions. The analysis tests whether US stress probabilities contain incremental information about future Indian stress states and whether an analysis-only India overlay is useful.
+
+\ReportFigure{us_india_vrp.png}{US-India VRP descriptive diagnostic.}{The VRP comparison shows that both markets exhibit a volatility premium, but the magnitude and timing are not identical. Differences can arise from liquidity, market structure, investor composition, local risk events, and data-source limitations.}
+
+\ReportFigure{us_india_stress_prob.png}{US-India filtered stress probability comparison.}{The stress-probability plot shows common global volatility cycles and market-specific episodes. The series are related but not interchangeable.}
+
+\ReportFigure{lagged_us_vs_india_stress.png}{Lagged-US versus India stress predictive diagnostic.}{The lagged diagnostic examines whether US stress probability is associated with later Indian stress probability. The interpretation is predictive and statistical, not causal.}
+
+\subsection{Analysis-only India overlay}
+
+The India overlay applies an additional de-risking rule based on lagged US stress. If US stress probability exceeds a chosen cutoff, Indian exposure is constrained. This is not part of the locked Phase 9 strategy universe; it is an analysis-only overlay.
+
+\SmallReportFigure{india_overlay_equity_curves.png}{Analysis-only India overlay cumulative curves.}{The overlay figure tests whether importing a US stress signal improves Indian risk control. The result is mixed and depends on cutoff and model.}
+
+\ReportFigure{india_overlay_exposure.png}{Analysis-only India overlay exposure diagnostic.}{The exposure plot shows exactly when the US stress rule forces the India strategy to reduce exposure. This is useful for understanding whether the overlay is economically plausible or merely over-restrictive.}
+
+\section{Operational Readiness Appendix}
+
+A paper-signal readiness layer converts research signals into guarded signal artifacts and validates that live-order pathways remain blocked. This layer is deliberately not presented as paper-trading performance.
+
+Allowed interpretation:
+
+\begin{itemize}
+    \item signal-format readiness,
+    \item order-guard validation,
+    \item configuration and risk-check demonstration,
+    \item no broker orders placed.
+\end{itemize}
+
+Forbidden interpretation:
+
+\begin{itemize}
+    \item broker execution results,
+    \item live strategy performance,
+    \item paper-trading track record,
+    \item executable option-chain PnL.
+\end{itemize}
+
+The operational layer is therefore a software-engineering and risk-boundary appendix, not a performance result.
+
+\section{Main Findings}
+
+\begin{enumerate}
+    \item \textbf{VRP construction is feasible with public proxies.} VIX and India VIX can be transformed into implied-variance proxies and aligned with daily OHLC realised-variance estimates to build public-data VRP panels.
+    \item \textbf{HAR-RV is useful but incomplete.} HAR-RV provides a point-in-time forecast layer, but residual diagnostics show clustered errors during volatility transitions.
+    \item \textbf{Regime labels are economically interpretable.} Threshold, HMM, and MAR models identify calm, transition, and stress states with plausible volatility and premium behaviour.
+    \item \textbf{Regime conditioning improves risk control more reliably than raw return.} The unconditional benchmark often earns the largest carry, but regime-conditioned strategies can substantially reduce drawdown and volatility.
+    \item \textbf{The US and India are related but not identical.} Cross-market diagnostics show co-movement and lagged predictive associations, but the evidence is statistical and not causal.
+    \item \textbf{The backtest is research-proxy only.} The project does not model true option-chain execution, margin, slippage, contract selection, or broker account returns.
+\end{enumerate}
+
+\section{Limitations}
+
+\begin{enumerate}
+    \item \textbf{Implied-volatility proxies.} VIX and India VIX are implied-volatility proxies, not true variance swap quotes. Squared VIX is an approximation to implied variance.
+    \item \textbf{Realised-variance proxies.} Daily OHLC estimators do not observe the full intraday price path and can miss microstructure effects and overnight structure.
+    \item \textbf{Horizon mismatch.} A 22-trading-day realised-variance horizon only approximates the 30-calendar-day implied-volatility index horizon.
+    \item \textbf{Forecasting restrictions.} HAR forecasts are model-dependent and sensitive to training-window design.
+    \item \textbf{Regime model interpretation.} HMM and MAR states are statistical labels, not observed ground truth.
+    \item \textbf{Backtest abstraction.} Phase 10 returns are additive research-proxy units, not account returns. No true option-chain PnL, margin, liquidity, bid-ask spread, exercise, assignment, or broker execution is modelled.
+    \item \textbf{Cross-market interpretation.} US-India lead-lag diagnostics are predictive/statistical only. They do not prove causal transmission.
+    \item \textbf{Generated data policy.} Raw data, processed feature panels, model outputs, and backtest panels remain local generated artifacts and are not embedded as full datasets in the report.
+\end{enumerate}
+
+\section{Conclusion}
+
+This project constructs a dual-market VRP research pipeline for the US and India. It measures realised variance from daily OHLC data, constructs implied-variance and VRP proxies, estimates HAR-RV forecasts, decomposes market states through threshold, HMM, and MAR models, evaluates regime-conditioned research-proxy exposure rules, and adds cross-market diagnostics.
+
+The main conclusion is not that regime conditioning always dominates unconditional short-volatility exposure. The more accurate conclusion is that regime conditioning provides a defensible risk-control mechanism. It can reduce drawdowns and volatility by suppressing exposure during stress states, but it may also surrender premium during periods where unconditional exposure later earns carry. The strongest evidence for regime conditioning appears in the reduction of drawdown and improved risk-adjusted behaviour in selected US model variants, while India shows a clearer trade-off between unconditional carry and defensive risk control.
+
+The project is therefore a credible empirical and implementation study, not a live trading claim. Its value lies in clear VRP construction, no-lookahead modelling discipline, explicit regime decomposition, transparent research-proxy evaluation, and honest limitations.
+
+\section{Future Work}
+
+The most important extensions are:
+
+\begin{enumerate}
+    \item Build true option-chain PnL using historical option chains, explicit strikes, expiries, bid-ask spreads, liquidity filters, and margin assumptions.
+    \item Compare VIX-squared and India-VIX-squared proxies against institutional variance swap or variance futures data where available.
+    \item Implement a formal R MSGARCH model and compare its state sequence with the current Python MSVOL-style robustness layer.
+    \item Extend the broker adapter into paper-order previews while preserving live-order blocks.
+    \item Add intraday realised variance where clean high-frequency data is available.
+    \item Add portfolio-level capital allocation, exposure caps, drawdown stop rules, and cross-market risk aggregation.
+\end{enumerate}
+
+\newpage
+\appendix
+\section{Figure Inventory}
+
+{\scriptsize
+\begin{longtable}{>{\raggedright\arraybackslash}p{0.42\linewidth}>{\raggedright\arraybackslash}p{0.50\linewidth}}
+\caption{Figures included in the report.}\\
+\toprule
+File & Report role \\
+\midrule
+\endfirsthead
+\toprule
+File & Report role \\
+\midrule
+\endhead
+\path{rv_estimators_india.png} & India realised-variance estimator comparison \\
+\path{rv_estimators_us.png} & US realised-variance estimator comparison \\
+\path{india_iv_rv_vrp.png} & India IV, RV, and VRP construction diagnostic \\
+\path{us_iv_rv_vrp.png} & US IV, RV, and VRP construction diagnostic \\
+\path{har_forecast_india.png} & India HAR-RV forecast diagnostic \\
+\path{har_forecast_us.png} & US HAR-RV forecast diagnostic \\
+\path{har_residuals_india.png} & India HAR forecast residual diagnostic \\
+\path{har_residuals_us.png} & US HAR forecast residual diagnostic \\
+\path{har_vrp_india.png} & India HAR-based VRP signal diagnostic \\
+\path{har_vrp_us.png} & US HAR-based VRP signal diagnostic \\
+\path{threshold_regimes_india.png} & India threshold regime timeline \\
+\path{threshold_regimes_us.png} & US threshold regime timeline \\
+\path{threshold_component_states_india.png} & India threshold component-state diagnostic \\
+\path{threshold_component_states_us.png} & US threshold component-state diagnostic \\
+\path{threshold_regime_vrp_boxplots_india.png} & India VRP distribution by regime \\
+\path{threshold_regime_vrp_boxplots_us.png} & US VRP distribution by regime \\
+\path{equity_curves_common_start_india.png} & India common-start proxy cumulative curves \\
+\path{equity_curves_common_start_us.png} & US common-start proxy cumulative curves \\
+\path{equity_curves_india.png} & India full-sample proxy cumulative curves \\
+\path{equity_curves_us.png} & US full-sample proxy cumulative curves \\
+\path{drawdowns_india.png} & India proxy drawdown diagnostic \\
+\path{drawdowns_us.png} & US proxy drawdown diagnostic \\
+\path{return_distribution_india.png} & India proxy return distribution \\
+\path{return_distribution_us.png} & US proxy return distribution \\
+\path{us_india_vrp.png} & US-India VRP comparison \\
+\path{us_india_stress_prob.png} & US-India stress probability comparison \\
+\path{lagged_us_vs_india_stress.png} & Lagged US stress versus India stress diagnostic \\
+\path{india_overlay_equity_curves.png} & Analysis-only India overlay cumulative curves \\
+\path{india_overlay_exposure.png} & Analysis-only India overlay exposure diagnostic \\
+\bottomrule
+\end{longtable}
+}
+
+\section{Selected References}
+
+\begin{itemize}
+    \item Bollerslev, T., Tauchen, G., and Zhou, H. (2009). Expected stock returns and variance risk premia.
+    \item Carr, P., and Wu, L. (2009). Variance risk premiums.
+    \item Corsi, F. (2009). A simple approximate long-memory model of realised volatility.
+    \item Garman, M. B., and Klass, M. J. (1980). On the estimation of security price volatilities from historical data.
+    \item Hamilton, J. D. (1989). A new approach to the economic analysis of nonstationary time series and the business cycle.
+\end{itemize}
+
+\end{document}
